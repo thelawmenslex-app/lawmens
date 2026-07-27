@@ -1902,9 +1902,10 @@ const publishMinorAct = async (req, res) => {
         // 1. Create or Update MinorAct
         let act = await MinorAct.findOne({ name });
         if (!act) {
-            act = await MinorAct.create({ name, description });
+            act = await MinorAct.create({ name, description, isActive: true });
         } else {
             act.description = description;
+            act.isActive = true;
             await act.save();
             // Delete old sections if updating
             await MinorActSection.deleteMany({ minorActId: act._id });

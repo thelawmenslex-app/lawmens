@@ -8,8 +8,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api/v1': {
-        target: 'http://127.0.0.1:3001',
-        changeOrigin: true
+        target: process.env.VITE_API_URL || 'https://lawmens-1.onrender.com',
+        changeOrigin: true,
+        secure: false
       }
     }
   }
