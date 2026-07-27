@@ -1,3 +1,8 @@
+if (typeof global.SlowBuffer === 'undefined') {
+    const { Buffer } = require('buffer');
+    global.SlowBuffer = Buffer;
+}
+
 const dns = require('dns');
 dns.setServers(['8.8.8.8', '1.1.1.1']);
 
