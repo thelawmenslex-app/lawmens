@@ -1,0 +1,24 @@
+const router = require("express").Router();
+const { register, login, otpFunctionality, forgotVerification, changePassword, getProfile, profileUpdate,profileVerification,addBookMarks,getBookMark,googleLogin ,getPrivacyPolicy, getNotifications, getPublicSignupConfig, submitQuery, getUserQueries} = require("./user.controller");
+const { validate } = require("../../middleware/validation");
+const { register: signup, login: userLogin, otp, forgot, profile } = require("./user.validations");
+const { auth } = require("../../middleware/auth.middleware");
+router.get("/signup-config", getPublicSignupConfig);
+router.post("/register", validate(signup), register);
+router.post("/login", validate(userLogin), login);
+router.post("/otp", validate(otp), otpFunctionality);
+router.post("/verification", validate(otp), forgotVerification);
+router.post("/profileverification",auth, validate(otp), profileVerification);
+router.put("/forgotpassword", validate(forgot), changePassword);
+const { checkPremiumAccess } = require("../../middleware/trial.middleware");
+router.put("/profile", auth, validate(profile), profileUpdate);
+router.get("/profile", auth, getProfile);
+router.put("/bookmark", auth, checkPremiumAccess, addBookMarks);
+router.get("/bookMark", auth, checkPremiumAccess, getBookMark);
+router.post("/google", googleLogin);
+router.get("/privacypolicy",getPrivacyPolicy);
+router.get("/notifications", auth, getNotifications);
+router.post("/query", auth, submitQuery);
+router.get("/query/my", auth, getUserQueries);
+
+module.exports = router;
