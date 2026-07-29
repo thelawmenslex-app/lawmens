@@ -278,16 +278,28 @@ const getSectionContent = async (req, res) => {
         const checkCategory = await casebookService.getCasebookPopulate({ _id: chapterId });
         console.log("[DEBUG] getSectionContent checkCategory found:", checkCategory ? { _id: checkCategory._id, name: checkCategory.name, sectionsCount: checkCategory.section?.length } : "null");
         if (checkCategory) {
-            if (checkCategory.section.length) {
-                const content = checkCategory.section.find(item => item._id.toString() === sectionId.toString())
+                const content = checkCategory.section.find(item => 
+                    item._id.toString() === sectionId.toString() ||
+                    (item.sectionId && item.sectionId.toString() === sectionId.toString())
+                );
                 console.log("[DEBUG] getSectionContent content found:", content ? { _id: content._id, name: content.name, sectionId: content.sectionId } : "null");
                 if (content) {
+                    let formattedText = "No content available";
+                    if (Array.isArray(content.content) && content.content.length > 0) {
+                        const parts = content.content.map(item => typeof item === 'string' ? item : item?.content).filter(Boolean);
+                        if (parts.length > 0) {
+                            formattedText = parts.join("\n\n");
+                        }
+                    } else if (typeof content.content === 'string' && content.content.trim()) {
+                        formattedText = content.content;
+                    }
+
                     oldCase = {
-                        content: content.content.map(item => item.content).toString(),
-                        title: content.keyword,
+                        content: formattedText,
+                        title: content.keyword || "",
                         bookMark: false,
                         chapterId: chapterId,
-                        sectionId: sectionId,
+                        sectionId: content._id ? content._id.toString() : sectionId,
                         oldversion: content.oldversion ? content.oldversion : 0,
                         name: content.name,
                         bookName: checkCategory?.categoryId?.name
