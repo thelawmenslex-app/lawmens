@@ -281,7 +281,7 @@ const Users = () => {
                     <button onClick={() => handleViewUser(user._id)} className="text-slate-400 hover:text-slate-800 p-1.5 rounded-lg hover:bg-slate-100" title="View details">
                       <Eye className="h-4 w-4" />
                     </button>
-                    <button onClick={() => handleEditUserClick(user)} className="text-slate-400 hover:text-slate-800 p-1.5 rounded-lg hover:bg-slate-100" title="Edit details">
+                    <button onClick={() => handleEditUser(user)} className="text-slate-400 hover:text-slate-800 p-1.5 rounded-lg hover:bg-slate-100" title="Edit details">
                       <Edit className="h-4 w-4" />
                     </button>
                     <button onClick={() => handleForceLogout(user._id)} className="text-slate-400 hover:text-slate-800 p-1.5 rounded-lg hover:bg-slate-100" title="Force Logout">
