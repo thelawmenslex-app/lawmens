@@ -323,7 +323,7 @@ const getSectionContent = async (req, res) => {
                             
                             if (newVersion) {
                                 newCase = {
-                                    content: newVersion.content ? newVersion.content.map(item => item.content).toString() : "No content available",
+                                    content: newVersion.content ? (Array.isArray(newVersion.content) ? newVersion.content.map(item => typeof item === 'string' ? item : item?.content).filter(Boolean).join("\n\n") : newVersion.content) : "No content available",
                                     title: newVersion.keyword || "",
                                     bookMark: false,
                                     chapterId: checkOldVersion._id,
@@ -332,7 +332,7 @@ const getSectionContent = async (req, res) => {
                                     name: newVersion.name || "",
                                     bookName: checkOldVersion?.categoryId?.name || ""
                                 };
-                                if (profile.bookMarks.length) {
+                                if (profile.bookMarks && profile.bookMarks.length) {
                                     const profileResult = profile.bookMarks.find(itemEntry => itemEntry.sectionId === newVersion._id.toString());
                                     if (profileResult) {
                                         newCase.bookMark = true;
@@ -351,58 +351,44 @@ const getSectionContent = async (req, res) => {
                             finalOld = oldCase;
                         }
 
-                        // Fallback handling if one side is missing or has placeholder text
                         if (oldCase.title && !newCase.title) {
                             finalOld = oldCase;
                             finalNew = newCase;
                         }
                         if (newCase.title && !oldCase.title) {
                             finalOld = newCase;
-                            finalNew = oldCase;
+                            finalOld = oldCase;
                         }
 
                         const response = {
                             old: finalOld,
                             new: finalNew
                         };
-                        await addHistory({ userId: userId, chapterId: chapterId, sectionId: sectionId })
-                        return sendResponse(res, true, 200, 'Section  available.', response);
+                        try { await addHistory({ userId: userId, chapterId: chapterId, sectionId: sectionId }); } catch (e) {}
+                        return sendResponse(res, true, 200, 'Section available.', response);
                     } else {
-                        const finalContent = content.content.find(item => item.page === Number(page))
-                        if (finalContent) {
-                            finalContent.bookMark = false
-                            if (profile.bookMarks.length) {
-                                const profileResult = profile.bookMarks.find(itemEntry => itemEntry.sectionId === content._id.toString())
-                                if (profileResult) {
-                                    finalContent.bookMark = true
-                                }
-                            }
-                            finalContent.totalPage = content.content.length
-                            finalContent.title = content.keyword
-                            finalContent.bookName = checkCategory?.categoryId?.name
-
-                            return sendResponse(res, true, 200, 'Section  available.', finalContent);
-                        } else {
-
-                            return sendResponse(res, true, 200, 'Section not available.', { content: "No content available", bookName: "", page: 1, totalPage: 1 });
-                        }
+                        // Single-book mode: return full formatted section text directly
+                        try { await addHistory({ userId: userId, chapterId: chapterId, sectionId: sectionId }); } catch (e) {}
+                        return sendResponse(res, true, 200, 'Section available.', {
+                            content: formattedText,
+                            title: content.keyword || "",
+                            name: content.name || "",
+                            bookName: checkCategory?.categoryId?.name || "",
+                            bookMark: oldCase.bookMark,
+                            page: 1,
+                            totalPage: 1
+                        });
                     }
                 } else {
-
                     return sendResponse(res, true, 200, 'Section not available.', { content: "No content available", bookName: "", page: 1, totalPage: 1 });
                 }
             } else {
-
                 return sendResponse(res, true, 200, 'Section not available.', { content: "No content available", bookName: "", page: 1, totalPage: 1 });
             }
-        } else {
-
-            return sendResponse(res, true, 200, 'Section not available.', { content: "No content available", bookName: "", page: 1, totalPage: 1 });
-        }
     } catch (error) {
         errorHandler(error, res);
     }
-}
+};
 
 const sharePdf = async (req, res) => {
     try {
