@@ -691,6 +691,21 @@ const sendPushNotification = async (req, res) => {
             actionUrl: actionUrl || ''
         });
 
+        // Trigger real FCM system notification banner delivery if not scheduled in future
+        if (!isFutureSchedule) {
+            const fcmService = require('../../services/fcm.service');
+            fcmService.sendFcmPushToTokens({
+                title,
+                message,
+                targetGroup,
+                targetUserId,
+                dataPayload: {
+                    notificationType: notificationType || 'general',
+                    actionUrl: actionUrl || ''
+                }
+            }).catch(err => console.log('Background FCM Broadcast Error:', err?.message));
+        }
+
         await AuditLog.create({
             userId: adminId,
             action: isFutureSchedule ? 'schedule_push_notification' : 'send_push_notification',
@@ -700,7 +715,7 @@ const sendPushNotification = async (req, res) => {
 
         const successMessage = isFutureSchedule 
             ? 'Push notification scheduled successfully.' 
-            : 'Push notification broadcast triggered successfully.';
+            : 'Push notification broadcast triggered and system banners sent successfully.';
 
         return sendResponse(res, true, 201, successMessage, notification);
     } catch (error) {
