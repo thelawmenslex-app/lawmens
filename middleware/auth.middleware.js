@@ -32,7 +32,8 @@ const verifyCallback = (req, resolve, reject) => async (err, user, info) => {
         professionId:user.professionId?user.professionId:"",
         role: user.role || 'User',
         isPremium: user.isPremium || false,
-        trialEndDate: user.trialEndDate
+        trialEndDate: user.trialEndDate ? user.trialEndDate : (user.createdAt ? new Date(new Date(user.createdAt).getTime() + 7 * 24 * 60 * 60 * 1000) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)),
+        createdAt: user.createdAt
     }
     resolve();
 };
