@@ -1952,15 +1952,46 @@ const publishMinorAct = async (req, res) => {
 
 const getMinorActsList = async (req, res) => {
     try {
-        const acts = await MinorAct.find().sort({ createdAt: -1 }).lean();
+        const acts = await MinorAct.find().sort({ order: 1, createdAt: 1 }).lean();
         
         // Populate sections counts
-        const enriched = await Promise.all(acts.map(async act => {
+        const enriched = await Promise.all(acts.map(async (act, index) => {
             const count = await MinorActSection.countDocuments({ minorActId: act._id });
-            return { ...act, sectionCount: count };
+            return { ...act, order: act.order || index + 1, sectionCount: count };
         }));
 
         return sendResponse(res, true, 200, 'Minor Acts list retrieved successfully.', enriched);
+    } catch (error) {
+        return errorHandler(error, res);
+    }
+};
+
+const reorderMinorActs = async (req, res) => {
+    try {
+        const { orderedIds } = req.body;
+        if (!Array.isArray(orderedIds)) {
+            return sendResponse(res, false, 400, 'orderedIds must be an array of IDs.');
+        }
+
+        const bulkOps = orderedIds.map((id, index) => ({
+            updateOne: {
+                filter: { _id: id },
+                update: { $set: { order: index + 1 } }
+            }
+        }));
+
+        if (bulkOps.length > 0) {
+            await MinorAct.bulkWrite(bulkOps);
+        }
+
+        await AuditLog.create({
+            userId: req.userId,
+            action: 'reorder_minor_acts',
+            details: { count: orderedIds.length },
+            ipAddress: req.ip
+        });
+
+        return sendResponse(res, true, 200, 'Minor Acts re-ordered successfully.');
     } catch (error) {
         return errorHandler(error, res);
     }
@@ -2359,6 +2390,7 @@ module.exports = {
     parseMinorActFile,
     publishMinorAct,
     getMinorActsList,
+    reorderMinorActs,
     deleteMinorAct,
     uploadMinorActPdf,
     clearMinorActPdf,

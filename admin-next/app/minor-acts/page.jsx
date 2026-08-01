@@ -13,7 +13,9 @@ import {
   Loader2,
   FileDown,
   XCircle,
-  Eye
+  Eye,
+  ArrowUp,
+  ArrowDown
 } from 'lucide-react';
 
 const MinorActsAdmin = () => {
@@ -33,6 +35,7 @@ const MinorActsAdmin = () => {
   const [isParsing, setIsParsing] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [isLoadingList, setIsLoadingList] = useState(false);
+  const [isReordering, setIsReordering] = useState(false);
   const [publishSuccess, setPublishSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -58,6 +61,40 @@ const MinorActsAdmin = () => {
   useEffect(() => {
     fetchMinorActs();
   }, []);
+
+  const handleReorder = async (newActsList) => {
+    setActs(newActsList);
+    setIsReordering(true);
+    try {
+      const orderedIds = newActsList.map(a => a._id);
+      await axios.put('/api/v1/admin/content/minor-acts/reorder', { orderedIds }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (err) {
+      console.error('Failed to save order:', err);
+      fetchMinorActs(); // revert on failure
+    } finally {
+      setIsReordering(false);
+    }
+  };
+
+  const handleMoveUp = (index) => {
+    if (index === 0) return;
+    const newActs = [...acts];
+    const temp = newActs[index - 1];
+    newActs[index - 1] = newActs[index];
+    newActs[index] = temp;
+    handleReorder(newActs);
+  };
+
+  const handleMoveDown = (index) => {
+    if (index === acts.length - 1) return;
+    const newActs = [...acts];
+    const temp = newActs[index + 1];
+    newActs[index + 1] = newActs[index];
+    newActs[index] = temp;
+    handleReorder(newActs);
+  };
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -490,7 +527,7 @@ const MinorActsAdmin = () => {
             <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
               <div className="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
                 <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Minor Acts Catalog ({acts.length} acts total)</h3>
-                <span className="text-[10px] text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full font-bold">50 PDFs Scalable</span>
+                <span className="text-[10px] text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full font-bold border border-indigo-200">150+ PDFs Scalable</span>
               </div>
 
               {isLoadingList ? (
@@ -503,6 +540,7 @@ const MinorActsAdmin = () => {
                   <table className="min-w-full divide-y divide-slate-100 text-left text-xs">
                     <thead className="bg-slate-50 font-bold text-slate-500">
                       <tr>
+                        <th className="px-3 py-3 w-20 text-center">Order</th>
                         <th className="px-4 py-3">Act Name</th>
                         <th className="px-4 py-3">Description</th>
                         <th className="px-4 py-3">Document Status</th>
@@ -510,8 +548,29 @@ const MinorActsAdmin = () => {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-slate-700">
-                      {acts.map((act) => (
+                      {acts.map((act, index) => (
                         <tr key={act._id} className="hover:bg-slate-50/50 transition">
+                          <td className="px-3 py-3 text-center">
+                            <div className="flex items-center justify-center gap-1">
+                              <button
+                                onClick={() => handleMoveUp(index)}
+                                disabled={index === 0 || isReordering}
+                                className="p-1 rounded bg-slate-100 hover:bg-indigo-100 text-slate-600 hover:text-indigo-600 disabled:opacity-30 transition"
+                                title="Move Up"
+                              >
+                                <ArrowUp className="h-3.5 w-3.5" />
+                              </button>
+                              <span className="text-xs font-bold text-slate-500 w-5">{index + 1}</span>
+                              <button
+                                onClick={() => handleMoveDown(index)}
+                                disabled={index === acts.length - 1 || isReordering}
+                                className="p-1 rounded bg-slate-100 hover:bg-indigo-100 text-slate-600 hover:text-indigo-600 disabled:opacity-30 transition"
+                                title="Move Down"
+                              >
+                                <ArrowDown className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </td>
                           <td className="px-4 py-3 font-bold text-slate-800">{act.name}</td>
                           <td className="px-4 py-3 text-slate-500 truncate max-w-[150px]">{act.description || 'No description'}</td>
                           <td className="px-4 py-3">
@@ -560,7 +619,7 @@ const MinorActsAdmin = () => {
                       ))}
                       {acts.length === 0 && (
                         <tr>
-                          <td colSpan={4} className="text-center py-10 text-slate-400 font-semibold">No Criminal Minor Acts published yet.</td>
+                          <td colSpan={5} className="text-center py-10 text-slate-400 font-semibold">No Criminal Minor Acts published yet.</td>
                         </tr>
                       )}
                     </tbody>

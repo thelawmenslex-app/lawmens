@@ -141,6 +141,7 @@ router.post('/content/minor-acts/publish', checkRole(['Admin', 'Super Admin', 'E
 router.post('/content/minor-acts/upload-pdf', checkRole(['Admin', 'Super Admin', 'Editor']), minorActPdfUpload.single('pdf'), adminController.uploadMinorActPdf);
 router.delete('/content/minor-acts/clear-pdf/:id', checkRole(['Admin', 'Super Admin', 'Editor']), adminController.clearMinorActPdf);
 router.get('/content/minor-acts', checkRole(['Admin', 'Super Admin', 'Editor']), adminController.getMinorActsList);
+router.put('/content/minor-acts/reorder', checkRole(['Admin', 'Super Admin', 'Editor']), adminController.reorderMinorActs);
 router.delete('/content/minor-acts/:id', checkRole(['Admin', 'Super Admin']), adminController.deleteMinorAct);
 
 // Audit Logging list
