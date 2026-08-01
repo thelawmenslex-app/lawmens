@@ -15,7 +15,8 @@ import {
   XCircle,
   Eye,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  GripVertical
 } from 'lucide-react';
 
 const MinorActsAdmin = () => {
@@ -36,6 +37,7 @@ const MinorActsAdmin = () => {
   const [isPublishing, setIsPublishing] = useState(false);
   const [isLoadingList, setIsLoadingList] = useState(false);
   const [isReordering, setIsReordering] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState(null);
   const [publishSuccess, setPublishSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
@@ -93,6 +95,38 @@ const MinorActsAdmin = () => {
     const temp = newActs[index + 1];
     newActs[index + 1] = newActs[index];
     newActs[index] = temp;
+    handleReorder(newActs);
+  };
+
+  const handleManualPositionChange = (currentIndex, targetPosStr) => {
+    const targetPos = parseInt(targetPosStr, 10);
+    if (isNaN(targetPos) || targetPos < 1 || targetPos > acts.length || targetPos === currentIndex + 1) {
+      return;
+    }
+    const targetIndex = targetPos - 1;
+    const newActs = [...acts];
+    const [movedItem] = newActs.splice(currentIndex, 1);
+    newActs.splice(targetIndex, 0, movedItem);
+    handleReorder(newActs);
+  };
+
+  const handleDragStart = (e, index) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const handleDrop = (e, dropIndex) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === dropIndex) return;
+    const newActs = [...acts];
+    const [draggedItem] = newActs.splice(draggedIndex, 1);
+    newActs.splice(dropIndex, 0, draggedItem);
+    setDraggedIndex(null);
     handleReorder(newActs);
   };
 
@@ -526,7 +560,10 @@ const MinorActsAdmin = () => {
             /* Acts CRUD Table List (Schedules CRUD counterpart) */
             <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
               <div className="p-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
-                <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Minor Acts Catalog ({acts.length} acts total)</h3>
+                <div>
+                  <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider">Minor Acts Catalog ({acts.length} acts total)</h3>
+                  <p className="text-[10px] text-slate-400 mt-0.5">💡 Drag rows to reorder, type position number, or use ⬆️ / ⬇️ buttons.</p>
+                </div>
                 <span className="text-[10px] text-indigo-600 bg-indigo-50 px-2.5 py-0.5 rounded-full font-bold border border-indigo-200">150+ PDFs Scalable</span>
               </div>
 
@@ -540,7 +577,8 @@ const MinorActsAdmin = () => {
                   <table className="min-w-full divide-y divide-slate-100 text-left text-xs">
                     <thead className="bg-slate-50 font-bold text-slate-500">
                       <tr>
-                        <th className="px-3 py-3 w-20 text-center">Order</th>
+                        <th className="px-3 py-3 w-10 text-center">Drag</th>
+                        <th className="px-3 py-3 w-28 text-center">Position #</th>
                         <th className="px-4 py-3">Act Name</th>
                         <th className="px-4 py-3">Description</th>
                         <th className="px-4 py-3">Document Status</th>
@@ -549,7 +587,19 @@ const MinorActsAdmin = () => {
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-slate-700">
                       {acts.map((act, index) => (
-                        <tr key={act._id} className="hover:bg-slate-50/50 transition">
+                        <tr 
+                          key={act._id} 
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, index)}
+                          onDragOver={handleDragOver}
+                          onDrop={(e) => handleDrop(e, index)}
+                          className={`hover:bg-slate-50 transition cursor-grab active:cursor-grabbing ${draggedIndex === index ? 'bg-indigo-50/70 border-2 border-indigo-300 opacity-60' : ''}`}
+                        >
+                          <td className="px-3 py-3 text-center">
+                            <div className="flex items-center justify-center" title="Drag to reorder">
+                              <GripVertical className="h-4 w-4 text-slate-400 hover:text-indigo-600 cursor-grab" />
+                            </div>
+                          </td>
                           <td className="px-3 py-3 text-center">
                             <div className="flex items-center justify-center gap-1">
                               <button
@@ -558,16 +608,34 @@ const MinorActsAdmin = () => {
                                 className="p-1 rounded bg-slate-100 hover:bg-indigo-100 text-slate-600 hover:text-indigo-600 disabled:opacity-30 transition"
                                 title="Move Up"
                               >
-                                <ArrowUp className="h-3.5 w-3.5" />
+                                <ArrowUp className="h-3 w-3" />
                               </button>
-                              <span className="text-xs font-bold text-slate-500 w-5">{index + 1}</span>
+                              
+                              {/* Manual Position Number Input */}
+                              <input
+                                key={`pos_${act._id}_${index}`}
+                                type="number"
+                                min="1"
+                                max={acts.length}
+                                defaultValue={index + 1}
+                                onBlur={(e) => handleManualPositionChange(index, e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    handleManualPositionChange(index, e.target.value);
+                                    e.target.blur();
+                                  }
+                                }}
+                                className="w-11 text-center text-xs font-bold text-slate-800 border border-slate-200 rounded-md py-0.5 bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 shadow-none"
+                                title="Type position number (e.g. 1 to jump to top)"
+                              />
+
                               <button
                                 onClick={() => handleMoveDown(index)}
                                 disabled={index === acts.length - 1 || isReordering}
                                 className="p-1 rounded bg-slate-100 hover:bg-indigo-100 text-slate-600 hover:text-indigo-600 disabled:opacity-30 transition"
                                 title="Move Down"
                               >
-                                <ArrowDown className="h-3.5 w-3.5" />
+                                <ArrowDown className="h-3 w-3" />
                               </button>
                             </div>
                           </td>
@@ -619,7 +687,7 @@ const MinorActsAdmin = () => {
                       ))}
                       {acts.length === 0 && (
                         <tr>
-                          <td colSpan={5} className="text-center py-10 text-slate-400 font-semibold">No Criminal Minor Acts published yet.</td>
+                          <td colSpan={6} className="text-center py-10 text-slate-400 font-semibold">No Criminal Minor Acts published yet.</td>
                         </tr>
                       )}
                     </tbody>
