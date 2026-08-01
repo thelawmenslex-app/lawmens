@@ -3,13 +3,33 @@ const axios = require('axios');
 const Sib = require('sib-api-v3-sdk');
 
 /**
- * Send Transactional Email & Signup OTP via Nodemailer SMTP or Brevo API v3
+ * Send Signup OTP & Email Verification via Firebase Auth, Nodemailer, or Brevo
  */
 const sendEmail = async (sendTo, htmlContent, subject, content, attachment, status) => {
     try {
         const recipientEmail = Array.isArray(sendTo) ? (sendTo[0]?.email || sendTo[0]) : sendTo;
 
-        // 1. Send via Nodemailer SMTP if credentials configured in environment
+        // 1. Try Firebase Auth Email Verification (Sends via Google's official noreply@the-lawmens.firebaseapp.com)
+        const firebaseApiKey = process.env.FIREBASE_WEB_API_KEY || "AIzaSyBLc-ePPiNr5XhQSHKV0GdArM-BYMM0VhI";
+        if (firebaseApiKey) {
+            try {
+                // First get or create OOB code via Firebase Identity Toolkit
+                const firebaseRes = await axios.post(
+                    `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${firebaseApiKey}`,
+                    {
+                        requestType: "VERIFY_EMAIL",
+                        email: recipientEmail
+                    },
+                    { timeout: 8000 }
+                );
+                console.log('[Firebase Auth Email] Sent verification email via Firebase:', firebaseRes.data);
+                return firebaseRes.data;
+            } catch (fbErr) {
+                console.warn('[Firebase Auth Email Notice]:', fbErr?.response?.data?.error?.message || fbErr?.message);
+            }
+        }
+
+        // 2. Send via Nodemailer SMTP if credentials configured in environment
         if (process.env.SMTP_USER && process.env.SMTP_PASS) {
             try {
                 const transporter = nodemailer.createTransport({
@@ -33,11 +53,11 @@ const sendEmail = async (sendTo, htmlContent, subject, content, attachment, stat
                 console.log('[Nodemailer SMTP] Sent OTP email successfully:', info.messageId);
                 return info;
             } catch (smtpErr) {
-                console.warn('[Nodemailer SMTP warning, trying Brevo API]:', smtpErr.message);
+                console.warn('[Nodemailer SMTP warning]:', smtpErr.message);
             }
         }
 
-        // 2. Send via Brevo API v3 if API key configured
+        // 3. Send via Brevo API v3 if API key configured
         const apiKey = process.env.BREVO_API_KEY || process.env.EMAILSECRET || process.env.SENDINBLUE_API_KEY || process.env.SIB_API_KEY;
 
         if (apiKey && apiKey !== 'emailsecretkey') {
@@ -67,7 +87,7 @@ const sendEmail = async (sendTo, htmlContent, subject, content, attachment, stat
             }
         }
 
-        console.warn('[Email Service Notice] No live SMTP credentials or Brevo API Key found in env.');
+        console.warn('[Email Service Notice] No active Firebase Auth key or SMTP credentials found.');
         return { status: false, message: 'No live email credentials configured' };
     } catch (error) {
         console.error('[Email Service Error]:', error?.message);
