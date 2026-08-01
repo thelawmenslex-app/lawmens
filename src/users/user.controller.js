@@ -101,10 +101,7 @@ const otpFunctionality = async (req, res) => {
             } catch (emailErr) {
                 console.error("Email sending failed:", emailErr.message);
             }
-            console.log(`========================================`);
-            console.log(`[OTP SYSTEM] Verification Code for ${data.email}: ${otp}`);
-            console.log(`========================================`);
-            return sendResponse(res, true, 200, `OTP sent successfully. (Code: ${otp})`, { otp: otp });
+            return sendResponse(res, true, 200, 'Otp sent successfull.');
         }
         if (!checkUser && checkOtp && data.type && data.type === "verify") {
             const currentDate = new Date();
