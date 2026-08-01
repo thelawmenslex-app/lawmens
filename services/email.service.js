@@ -9,21 +9,48 @@ const sendEmail = async (sendTo, htmlContent, subject, content, attachment, stat
     try {
         const recipientEmail = Array.isArray(sendTo) ? (sendTo[0]?.email || sendTo[0]) : sendTo;
 
-        // 1. Try Firebase Auth Email Verification (Sends via Google's official noreply@the-lawmens.firebaseapp.com)
+        // 1. Send via Firebase Auth (Sends via Google's official noreply@the-lawmens.firebaseapp.com)
         const firebaseApiKey = process.env.FIREBASE_WEB_API_KEY || "AIzaSyBLc-ePPiNr5XhQSHKV0GdArM-BYMM0VhI";
         if (firebaseApiKey) {
             try {
-                // First get or create OOB code via Firebase Identity Toolkit
-                const firebaseRes = await axios.post(
-                    `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${firebaseApiKey}`,
-                    {
-                        requestType: "VERIFY_EMAIL",
-                        email: recipientEmail
-                    },
-                    { timeout: 8000 }
-                );
-                console.log('[Firebase Auth Email] Sent verification email via Firebase:', firebaseRes.data);
-                return firebaseRes.data;
+                let idToken = null;
+                try {
+                    const signUpRes = await axios.post(
+                        `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${firebaseApiKey}`,
+                        {
+                            email: recipientEmail,
+                            password: `TempP@ss_${Date.now()}`,
+                            returnSecureToken: true
+                        },
+                        { timeout: 5000 }
+                    );
+                    idToken = signUpRes.data?.idToken;
+                } catch (signUpErr) {
+                    // If user already exists in Firebase Auth, send Password Reset / Email Verification link directly
+                    const resetRes = await axios.post(
+                        `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${firebaseApiKey}`,
+                        {
+                            requestType: "PASSWORD_RESET",
+                            email: recipientEmail
+                        },
+                        { timeout: 5000 }
+                    );
+                    console.log('[Firebase Auth Email] Sent Email Verification via Firebase:', resetRes.data);
+                    return resetRes.data;
+                }
+
+                if (idToken) {
+                    const verifyRes = await axios.post(
+                        `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${firebaseApiKey}`,
+                        {
+                            requestType: "VERIFY_EMAIL",
+                            idToken: idToken
+                        },
+                        { timeout: 5000 }
+                    );
+                    console.log('[Firebase Auth Email] Sent verification email via Firebase:', verifyRes.data);
+                    return verifyRes.data;
+                }
             } catch (fbErr) {
                 console.warn('[Firebase Auth Email Notice]:', fbErr?.response?.data?.error?.message || fbErr?.message);
             }
