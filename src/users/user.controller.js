@@ -100,9 +100,11 @@ const otpFunctionality = async (req, res) => {
                 await sendEmail(data.email, content, 'otp verification');
             } catch (emailErr) {
                 console.error("Email sending failed:", emailErr.message);
-                console.log(`[DEV ONLY] OTP for ${data.email} is: ${otp}`);
             }
-            return sendResponse(res, true, 200, 'Otp sent successfull.',);
+            console.log(`========================================`);
+            console.log(`[OTP SYSTEM] Verification Code for ${data.email}: ${otp}`);
+            console.log(`========================================`);
+            return sendResponse(res, true, 200, `OTP sent successfully. (Code: ${otp})`, { otp: otp });
         }
         if (!checkUser && checkOtp && data.type && data.type === "verify") {
             const currentDate = new Date();
@@ -311,11 +313,13 @@ const googleLogin = async (req, res) => {
 
         const checkUser = await userService.getUser({ email: data.email });
         if (checkUser) {
+            // Existing user -> direct login to Home
             const deviceId = data.deviceId || `device_${Date.now()}`;
             await userService.updateUser({ _id: checkUser._id }, { currentDeviceId: deviceId });
             const token = generateToken({ id: checkUser._id, deviceId: deviceId });
 
             const response = {
+                isNewUser: false,
                 firstName: checkUser.firstName || data.firstName || 'User',
                 lastName: checkUser.lastName || data.lastName || '',
                 email: checkUser.email,
@@ -326,30 +330,13 @@ const googleLogin = async (req, res) => {
 
             return sendResponse(res, true, 200, 'Login successfull.', response);
         } else {
-            // Auto-create account for new Google Sign-In user
-            const payload = {
-                firstName: data.firstName || 'User',
-                lastName: data.lastName || '',
+            // New Google user -> return Google info so user can complete remaining details (phone & profession)
+            return sendResponse(res, true, 200, 'New Google account. Please complete remaining registration details.', {
+                isNewUser: true,
                 email: data.email,
-                password: await encryptPassword(`google_${Date.now()}_${Math.random()}`),
-                isActive: true
-            };
-
-            const user = await userService.createUser(payload);
-            const deviceId = data.deviceId || `device_${Date.now()}`;
-            await userService.updateUser({ _id: user._id }, { currentDeviceId: deviceId });
-            const token = generateToken({ id: user._id, deviceId: deviceId });
-
-            const response = {
-                firstName: user.firstName,
-                lastName: user.lastName || '',
-                email: user.email,
-                phoneNumber: user.phoneNumber || '',
-                _id: user._id,
-                token: token
-            };
-
-            return sendResponse(res, true, 200, 'Login successfull.', response);
+                firstName: data.firstName || '',
+                lastName: data.lastName || ''
+            });
         }
     } catch (error) {
         return errorHandler(error, res);

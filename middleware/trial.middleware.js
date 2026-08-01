@@ -19,34 +19,20 @@ const checkPremiumAccess = (req, res, next) => {
     }
 
     // Check if the user is within their 7-day free trial
-    const isTrialActive = profile.trialEndDate && new Date() < new Date(profile.trialEndDate);
+    const now = new Date();
+    const trialEnd = profile.trialEndDate 
+        ? new Date(profile.trialEndDate) 
+        : (profile.createdAt ? new Date(new Date(profile.createdAt).getTime() + 7 * 24 * 60 * 60 * 1000) : new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000));
+        
+    const isTrialActive = now < trialEnd;
 
     if (isTrialActive) {
-        // Free trial users can access content navigation, search filtering, schedules, and sync
-        const requestPath = req.originalUrl || req.url || "";
-        const allowedRoutes = [
-            '/cases/getsectionContent',
-            '/cases/casefilter',
-            '/cases/getSections',
-            '/cases/getSubSections',
-            '/cases/getUnderSections',
-            '/cases/getContent',
-            '/cases/comparison',
-            '/firstschedule/getLegalEntries',
-            '/sync/pull',
-            '/sync/push',
-            '/user/notifications'
-        ];
-        
-        const isAllowed = allowedRoutes.some(route => requestPath.includes(route));
-        if (isAllowed) {
-            return next();
-        }
-        return sendResponse(res, false, 403, 'Trial restriction: This feature is locked during your 7-day free trial. Please unlock Premium Lifetime Access to continue.');
+        // Free trial users get full access to all features during their 7-day free trial!
+        return next();
     }
 
-    // Access Expired
-    return sendResponse(res, false, 402, 'Premium access required. Your 7-day free trial has expired. Please complete the one-time purchase to continue accessing premium features.');
+    // Access Expired after 7-day trial
+    return sendResponse(res, false, 402, 'Your 7-day free trial has completed. Please upgrade to Premium to continue enjoying unlimited legal access.');
 };
 
 module.exports = { checkPremiumAccess };
