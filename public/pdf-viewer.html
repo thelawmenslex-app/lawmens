@@ -2,65 +2,129 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
   <title>THE-LAWMEN'S PDF Viewer</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <style>
+    * {
+      box-sizing: border-box;
+    }
     body {
       margin: 0;
       padding: 0;
-      background-color: #1e293b;
+      background-color: #0f172a;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      overflow-x: auto;
+    }
+    #toolbar {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 40px;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+      z-index: 9999;
+      transition: all 0.2s ease;
+    }
+    .btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: #ffffff;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+    .btn:active {
+      background: #2563eb;
+      transform: scale(0.95);
+    }
+    #zoom-label {
+      color: #38bdf8;
+      font-size: 13px;
+      font-weight: 700;
+      min-width: 46px;
+      text-align: center;
     }
     #pdf-container {
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 10px;
+      padding: 15px 10px 90px 10px;
       gap: 15px;
     }
     canvas {
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.4);
       max-width: 100%;
       height: auto !important;
       border-radius: 6px;
       background-color: #ffffff;
+      transition: transform 0.15s ease-out;
     }
     #loading {
       color: #94a3b8;
       font-size: 14px;
       font-weight: 600;
       text-align: center;
-      margin-top: 40px;
+      margin-top: 50px;
     }
   </style>
 </head>
 <body>
-  <div id="loading">Loading schedule document...</div>
+  <div id="loading">Loading document...</div>
   <div id="pdf-container"></div>
+
+  <!-- Floating PDF Toolbar -->
+  <div id="toolbar" style="display: none;">
+    <button class="btn" id="btn-zoom-out" title="Zoom Out (Minimize)">−</button>
+    <span id="zoom-label">100%</span>
+    <button class="btn" id="btn-zoom-in" title="Zoom In (Maximize)">+</button>
+    <button class="btn" id="btn-reset" title="Reset Fit" style="font-size:12px;">Fit</button>
+    <button class="btn" id="btn-fullscreen" title="Maximize Fullscreen">⛶</button>
+  </div>
 
   <script>
     const urlParams = new URLSearchParams(window.location.search);
     const fileUrl = urlParams.get('file');
 
+    let currentScale = 1.8;
+    let pdfDoc = null;
+
     if (fileUrl) {
-      // Set worker source
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
       const container = document.getElementById('pdf-container');
       const loadingEl = document.getElementById('loading');
+      const toolbar = document.getElementById('toolbar');
+      const zoomLabel = document.getElementById('zoom-label');
 
-      // Load document
-      pdfjsLib.getDocument(fileUrl).promise.then(pdf => {
-        loadingEl.style.display = 'none';
+      function updateZoomLabel() {
+        zoomLabel.innerText = Math.round((currentScale / 1.8) * 100) + '%';
+      }
 
-        // Render pages sequentially
+      function renderAllPages() {
+        if (!pdfDoc) return;
+        container.innerHTML = '';
+
         let renderPage = (pageNum) => {
-          if (pageNum > pdf.numPages) return;
+          if (pageNum > pdfDoc.numPages) return;
 
-          pdf.getPage(pageNum).then(page => {
-            // Adjust scale for high-quality display
-            const viewport = page.getViewport({ scale: 2.0 });
+          pdfDoc.getPage(pageNum).then(page => {
+            const viewport = page.getViewport({ scale: currentScale });
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
             
@@ -72,18 +136,54 @@
               canvasContext: context,
               viewport: viewport
             }).promise.then(() => {
-              // Load next page
               renderPage(pageNum + 1);
             });
           });
         };
 
-        // Start rendering from page 1
         renderPage(1);
+      }
+
+      pdfjsLib.getDocument(fileUrl).promise.then(pdf => {
+        pdfDoc = pdf;
+        loadingEl.style.display = 'none';
+        toolbar.style.display = 'flex';
+        renderAllPages();
       }).catch(err => {
         loadingEl.innerText = 'Failed to load document: ' + err.message;
         console.error('PDFJS error:', err);
       });
+
+      document.getElementById('btn-zoom-in').addEventListener('click', () => {
+        if (currentScale < 4.5) {
+          currentScale += 0.4;
+          updateZoomLabel();
+          renderAllPages();
+        }
+      });
+
+      document.getElementById('btn-zoom-out').addEventListener('click', () => {
+        if (currentScale > 0.8) {
+          currentScale -= 0.4;
+          updateZoomLabel();
+          renderAllPages();
+        }
+      });
+
+      document.getElementById('btn-reset').addEventListener('click', () => {
+        currentScale = 1.8;
+        updateZoomLabel();
+        renderAllPages();
+      });
+
+      document.getElementById('btn-fullscreen').addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      });
+
     } else {
       document.getElementById('loading').innerText = 'No PDF file specified.';
     }
