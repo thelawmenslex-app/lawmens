@@ -85,6 +85,15 @@ const userSchema = new Schema(
         currentDeviceId: {
             type: String,
             default: null
+        },
+        fcmToken: {
+            type: String,
+            default: null
+        },
+        fcmPlatform: {
+            type: String,
+            enum: ['android', 'ios', 'web'],
+            default: 'android'
         }
     },
     {

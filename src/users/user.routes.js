@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { register, login, otpFunctionality, forgotVerification, changePassword, getProfile, profileUpdate,profileVerification,addBookMarks,getBookMark,googleLogin ,getPrivacyPolicy, getNotifications, getPublicSignupConfig, submitQuery, getUserQueries} = require("./user.controller");
+const { register, login, otpFunctionality, forgotVerification, changePassword, getProfile, profileUpdate,profileVerification,addBookMarks,getBookMark,googleLogin ,getPrivacyPolicy, getNotifications, getPublicSignupConfig, submitQuery, getUserQueries, updateFcmToken} = require("./user.controller");
 const { validate } = require("../../middleware/validation");
 const { register: signup, login: userLogin, otp, forgot, profile } = require("./user.validations");
 const { auth } = require("../../middleware/auth.middleware");
@@ -20,5 +20,6 @@ router.get("/privacypolicy",getPrivacyPolicy);
 router.get("/notifications", auth, getNotifications);
 router.post("/query", auth, submitQuery);
 router.get("/query/my", auth, getUserQueries);
+router.post("/fcm-token", auth, updateFcmToken);
 
 module.exports = router;

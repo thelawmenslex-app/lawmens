@@ -435,6 +435,25 @@ const getUserQueries = async (req, res) => {
     }
 };
 
+const updateFcmToken = async (req, res) => {
+    try {
+        const { fcmToken, platform } = req.body;
+        const userId = req.userId;
+        if (!fcmToken) {
+            return sendResponse(res, false, 400, 'fcmToken is required.');
+        }
+
+        const user = await userService.updateUser(
+            { _id: userId },
+            { fcmToken, fcmPlatform: platform || 'android' }
+        );
+
+        return sendResponse(res, true, 200, 'FCM push token registered successfully.', { fcmToken });
+    } catch (error) {
+        return errorHandler(error, res);
+    }
+};
+
 module.exports = {
     register,
     login,
@@ -451,5 +470,6 @@ module.exports = {
     getNotifications,
     getPublicSignupConfig,
     submitQuery,
-    getUserQueries
+    getUserQueries,
+    updateFcmToken
 }

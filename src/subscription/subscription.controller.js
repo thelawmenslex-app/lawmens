@@ -52,29 +52,140 @@ const planSubscribe = async (req, res) => {
         errorHandler(error, res);
     }
 }
-const userPlans = async (req, res) => {
+const getAvailablePlans = async (req, res) => {
     try {
-        const { userId } = req;
-        const response = { current: [], upcoming: [] }
-        const plans = await categoryService.getSubscriptions({ userId: userId, isActive: true });
-        for (const plan of plans) {
-            plan.status = false
-            const days = calculateDaysBetween(new Date(), plan.purchasedDate)
-            if (Number(plan.plan.validity) && days < Number(plan.plan.validity)) {
-                plan.status = true
-            }
-            plan.expireDate = calculateExpirationDate(plan.plan.validity-1, plan.purchasedDate);
-            plan.purchasedDate = plan.purchasedDate.toLocaleDateString()
-        }
-        if (plans.length) {
-            response.current.push(plans[0])
-            plans.shift();
-            response.upcoming = plans
+        const Subscription = require('../models/subscription');
+        let plans = await Subscription.find({ isActive: true }).sort({ price: 1 }).lean();
+        
+        if (!plans || plans.length === 0) {
+            // Seed standard Google Play Monthly & Yearly Subscription Plans
+            const defaultMonthly = await Subscription.create({
+                name: "Monthly Premium Plan",
+                planType: "monthly",
+                productId: "com.thelawmens.monthly",
+                googlePlaySku: "com.thelawmens.monthly",
+                validity: 30,
+                price: 199,
+                discount: 0,
+                description: "Full access to all books, search, comparison and offline features billed monthly.",
+                features: [
+                    "Access to all 125+ Law Books & Schedules",
+                    "Side-by-Side BNS vs IPC & BNSS vs CrPC Comparison",
+                    "Full Offline Access & Local Search",
+                    "No Ads & Unlimited Bookmarks"
+                ]
+            });
+
+            const defaultYearly = await Subscription.create({
+                name: "Yearly Premium Pass (Save 35%)",
+                planType: "yearly",
+                productId: "com.thelawmens.yearly",
+                googlePlaySku: "com.thelawmens.yearly",
+                validity: 365,
+                price: 1499,
+                discount: 35,
+                description: "Best Value: Unrestricted annual access with priority legal updates and offline downloads.",
+                features: [
+                    "Everything in Monthly Plan",
+                    "Save over 35% compared to Monthly Billing",
+                    "Priority Customer & Legal Query Support",
+                    "Unlimited PDF Exports & Offline Data Sync"
+                ]
+            });
+
+            plans = [defaultMonthly.toObject(), defaultYearly.toObject()];
         }
 
-        return sendResponse(res, true, 200, 'User plans', response);
+        return sendResponse(res, true, 200, 'Subscription plans retrieved successfully.', plans);
     } catch (error) {
-        errorHandler(error, res);
+        return errorHandler(error, res);
     }
-}
-module.exports = { addEndUse, getEndUses, planSubscribe, userPlans };
+};
+
+const verifyGooglePlaySubscription = async (req, res) => {
+    try {
+        const { userId } = req;
+        const { purchaseToken, productId, orderId, packageName } = req.body;
+
+        if (!purchaseToken || !productId) {
+            return sendResponse(res, false, 400, 'purchaseToken and productId are required.');
+        }
+
+        const Subscription = require('../models/subscription');
+        const User = require('../models/user');
+        const SubscriptionHistory = require('../models/subscriptionHistory');
+
+        // Find plan details matching product ID
+        let plan = await Subscription.findOne({ productId: productId });
+        if (!plan) {
+            // Fallback matching by planType (monthly vs yearly)
+            const isYearly = productId.includes('yearly') || productId.includes('annual');
+            plan = await Subscription.findOne({ planType: isYearly ? 'yearly' : 'monthly' });
+        }
+
+        const validityDays = plan ? plan.validity : (productId.includes('yearly') ? 365 : 30);
+        const purchaseDate = new Date();
+        const expiryDate = new Date(Date.now() + validityDays * 24 * 60 * 60 * 1000);
+
+        // Update User Premium Status
+        const user = await User.findById(userId);
+        if (!user) return sendResponse(res, false, 404, 'User not found.');
+
+        user.isPremium = true;
+        user.premiumPurchaseDate = purchaseDate;
+        user.trialEndDate = expiryDate;
+        user.premiumPaymentId = orderId || purchaseToken;
+        if (plan) user.subscriptionId = plan._id;
+        await user.save();
+
+        // Log Subscription History
+        await SubscriptionHistory.create({
+            userId: user._id,
+            plan: plan ? plan.toObject() : { name: "Google Play Subscription", validity: validityDays, price: isYearly ? 1499 : 199 },
+            purchasedDate: purchaseDate,
+            isActive: true
+        });
+
+        return sendResponse(res, true, 200, 'Google Play Subscription verified & Premium activated successfully.', {
+            isPremium: true,
+            purchaseDate,
+            expiryDate,
+            validityDays
+        });
+    } catch (error) {
+        return errorHandler(error, res);
+    }
+};
+
+const getSubscriptionStatus = async (req, res) => {
+    try {
+        const { profile } = req;
+        const isPremium = profile?.isPremium === true;
+        const expiryDate = profile?.trialEndDate ? new Date(profile.trialEndDate) : null;
+        const isExpired = expiryDate ? new Date() > expiryDate : false;
+        
+        let daysRemaining = 0;
+        if (expiryDate && !isExpired) {
+            daysRemaining = Math.max(0, Math.ceil((expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+        }
+
+        return sendResponse(res, true, 200, 'Subscription status retrieved.', {
+            isPremium: isPremium && !isExpired,
+            expiryDate,
+            daysRemaining,
+            isTrialUsed: profile?.isTrialUsed || false
+        });
+    } catch (error) {
+        return errorHandler(error, res);
+    }
+};
+
+module.exports = { 
+    addEndUse, 
+    getEndUses, 
+    planSubscribe, 
+    userPlans,
+    getAvailablePlans,
+    verifyGooglePlaySubscription,
+    getSubscriptionStatus
+};
