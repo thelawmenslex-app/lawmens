@@ -165,16 +165,39 @@ const getSubscriptionStatus = async (req, res) => {
         const isExpired = expiryDate ? new Date() > expiryDate : false;
         
         let daysRemaining = 0;
-        if (expiryDate && !isExpired) {
-            daysRemaining = Math.max(0, Math.ceil((expiryDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
-        }
-
         return sendResponse(res, true, 200, 'Subscription status retrieved.', {
             isPremium: isPremium && !isExpired,
             expiryDate,
             daysRemaining,
             isTrialUsed: profile?.isTrialUsed || false
         });
+    } catch (error) {
+        return errorHandler(error, res);
+    }
+};
+
+const userPlans = async (req, res) => {
+    try {
+        const { userId } = req;
+        const categoryService = require('./subscription.service');
+        const response = { current: [], upcoming: [] };
+        const plans = await categoryService.getSubscriptions({ userId: userId, isActive: true });
+        for (const plan of plans) {
+            plan.status = false;
+            const days = calculateDaysBetween(new Date(), plan.purchasedDate);
+            if (Number(plan.plan?.validity) && days < Number(plan.plan.validity)) {
+                plan.status = true;
+            }
+            plan.expireDate = calculateExpirationDate((plan.plan?.validity || 30) - 1, plan.purchasedDate);
+            plan.purchasedDate = plan.purchasedDate ? new Date(plan.purchasedDate).toLocaleDateString() : "";
+        }
+        if (plans.length) {
+            response.current.push(plans[0]);
+            plans.shift();
+            response.upcoming = plans;
+        }
+
+        return sendResponse(res, true, 200, 'User plans', response);
     } catch (error) {
         return errorHandler(error, res);
     }
