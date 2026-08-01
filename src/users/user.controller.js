@@ -305,35 +305,56 @@ const addBookMarks = async (req, res) => {
 const googleLogin = async (req, res) => {
     try {
         const { body: data } = req;
-        const checkUser = await userService.getUser({ email: data.email })
+        if (!data || !data.email) {
+            return sendResponse(res, false, 400, 'Google account email is required.');
+        }
+
+        const checkUser = await userService.getUser({ email: data.email });
         if (checkUser) {
-            checkUser.token = generateToken({ id: checkUser._id });
-            delete checkUser?.password;
-            delete checkUser?.createdAt;
-            delete checkUser?.updatedAt;
-            delete checkUser?.otp;
-            delete checkUser?.isActive;
-            delete checkUser?.otpCreatedOn;
-            delete checkUser?.bookMarks
-            return sendResponse(res, true, 200, 'Login successfull.', checkUser);
-        } else {
-            const user = await userService.createUser(data);
-            const token = generateToken({ id: user._id });
+            const deviceId = data.deviceId || `device_${Date.now()}`;
+            await userService.updateUser({ _id: checkUser._id }, { currentDeviceId: deviceId });
+            const token = generateToken({ id: checkUser._id, deviceId: deviceId });
+
             const response = {
-                "firstName": user.firstName,
-                "lastName": user?.lastName,
-                "password": user?.password,
-                "email": user.email,
-                "phoneNumber": user?.phoneNumber,
-                "_id": user._id,
+                firstName: checkUser.firstName || data.firstName || 'User',
+                lastName: checkUser.lastName || data.lastName || '',
+                email: checkUser.email,
+                phoneNumber: checkUser.phoneNumber || '',
+                _id: checkUser._id,
                 token: token
-            }
+            };
+
+            return sendResponse(res, true, 200, 'Login successfull.', response);
+        } else {
+            // Auto-create account for new Google Sign-In user
+            const payload = {
+                firstName: data.firstName || 'User',
+                lastName: data.lastName || '',
+                email: data.email,
+                password: await encryptPassword(`google_${Date.now()}_${Math.random()}`),
+                isActive: true
+            };
+
+            const user = await userService.createUser(payload);
+            const deviceId = data.deviceId || `device_${Date.now()}`;
+            await userService.updateUser({ _id: user._id }, { currentDeviceId: deviceId });
+            const token = generateToken({ id: user._id, deviceId: deviceId });
+
+            const response = {
+                firstName: user.firstName,
+                lastName: user.lastName || '',
+                email: user.email,
+                phoneNumber: user.phoneNumber || '',
+                _id: user._id,
+                token: token
+            };
+
             return sendResponse(res, true, 200, 'Login successfull.', response);
         }
     } catch (error) {
         return errorHandler(error, res);
     }
-}
+};
 const getPrivacyPolicy = async (req, res) => {
     try {
         const cms = await userService.getcms()
