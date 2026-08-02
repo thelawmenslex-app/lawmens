@@ -27,6 +27,7 @@ const Sidebar = () => {
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
     { name: 'Users', path: '/users', icon: Users },
+    { name: 'Subscription Plans', path: '/plans', icon: Scale },
     { name: 'Payments', path: '/payments', icon: CreditCard },
     { name: 'Import Books', path: '/books', icon: BookOpen },
     { name: 'Content CRUD', path: '/content', icon: FileText },

@@ -9,6 +9,7 @@ import Content from './pages/Content';
 import PromoOffers from './pages/PromoOffers';
 import Notifications from './pages/Notifications';
 import Settings from './pages/Settings';
+import SubscriptionPlans from './pages/SubscriptionPlans';
 import AuditLogs from './pages/AuditLogs';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -59,6 +60,13 @@ function App() {
           <ProtectedRoute>
             <AdminLayout>
               <Users />
+            </AdminLayout>
+          </ProtectedRoute>
+        } />
+        <Route path="/plans" element={
+          <ProtectedRoute>
+            <AdminLayout>
+              <SubscriptionPlans />
             </AdminLayout>
           </ProtectedRoute>
         } />
