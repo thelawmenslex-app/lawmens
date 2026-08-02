@@ -164,16 +164,37 @@ const verifyGooglePlaySubscription = async (req, res) => {
 const getSubscriptionStatus = async (req, res) => {
     try {
         const { profile } = req;
+        const SubscriptionHistory = require('../models/subscriptionHistory');
+        const Subscription = require('../models/subscription');
+
         const isPremium = profile?.isPremium === true;
-        const expiryDate = profile?.trialEndDate ? new Date(profile.trialEndDate) : null;
-        const isExpired = expiryDate ? new Date() > expiryDate : false;
+        const createdAt = profile?.createdAt ? new Date(profile.createdAt) : new Date();
+        const fallbackTrialEnd = new Date(createdAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+        const expiryDate = profile?.trialEndDate ? new Date(profile.trialEndDate) : fallbackTrialEnd;
         
-        let daysRemaining = 0;
+        const now = new Date();
+        const isExpired = now > expiryDate;
+        const daysRemaining = !isExpired ? Math.max(0, Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0;
+
+        let activePlan = null;
+        if (profile?.subscriptionId) {
+            activePlan = await Subscription.findById(profile.subscriptionId).lean();
+        }
+
+        const history = await SubscriptionHistory.find({ userId: profile._id }).sort({ createdAt: -1 }).lean();
+
         return sendResponse(res, true, 200, 'Subscription status retrieved.', {
             isPremium: isPremium && !isExpired,
-            expiryDate,
-            daysRemaining,
-            isTrialUsed: profile?.isTrialUsed || false
+            isExpired: isExpired,
+            purchasedDate: profile?.premiumPurchaseDate || profile?.createdAt,
+            expiryDate: expiryDate,
+            daysRemaining: daysRemaining,
+            paymentId: profile?.premiumPaymentId || "FREE_TRIAL",
+            planName: activePlan ? activePlan.name : (isPremium ? "Premium License" : "7-Day Free Trial"),
+            planPrice: activePlan ? activePlan.price : 0,
+            validityDays: activePlan ? activePlan.validity : 7,
+            planType: activePlan ? activePlan.planType : "trial",
+            history: history
         });
     } catch (error) {
         return errorHandler(error, res);
