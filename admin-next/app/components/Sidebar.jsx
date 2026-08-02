@@ -17,7 +17,8 @@ import {
   X,
   ClipboardList,
   FormInput,
-  MessageSquare
+  MessageSquare,
+  Tag
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, onClose }) => {
