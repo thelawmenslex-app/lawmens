@@ -3,13 +3,42 @@ const axios = require('axios');
 const Sib = require('sib-api-v3-sdk');
 
 /**
- * Send Signup OTP & Email Verification via Firebase Auth, Nodemailer, or Brevo
+ * Send Signup OTP & Transactional Email via Resend.com API, Nodemailer, or Brevo
  */
 const sendEmail = async (sendTo, htmlContent, subject, content, attachment, status) => {
     try {
         const recipientEmail = Array.isArray(sendTo) ? (sendTo[0]?.email || sendTo[0]) : sendTo;
 
-        // 1. Send via Nodemailer SMTP if credentials configured in environment
+        // 1. Send via Resend.com API (Primary Provider)
+        const resendApiKey = process.env.RESEND_API_KEY || (process.env.EMAILSECRET && process.env.EMAILSECRET.startsWith('re_') ? process.env.EMAILSECRET : null);
+        
+        if (resendApiKey) {
+            const senderEmail = process.env.RESEND_FROM_EMAIL || "THE-LAWMEN'S <onboarding@resend.dev>";
+            try {
+                const response = await axios.post(
+                    'https://api.resend.com/emails',
+                    {
+                        from: senderEmail,
+                        to: [recipientEmail],
+                        subject: subject || "OTP Verification - THE-LAWMEN'S",
+                        html: htmlContent
+                    },
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${resendApiKey}`,
+                            'Content-Type': 'application/json'
+                        },
+                        timeout: 10000
+                    }
+                );
+                console.log('[Resend Email Service] Sent OTP email successfully via Resend. ID:', response.data?.id);
+                return response.data;
+            } catch (resendErr) {
+                console.warn('[Resend API Error]:', resendErr?.response?.data || resendErr?.message);
+            }
+        }
+
+        // 2. Send via Nodemailer SMTP if credentials configured in environment
         if (process.env.SMTP_USER && process.env.SMTP_PASS) {
             try {
                 const transporter = nodemailer.createTransport({
@@ -37,8 +66,8 @@ const sendEmail = async (sendTo, htmlContent, subject, content, attachment, stat
             }
         }
 
-        // 2. Send via Brevo API v3 if a valid non-placeholder API key is configured
-        const apiKey = process.env.BREVO_API_KEY || process.env.SENDINBLUE_API_KEY || process.env.SIB_API_KEY || (process.env.EMAILSECRET && process.env.EMAILSECRET.length > 20 ? process.env.EMAILSECRET : null);
+        // 3. Send via Brevo API v3 if a valid non-placeholder API key is configured
+        const apiKey = process.env.BREVO_API_KEY || process.env.SENDINBLUE_API_KEY || process.env.SIB_API_KEY;
 
         if (apiKey && apiKey !== 'emailsecretkey') {
             const senderName = process.env.BREVO_SENDER_NAME || "THE-LAWMEN'S";
@@ -67,54 +96,7 @@ const sendEmail = async (sendTo, htmlContent, subject, content, attachment, stat
             }
         }
 
-        // 3. Send via Firebase Auth Identity Toolkit API
-        const firebaseApiKey = process.env.FIREBASE_WEB_API_KEY || "AIzaSyBLc-ePPiNr5XhQSHKV0GdArM-BYMM0VhI";
-        if (firebaseApiKey) {
-            try {
-                let idToken = null;
-                try {
-                    const signUpRes = await axios.post(
-                        `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${firebaseApiKey}`,
-                        {
-                            email: recipientEmail,
-                            password: `TempP@ss_${Date.now()}`,
-                            returnSecureToken: true
-                        },
-                        { timeout: 5000 }
-                    );
-                    idToken = signUpRes.data?.idToken;
-                } catch (signUpErr) {
-                    const resetRes = await axios.post(
-                        `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${firebaseApiKey}`,
-                        {
-                            requestType: "PASSWORD_RESET",
-                            email: recipientEmail
-                        },
-                        { timeout: 5000 }
-                    );
-                    console.log('[Firebase Auth Email] Sent Email Verification via Firebase:', resetRes.data);
-                    return resetRes.data;
-                }
-
-                if (idToken) {
-                    const verifyRes = await axios.post(
-                        `https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${firebaseApiKey}`,
-                        {
-                            requestType: "VERIFY_EMAIL",
-                            idToken: idToken
-                        },
-                        { timeout: 5000 }
-                    );
-                    console.log('[Firebase Auth Email] Sent verification email via Firebase:', verifyRes.data);
-                    return verifyRes.data;
-                }
-            } catch (fbErr) {
-                console.warn('[Firebase Auth Email Notice]:', fbErr?.response?.data?.error?.message || fbErr?.message);
-            }
-        }
-
-        console.warn('[Email Service Notice] No active email credentials (SMTP/Brevo/Firebase) succeeded.');
-        return { status: false, message: 'No live email credentials configured' };
+        console.warn('[Email Service Notice] No active email credentials (Resend/SMTP/Brevo) succeeded.');
         return { status: false, message: 'No live email credentials configured' };
     } catch (error) {
         console.error('[Email Service Error]:', error?.message);
