@@ -13,7 +13,7 @@ const sendEmail = async (sendTo, htmlContent, subject, content, attachment, stat
         const resendApiKey = process.env.RESEND_API_KEY || (process.env.EMAILSECRET && process.env.EMAILSECRET.startsWith('re_') ? process.env.EMAILSECRET : null);
         
         if (resendApiKey) {
-            const senderEmail = process.env.RESEND_FROM_EMAIL || "THE-LAWMEN'S <onboarding@resend.dev>";
+            const senderEmail = process.env.RESEND_FROM_EMAIL || "THE-LAWMEN'S <noreply@the-lawmens.com>";
             try {
                 const response = await axios.post(
                     'https://api.resend.com/emails',
