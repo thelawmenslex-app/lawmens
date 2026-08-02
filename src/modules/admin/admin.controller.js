@@ -449,6 +449,58 @@ const manualSubscribe = async (req, res) => {
     }
 };
 
+// Subscription Plans Management for Admin
+const getAllSubscriptionPlans = async (req, res) => {
+    try {
+        const plans = await Subscription.find({}).sort({ price: 1 }).lean();
+        return sendResponse(res, true, 200, 'Subscription plans fetched.', plans);
+    } catch (error) {
+        return errorHandler(error, res);
+    }
+};
+
+const updateSubscriptionPlan = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updateFields = req.body;
+        
+        const plan = await Subscription.findByIdAndUpdate(id, updateFields, { new: true });
+        if (!plan) {
+            return sendResponse(res, false, 404, 'Subscription plan not found.');
+        }
+
+        // Log audit event
+        await AuditLog.create({
+            userId: req.userId,
+            action: 'update_subscription_plan',
+            details: { planId: id, updatedFields: updateFields },
+            ipAddress: req.ip
+        });
+
+        return sendResponse(res, true, 200, 'Subscription plan updated successfully.', plan);
+    } catch (error) {
+        return errorHandler(error, res);
+    }
+};
+
+const createSubscriptionPlan = async (req, res) => {
+    try {
+        const planData = req.body;
+        const plan = await Subscription.create(planData);
+
+        await AuditLog.create({
+            userId: req.userId,
+            action: 'create_subscription_plan',
+            details: { planId: plan._id, planData },
+            ipAddress: req.ip
+        });
+
+        return sendResponse(res, true, 200, 'Subscription plan created successfully.', plan);
+    } catch (error) {
+        return errorHandler(error, res);
+    }
+};
+
 // Cancel Subscription
 const cancelSubscription = async (req, res) => {
     try {
@@ -2399,5 +2451,8 @@ module.exports = {
     getAdminQueries,
     replyUserQuery,
     updateAdminSelfProfile,
-    createAdminUser
+    createAdminUser,
+    getAllSubscriptionPlans,
+    updateSubscriptionPlan,
+    createSubscriptionPlan
 };

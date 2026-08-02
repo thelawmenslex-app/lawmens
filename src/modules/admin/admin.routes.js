@@ -39,6 +39,9 @@ router.post('/users/:userId/force-logout', checkRole(['Admin', 'Super Admin']), 
 router.get('/payments', checkRole(['Admin', 'Super Admin', 'Finance Manager']), adminController.getPayments);
 router.post('/payments/manual', checkRole(['Admin', 'Super Admin', 'Finance Manager']), adminController.manualSubscribe);
 router.put('/payments/cancel', checkRole(['Admin', 'Super Admin', 'Finance Manager']), adminController.cancelSubscription);
+router.get('/subscriptions', checkRole(['Admin', 'Super Admin', 'Finance Manager']), adminController.getAllSubscriptionPlans);
+router.put('/subscriptions/:id', checkRole(['Admin', 'Super Admin', 'Finance Manager']), adminController.updateSubscriptionPlan);
+router.post('/subscriptions', checkRole(['Admin', 'Super Admin', 'Finance Manager']), adminController.createSubscriptionPlan);
 
 // Law Book upload & validation imports
 router.post('/books/upload', checkRole(['Admin', 'Super Admin', 'Editor']), upload.single('bookFile'), adminController.uploadBook);

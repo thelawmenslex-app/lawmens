@@ -66,7 +66,9 @@ const getAvailablePlans = async (req, res) => {
                 googlePlaySku: "com.thelawmens.monthly",
                 validity: 30,
                 price: 199,
-                discount: 0,
+                strikePrice: 399,
+                offerText: "SPECIAL OFFER • 50% OFF",
+                discount: 50,
                 description: "Full access to all books, search, comparison and offline features billed monthly.",
                 features: [
                     "Access to all 125+ Law Books & Schedules",
@@ -77,17 +79,19 @@ const getAvailablePlans = async (req, res) => {
             });
 
             const defaultYearly = await Subscription.create({
-                name: "Yearly Premium Pass (Save 35%)",
+                name: "Yearly Premium Pass (Save 50%)",
                 planType: "yearly",
                 productId: "com.thelawmens.yearly",
                 googlePlaySku: "com.thelawmens.yearly",
                 validity: 365,
                 price: 1499,
-                discount: 35,
+                strikePrice: 2999,
+                offerText: "🔥 EXCLUSIVE OFFER • SAVE 50%",
+                discount: 50,
                 description: "Best Value: Unrestricted annual access with priority legal updates and offline downloads.",
                 features: [
                     "Everything in Monthly Plan",
-                    "Save over 35% compared to Monthly Billing",
+                    "Save over 50% compared to Regular Billing",
                     "Priority Customer & Legal Query Support",
                     "Unlimited PDF Exports & Offline Data Sync"
                 ]

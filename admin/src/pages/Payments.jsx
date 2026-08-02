@@ -38,11 +38,24 @@ const Payments = () => {
 
   const fetchPlans = async () => {
     try {
-      const response = await axios.get('/api/v1/subscription', {
+      const response = await axios.get('/api/v1/subscription/plans', {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (response.data.status) {
         setPlans(response.data.data);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const updatePlan = async (planId, updateData) => {
+    try {
+      const response = await axios.put(`/api/v1/admin/subscriptions/${planId}`, updateData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.data.status) {
+        fetchPlans();
       }
     } catch (err) {
       console.error(err);
@@ -98,8 +111,8 @@ const Payments = () => {
       {/* Header action panel */}
       <div className="flex justify-between items-center bg-white border border-slate-200 p-6 rounded-xl shadow-sm">
         <div>
-          <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Revenue Operations</h3>
-          <p className="text-xs text-slate-400 mt-1">Manage active premium subscription licenses and payment allocations.</p>
+          <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">Revenue Operations & Pricing</h3>
+          <p className="text-xs text-slate-400 mt-1">Manage active premium subscription prices, strikeout prices, exclusive offers, and manual allocations.</p>
         </div>
         <button
           onClick={() => setIsGrantModalOpen(true)}
@@ -108,6 +121,73 @@ const Payments = () => {
           <PlusCircle className="h-5 w-5" />
           <span>Allocate Manual Plan</span>
         </button>
+      </div>
+
+      {/* Subscription Plans Pricing & Exclusive Offers Manager */}
+      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+          <div>
+            <h4 className="text-base font-bold text-slate-800">Monthly & Yearly Subscription Plans</h4>
+            <p className="text-xs text-slate-400">Configure selling prices, strikeout prices, and exclusive offer badges displayed in the mobile app.</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {plans.map((p) => (
+            <div key={p._id} className="border border-slate-200 rounded-xl p-5 bg-slate-50/50 hover:border-slate-300 space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-extrabold uppercase tracking-wider px-3 py-1 rounded-full bg-blue-100 text-blue-700">
+                  {p.planType === 'yearly' ? 'Yearly Pass' : 'Monthly Pass'}
+                </span>
+                <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${p.isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'}`}>
+                  {p.isActive ? 'Active' : 'Inactive'}
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1">Plan Title</label>
+                <input
+                  type="text"
+                  defaultValue={p.name}
+                  onBlur={(e) => updatePlan(p._id, { name: e.target.value })}
+                  className="w-full text-sm font-bold text-slate-800 bg-white border border-slate-200 rounded-lg px-3 py-1.5"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">Selling Price (₹)</label>
+                  <input
+                    type="number"
+                    defaultValue={p.price}
+                    onBlur={(e) => updatePlan(p._id, { price: Number(e.target.value) })}
+                    className="w-full text-sm font-bold text-emerald-600 bg-white border border-slate-200 rounded-lg px-3 py-1.5"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 mb-1">Strike Price (~~₹~~)</label>
+                  <input
+                    type="number"
+                    defaultValue={p.strikePrice || 0}
+                    onBlur={(e) => updatePlan(p._id, { strikePrice: Number(e.target.value) })}
+                    className="w-full text-sm font-bold text-slate-400 bg-white border border-slate-200 rounded-lg px-3 py-1.5"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1">Exclusive Offer Text Badge</label>
+                <input
+                  type="text"
+                  placeholder="e.g. 🔥 EXCLUSIVE OFFER • 50% OFF"
+                  defaultValue={p.offerText || ''}
+                  onBlur={(e) => updatePlan(p._id, { offerText: e.target.value })}
+                  className="w-full text-xs font-semibold text-blue-600 bg-white border border-slate-200 rounded-lg px-3 py-1.5"
+                />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Payments Logs List */}
