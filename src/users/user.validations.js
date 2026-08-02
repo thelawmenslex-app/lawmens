@@ -4,32 +4,24 @@ const register = joi
         body: joi.object({
             firstName: joi
                 .string()
-                .regex(/^[A-Za-z\s]+$/)
+                .trim()
                 .required(),
             lastName: joi
                 .string()
-                .regex(/^[A-Za-z\s]+$/)
+                .trim()
+                .allow('', null)
                 .optional(),
             phoneNumber: joi
                 .string()
-                .regex(/^(?:(?:\+|0{0,2})91(\s*[-]\s*)?|[0]?)?[6789]\d{9}$/)
-                .length(10)
                 .trim()
-                .required()
-                .error(new Error('Valid phone number only allowed')),
+                .required(),
             email: joi
                 .string()
-                .email({
-                    minDomainSegments: 2,
-                    tlds: {
-                        allow: ['com', 'net', 'in', 'co', 'org', 'guru', 'etc', 'info'],
-                    },
-                })
-                .strict()
+                .email()
                 .trim()
                 .required(),
             password: joi.string().required(),
-            professionId:joi.string().optional()
+            professionId: joi.string().allow('', null).optional()
         }),
     })
     .unknown(true);
@@ -91,31 +83,23 @@ const profile = joi
         body: joi.object({
             firstName: joi
                 .string()
-                .regex(/^[A-Za-z\s]+$/)
+                .trim()
                 .optional(),
             lastName: joi
                 .string()
-                .regex(/^[A-Za-z\s]+$/)
+                .trim()
+                .allow('', null)
                 .optional(),
             phoneNumber: joi
                 .string()
-                .regex(/^(?:(?:\+|0{0,2})91(\s*[-]\s*)?|[0]?)?[6789]\d{9}$/)
-                .length(10)
-                .trim()
-                .optional()
-                .error(new Error('Valid phone number only allowed')),
-            email: joi
-                .string()
-                .email({
-                    minDomainSegments: 2,
-                    tlds: {
-                        allow: ['com', 'net', 'in', 'co', 'org', 'guru', 'etc', 'info'],
-                    },
-                })
-                .strict()
                 .trim()
                 .optional(),
-            professionId:joi.string().optional()
+            email: joi
+                .string()
+                .email()
+                .trim()
+                .optional(),
+            professionId: joi.string().allow('', null).optional()
         }),
     })
     .unknown(true);
