@@ -41,6 +41,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     { name: 'Users', path: '/users', icon: Users },
     { name: 'Signup Builder', path: '/signup-config', icon: FormInput },
     { name: 'User Queries', path: '/queries', icon: MessageSquare },
+    { name: 'Subscription Plans', path: '/plans', icon: Tag },
     { name: 'Payments', path: '/payments', icon: CreditCard },
     { name: 'Import Books', path: '/books', icon: BookOpen },
     { name: 'Content CRUD', path: '/content', icon: FileText },
