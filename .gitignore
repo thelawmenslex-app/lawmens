@@ -1,2 +1,10 @@
 .env
-node_modules
+.env.local
+node_modules/
+admin/
+admin-next/
+scratch/
+*.pdf
+public/*.pdf
+public/schedule-pdfs/
+public/uploads/minor-acts/
