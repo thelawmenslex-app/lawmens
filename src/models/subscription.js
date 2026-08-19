@@ -1,1 +1,25 @@
-1;const s=function(t,e){const{xScale:i,yScale:s}=t;return i&&s?{left:Wi(i,e,"left"),right:Wi(i,e,"right"),top:Wi(s,e,"top"),bottom:Wi(s,e,"bottom")}:e}(e,t.chartArea);return{left:!1===i.left?0:s.left-(!0===i.left?0:i.left),right:!1===i.right?t.width:s.right+(!0===i.right?0:i.right),top:!1===i.top?0:s.top-(!0===i.top?0:i.top),bottom:!1===i.bottom?t.height:s.bottom+(!0===i.bottom?0:i.bottom)}}var Hi=Object.freeze({__proto__:null,HALF_PI:E,INFINITY:T,PI:C,PITAU:A,QUARTER_PI:R,RAD_PER_DEG:L,TAU:O,TWO_THIRDS_PI:I,_addGrace:Di,_alignPixel:Ae,_alignStartEnd:ft,_angleBetween:J,_angleDiff:K,_arrayUnique:lt,_attachContext:$e,_bezierCurveTo:Ve,_bezierInterpolation:mi,_boundSegment:Ri,_boundSegments:Ii,_capitalize:w,_computeSegments:zi,_createResolver:je,_decimalPlaces:U,_deprecated:function(t,e,i,s){void 0!==e&&console.warn(t+': "'+i+'" is deprecated. Please use "'+s+'" instead')},_descriptors:Ye,_elementsEqual:f,_factorize:W,_filterBetween:nt,_getParentNode:ge,_getStartAndCountOfVisiblePoints:pt,_int16Range:Q,_isBetween:tt,_isClickEvent:D,_isDomSupported:fe,_isPointInArea:Re,_limitValue:Z,_longestText:Oe,_lookup:et,_lookupByKey:it,_measureText:Ce,_merger:m,_mergerIf:_,_normalizeAngle:G,_parseObjectDataRadialScale:ii,_pointInLine:gi,_readValueToProps:vi,_rloo
+const { Schema, model } = require('mongoose');
+const { SUBSCRIPTION } = require('../../utils/constants');
+const categorySchema = Schema(
+    {
+        name: { type: String, required: true },
+        planType: { type: String, enum: ['monthly', 'yearly', 'lifetime', 'custom'], default: 'monthly' },
+        productId: { type: String, default: 'com.thelawmens.monthly' },
+        googlePlaySku: { type: String, default: 'com.thelawmens.monthly' },
+        validity: { type: Number, required: true }, // Validity in days (30 or 365)
+        count: { type: Number, default: 1 },
+        price: { type: Number, required: true }, // Active Selling Amount in INR
+        strikePrice: { type: Number, default: 0 }, // Strikethrough / Original price before discount
+        offerText: { type: String, default: '' }, // Exclusive offer text badge (e.g. "🔥 EXCLUSIVE OFFER • 50% OFF")
+        isOfferActive: { type: Boolean, default: true },
+        discount: { type: Number, default: 0 },
+        description: { type: String },
+        features: [{ type: String }],
+        isActive: { type: Boolean, default: true },
+    },
+    {
+        timestamps: true,
+        versionKey: false,
+    },
+);
+module.exports = model(SUBSCRIPTION, categorySchema);
