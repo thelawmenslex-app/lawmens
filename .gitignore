@@ -1,8 +1,8 @@
 .env
 .env.local
 node_modules/
-admin/
-admin-next/
+/admin/
+/admin-next/
 scratch/
 *.pdf
 public/*.pdf

@@ -57,7 +57,7 @@ app.get("/", (req, res) => {
     });
 });
 
-doConnect();
+doConnect(process.env.DBURL);
 subscriptionCron();
 
 const PORT = process.env.PORT || 3000;

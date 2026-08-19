@@ -11,16 +11,28 @@ connection.on('connected', () => {
 });
 
 connection.on('error', (err) => {
-    console.log({ err }, 'Mongoose connection error:');
+    console.error('Mongoose connection error:', err);
 });
 
 connection.on('disconnected', () => {
     console.log('Mongoose disconnected.');
 });
 
-const doConnect = async (DB_URL) => {
-    console.log("DB URL"+DB_URL);
-    return connect(DB_URL, options);
+const doConnect = async (url) => {
+    const mongoUri = url 
+        || process.env.DBURL 
+        || process.env.MONGODB_URL 
+        || process.env.MONGO_URI 
+        || process.env.DB_URL 
+        || process.env.DATABASE_URL 
+        || "mongodb+srv://thelawmenslex_db_user:Lawmens%40lex@cluster0.ddwnq8e.mongodb.net/lawapp?retryWrites=true&w=majority&appName=Cluster0";
+
+    console.log("Connecting to MongoDB URI:", mongoUri.replace(/\/\/[^:]+:[^@]+@/, '//***:***@'));
+    try {
+        return await connect(mongoUri, options);
+    } catch (err) {
+        console.error("MongoDB initial connection error:", err);
+    }
 };
 
 module.exports = {
