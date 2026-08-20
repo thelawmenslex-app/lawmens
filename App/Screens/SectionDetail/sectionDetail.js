@@ -13,11 +13,49 @@ import Feather from 'react-native-vector-icons/Feather';
 import { ApiService } from '../../Services/apiService';
 import mappingData from '../../Assets/Data/comprehensiveMappings.json';
 
+// Admin Portal Synced Rich Clause Parser
+function parseAdminPortalClauses(text) {
+  if (!text) return [];
+
+  let normalized = text
+    .replace(/<p[^>]*>/gi, '')
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/&nbsp;/gi, ' ');
+
+  // Split clauses like (1), (2), (a), (b), (i), (ii), Explanation, Illustration, Provided that
+  normalized = normalized.replace(/(?<!\n)\s*(\(\d+[a-zA-Z]?\))\s*/g, '\n\n$1 ');
+  normalized = normalized.replace(/(?<!\n)\s*(\([a-z]\))\s*/g, '\n\n$1 ');
+  normalized = normalized.replace(/(?<!\n)\s*(\([ivxLCDM]+\))\s*/g, '\n\n$1 ');
+  normalized = normalized.replace(/(?<!\n)\s*(Illustration(\s*\d*|\s*[A-Z])?\s*[.:])/g, '\n\n$1');
+  normalized = normalized.replace(/(?<!\n)\s*(Explanation(\s*\d*)?\s*[.:])/g, '\n\n$1');
+  normalized = normalized.replace(/(?<!\n)\s*(Provided(\s+further)?\s+that)/gi, '\n\n$1');
+
+  const rawBlocks = normalized
+    .split(/\n\s*\n/)
+    .map(b => b.trim())
+    .filter(Boolean);
+
+  return rawBlocks.map(block => {
+    const match = block.match(/^(\(\d+[a-zA-Z]?\)|\([a-z]\)|\([ivxLCDM]+\)|Illustration[^\n.:]*[.:]|Explanation[^\n.:]*[.:]|Provided[^\n.:]*that)\s*(.*)$/i);
+    if (match) {
+      return {
+        clausePrefix: match[1],
+        body: match[2]
+      };
+    }
+    return {
+      clausePrefix: null,
+      body: block
+    };
+  });
+}
+
 export default function SectionDetailScreen({ route, navigation }) {
   const {
-    actTitle = 'Bharatiya Nyaya Sanhita , 2023',
-    actCode = 'BNS',
-    chapterName = 'CHAPTER II - OF PUNISHMENTS',
+    actTitle = 'Bharatiya Nagarik Suraksha Sanhita , 2023',
+    actCode = 'BNSS',
+    chapterName = 'CHAPTER II - CONSTITUTION OF CRIMINAL COURTS AND OFFICES',
     sectionData = {}
   } = route?.params || {};
 
@@ -26,7 +64,7 @@ export default function SectionDetailScreen({ route, navigation }) {
   const secNumber = String(sectionData.name || '1').trim();
   const secTitle = sectionData.keyword || `Section ${secNumber}`;
 
-  // Robust content resolver
+  // Robust content resolver matching Admin Portal
   const fullContent = useMemo(() => {
     const rawParagraphs = (sectionData.content || [])
       .map(c => typeof c === 'string' ? c : c.content)
@@ -66,6 +104,11 @@ export default function SectionDetailScreen({ route, navigation }) {
 
     return `Statutory provisions and legal text for Section ${secNumber}.`;
   }, [sectionData, actCode, secNumber]);
+
+  // Formatted clauses matching Admin Portal
+  const clauses = useMemo(() => {
+    return parseAdminPortalClauses(fullContent);
+  }, [fullContent]);
 
   const handleCopy = () => {
     Alert.alert('Copied', `Section ${secNumber}: ${secTitle} copied to clipboard.`);
@@ -113,7 +156,7 @@ export default function SectionDetailScreen({ route, navigation }) {
         <Text style={styles.cyanChapterSubtitle} numberOfLines={1}>{chapterName}</Text>
       </View>
 
-      {/* 3. SCROLLABLE EXACT STATUTORY LAW CONTENT */}
+      {/* 3. SCROLLABLE STATUTORY LAW CONTENT (Synced with Admin Portal) */}
       <ScrollView
         style={styles.bodyScroll}
         contentContainerStyle={styles.bodyContent}
@@ -130,10 +173,19 @@ export default function SectionDetailScreen({ route, navigation }) {
 
           <View style={styles.cardDivider} />
 
-          {/* Full Statutory Provisions */}
-          <Text style={styles.statutoryText}>
-            {fullContent}
-          </Text>
+          {/* Formatted Clauses Synced with Admin Portal */}
+          {clauses.map((clause, idx) => (
+            <View key={idx} style={styles.clauseParagraph}>
+              <Text style={styles.clauseText}>
+                {clause.clausePrefix ? (
+                  <Text style={styles.clausePrefixText}>
+                    {clause.clausePrefix}{' '}
+                  </Text>
+                ) : null}
+                {clause.body}
+              </Text>
+            </View>
+          ))}
         </View>
       </ScrollView>
 
@@ -276,11 +328,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#F1F5F9',
     marginVertical: 12,
   },
-  statutoryText: {
+  clauseParagraph: {
+    marginBottom: 16,
+  },
+  clauseText: {
     fontSize: 14,
     lineHeight: 23,
     color: '#1E293B',
-    fontWeight: '500',
+    fontWeight: '400',
+  },
+  clausePrefixText: {
+    fontSize: 14.5,
+    fontWeight: '800',
+    color: '#0085CC',
   },
   bottomBarContainer: {
     position: 'absolute',
