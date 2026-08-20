@@ -17,7 +17,18 @@ const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 56) / 3;
 
 export default function HomeScreen({ navigation }) {
-  const [synced, setSynced] = useState(false);
+  const [synced, setSynced] = useState(true);
+
+  useEffect(() => {
+    SyncService.pullLatestChanges();
+  }, []);
+
+  const handleRefreshSync = async () => {
+    setSynced(false);
+    await SyncService.pullLatestChanges();
+    setSynced(true);
+    alert('Synchronized with Admin Portal.');
+  };
   const [drawerVisible, setDrawerVisible] = useState(false);
 
   const criminalLaws = [
@@ -95,7 +106,7 @@ export default function HomeScreen({ navigation }) {
           </View>
           <TouchableOpacity
             style={styles.syncRefreshButton}
-            onPress={() => setSynced(true)}
+            onPress={handleRefreshSync}
             activeOpacity={0.7}
           >
             <Feather name="refresh-cw" size={14} color="#0085CC" />

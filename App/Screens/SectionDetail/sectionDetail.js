@@ -12,6 +12,8 @@ import {
 import Feather from 'react-native-vector-icons/Feather';
 import { ApiService } from '../../Services/apiService';
 import mappingData from '../../Assets/Data/comprehensiveMappings.json';
+import { SyncService } from '../../Services/syncService';
+import { useEffect } from 'react';
 
 // Admin Portal Synced Rich Clause Parser
 function parseAdminPortalClauses(text) {
@@ -60,12 +62,24 @@ export default function SectionDetailScreen({ route, navigation }) {
   } = route?.params || {};
 
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [liveOverrideContent, setLiveOverrideContent] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      const dynamicSec = await SyncService.getDynamicSection(secNumber);
+      if (dynamicSec && dynamicSec.content && dynamicSec.content.length > 0) {
+        const txt = dynamicSec.content.map(c => typeof c === 'string' ? c : c.content).join('\n\n');
+        if (txt) setLiveOverrideContent(txt);
+      }
+    })();
+  }, [secNumber]);
 
   const secNumber = String(sectionData.name || '1').trim();
   const secTitle = sectionData.keyword || `Section ${secNumber}`;
 
   // Robust content resolver matching Admin Portal
   const fullContent = useMemo(() => {
+    if (liveOverrideContent) return liveOverrideContent;
     const rawParagraphs = (sectionData.content || [])
       .map(c => typeof c === 'string' ? c : c.content)
       .filter(Boolean)
