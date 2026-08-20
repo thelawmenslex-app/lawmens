@@ -1,0 +1,20 @@
+# Node modules
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Android
+android/app/build/
+android/.gradle/
+android/build/
+android/app/build/
+*.apk
+*.aab
+
+# Bundle & Cache
+.bundle/
+.idea/
+.vscode/
+.DS_Store
+.expo/
+.metro/

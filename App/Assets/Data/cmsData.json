@@ -1,0 +1,384 @@
+{
+  "cms": [
+    {
+      "_id": {
+        "$oid": "667328c6c4f936facfa709c3"
+      },
+      "type": "about",
+      "content": "Welcome to THE-LAWMEN’S, your go-to mobile application for all things related to Indian law. Whether you're a legal professional, a student, or simply someone interested in the intricacies of the legal system, our app provides a comprehensive and user-friendly platform to access and compare old and new Indian laws.\n\nFeatures:\n\n1. **Comprehensive Law Database**: Access detailed sections of the Indian Penal Code (IPC), Code of Criminal Procedure (CrPC), Indian Evidence Act, and the new laws like Bharatiya Nyaya Sanhita (BNS), Bharatiya Sakshya Adhiniyam (BSA), and Bharatiya Nagarik Suraksha Sanhita (BNSS). Source: Ministry of Home Affairs.\n\n2. **Effective July 1, 2024**: Stay updated with the new laws that come into effect from July 1, 2024. Easily compare the old and new laws to understand the changes and continuities.\n\n3. **Easy Search Functionality**: Use our powerful search feature to find specific sections across both old and new legal codes. For example, searching for \"IPC sec 34\" will also provide its equivalent in the new BNS law.\n\n4. **Detailed Explanations**: Get clear and concise explanations for each section to better understand the legal provisions.\n\n5. **User-Friendly Interface**: Navigate effortlessly through the app with an intuitive design that makes legal information accessible to everyone.\n\n6. **Regular Updates**: Our team ensures that the database is regularly updated to reflect the latest legal developments.",
+      "isActive": true,
+      "createdAt": {
+        "$date": "2024-06-19T18:51:50.729Z"
+      },
+      "updatedAt": {
+        "$date": "2024-06-19T18:51:50.729Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "667b12a43efbb29e45302a56"
+      },
+      "type": "privacy",
+      "content": "Privacy Policy of M/s.THE-LAWMEN’S\n\nIntroduction:\nAt THE-LAWMEN’S, we place a high value on your privacy and are committed to protecting your personal information. This privacy policy outlines how we collect, use, and disclose information from our users.\n\nInformation Collection and Use:\nWe gather information from publicly available sources, including the Ministry of Home Affairs website (source:[https://www.indiacode.nic.in/bitstream/123456789/15289/1/ipc_act.pdf],[https://www.indiacode.nic.in/bitstream/123456789/15351/1/iea_1872.pdf],[https://www.indiacode.nic.in/bitstream/123456789/15272/1/the_code_of_criminal_procedure%2C_1973.pdf][https://www.mha.gov.in/en/commoncontent/new-criminal-laws]), to improve and enhance our services. Your information is utilized to strengthen our support, enrich legal knowledge, and facilitate the implementation of new criminal laws through THE-LAWMEN’S application. This involves comparisons between historical criminal laws (Indian Penal Code 1860, Indian Evidence Act 1872, Criminal Procedure Code 1973) and recent legislations (The Bharatiya Nyaya Sanhita, 2023 [effective 01.07.2024], The Bharatiya Sakshya Adhiniyam 2023 [effective 01.07.2024], and The Bharatiya Nagarik Suraksha Sanhita 2023 [effective 01.07.2024]).\n\nCommitment to Integrity:\nWe want to assure you that we are fully committed to upholding the interests of justice, trust, and safety. All content provided through our application is sourced from the newly published central government major Acts (The Bharatiya Nyaya Sanhita, The Bharatiya Sakshya Adhiniyam, and The Bharatiya Nagarik Suraksha Sanhita) as published in the official central government gazette publication number [Gazette Number]. We adhere to the official publications and legal standards to ensure the accuracy and reliability of the information.\n\nData Security:\nWe employ stringent security measures to safeguard your information from unauthorized access, disclosure, or misuse.\n\nData Sharing and Disclosure:\nWe may disclose your information to government agencies to comply with legal obligations or to protect our rights.\n\nUser Rights and Choices:\nYou have the right to access, correct, or delete your personal information. You can opt-out of marketing communications or the use of cookies by [method].\n\nData Retention and Deletion:\nWe retain your information for [time period] or as required by law. Your information will be deleted upon request or when it is no longer necessary for our purposes.\n\nChildren’s Privacy:\nOur mission and services are designed to promote legal awareness for all, including children, as an integral part of the education system.\n\nChanges to the Privacy Policy:\nWe reserve the right to update this privacy policy. Changes will take effect immediately upon posting.\n\nContact Information:\nFor any questions or concerns regarding this privacy policy, please contact us at ceodesk@thelawmens.com",
+      "isActive": true,
+      "createdAt": {
+        "$date": "2024-06-25T18:55:32.305Z"
+      },
+      "updatedAt": {
+        "$date": "2024-06-25T18:55:32.305Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "667b12a43efbb29e45302a5a"
+      },
+      "type": "disclaimer",
+      "content": "THE-LAWMEN’S is an independent mobile application and is not affiliated with or endorsed by any government agency. The information available on this app is derived from publicly accessible sources, including the Ministry of Home Affairs. - Indian Penal Code (IPC): https://www.indiacode.nic.in/bitstream/123456789/15289/1/ipc_act.pdf - Indian Evidence Act (IEA): https://www.indiacode.nic.in/bitstream/123456789/15351/1/iea_1872.pdf - Code of Criminal Procedure (CrPC): https://www.indiacode.nic.in/bitstream/123456789/15272/1/the_code_of_criminal_procedure%2C_1973.pdf - New Criminal Laws: https://www.mha.gov.in/en/commoncontent/new-criminal-laws It is designed for educational and informational purposes only and aims to assist users in comparing and understanding Indian legal codes, including historical and recent laws. While we strive to provide accurate and up-to-date information, THE-LAWMEN’S does not guarantee the completeness or correctness of the data. Users should consult official legal sources or seek professional legal advice for authoritative guidance.",
+      "isActive": true,
+      "createdAt": {
+        "$date": "2024-06-25T18:55:32.409Z"
+      },
+      "updatedAt": {
+        "$date": "2024-06-25T18:55:32.409Z"
+      }
+    }
+  ],
+  "settings": [
+    {
+      "_id": {
+        "$oid": "66731a718f0035bb107c3e24"
+      },
+      "email": "ceodesk@thelawmens.com",
+      "phoneNumber": "9876543210",
+      "isActive": true,
+      "createdAt": {
+        "$date": "2024-06-19T17:50:41.652Z"
+      },
+      "updatedAt": {
+        "$date": "2024-06-19T17:50:41.652Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "66731b7408f41918de90e3ed"
+      },
+      "email": "admin@yopmail.com",
+      "phoneNumber": "9876543210",
+      "isActive": true,
+      "createdAt": {
+        "$date": "2024-06-19T17:55:00.764Z"
+      },
+      "updatedAt": {
+        "$date": "2024-06-19T17:55:00.764Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "66731df8f88b698c0c1bdd14"
+      },
+      "email": "admin@yopmail.com",
+      "phoneNumber": "9876543210",
+      "isActive": true,
+      "createdAt": {
+        "$date": "2024-06-19T18:05:44.081Z"
+      },
+      "updatedAt": {
+        "$date": "2024-06-19T18:05:44.081Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "66731e14f88b698c0c1bdd1a"
+      },
+      "email": "admin@yopmail.com",
+      "phoneNumber": "9876543210",
+      "isActive": true,
+      "createdAt": {
+        "$date": "2024-06-19T18:06:12.896Z"
+      },
+      "updatedAt": {
+        "$date": "2024-06-19T18:06:12.896Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "66731f7af88b698c0c1bdd1f"
+      },
+      "email": "admin@yopmail.com",
+      "phoneNumber": "9876543210",
+      "isActive": true,
+      "createdAt": {
+        "$date": "2024-06-19T18:12:10.116Z"
+      },
+      "updatedAt": {
+        "$date": "2024-06-19T18:12:10.116Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "66731fd8f88b698c0c1bdd26"
+      },
+      "email": "admin@yopmail.com",
+      "phoneNumber": "9876543210",
+      "isActive": true,
+      "createdAt": {
+        "$date": "2024-06-19T18:13:44.909Z"
+      },
+      "updatedAt": {
+        "$date": "2024-06-19T18:13:44.909Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "66731fe9f88b698c0c1bdd2d"
+      },
+      "email": "admin@yopmail.com",
+      "phoneNumber": "9876543210",
+      "isActive": true,
+      "createdAt": {
+        "$date": "2024-06-19T18:14:01.011Z"
+      },
+      "updatedAt": {
+        "$date": "2024-06-19T18:14:01.011Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "66732051f88b698c0c1bdd32"
+      },
+      "email": "admin@yopmail.com",
+      "phoneNumber": "9876543210",
+      "isActive": true,
+      "createdAt": {
+        "$date": "2024-06-19T18:15:45.637Z"
+      },
+      "updatedAt": {
+        "$date": "2024-06-19T18:15:45.637Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "667320b3f88b698c0c1bdd38"
+      },
+      "email": "admin@yopmail.com",
+      "phoneNumber": "9876543210",
+      "isActive": true,
+      "createdAt": {
+        "$date": "2024-06-19T18:17:23.574Z"
+      },
+      "updatedAt": {
+        "$date": "2024-06-19T18:17:23.574Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "667320cbf88b698c0c1bdd3f"
+      },
+      "email": "admin@yopmail.com",
+      "phoneNumber": "9876543210",
+      "isActive": true,
+      "createdAt": {
+        "$date": "2024-06-19T18:17:47.976Z"
+      },
+      "updatedAt": {
+        "$date": "2024-06-19T18:17:47.976Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "667320daf88b698c0c1bdd46"
+      },
+      "email": "admin@yopmail.com",
+      "phoneNumber": "9876543210",
+      "isActive": true,
+      "createdAt": {
+        "$date": "2024-06-19T18:18:02.476Z"
+      },
+      "updatedAt": {
+        "$date": "2024-06-19T18:18:02.476Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "667320f4f88b698c0c1bdd4c"
+      },
+      "email": "admin@yopmail.com",
+      "phoneNumber": "9876543210",
+      "isActive": true,
+      "createdAt": {
+        "$date": "2024-06-19T18:18:28.084Z"
+      },
+      "updatedAt": {
+        "$date": "2024-06-19T18:18:28.084Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "66732111f88b698c0c1bdd51"
+      },
+      "email": "admin@yopmail.com",
+      "phoneNumber": "9876543210",
+      "isActive": true,
+      "createdAt": {
+        "$date": "2024-06-19T18:18:57.737Z"
+      },
+      "updatedAt": {
+        "$date": "2024-06-19T18:18:57.737Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "66732178f88b698c0c1bdd57"
+      },
+      "email": "admin@yopmail.com",
+      "phoneNumber": "9876543210",
+      "isActive": true,
+      "createdAt": {
+        "$date": "2024-06-19T18:20:40.095Z"
+      },
+      "updatedAt": {
+        "$date": "2024-06-19T18:20:40.095Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "66732193f88b698c0c1bdd5f"
+      },
+      "email": "admin@yopmail.com",
+      "phoneNumber": "9876543210",
+      "isActive": true,
+      "createdAt": {
+        "$date": "2024-06-19T18:21:07.612Z"
+      },
+      "updatedAt": {
+        "$date": "2024-06-19T18:21:07.612Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "66732273f88b698c0c1bdd63"
+      },
+      "email": "admin@yopmail.com",
+      "phoneNumber": "9876543210",
+      "isActive": true,
+      "createdAt": {
+        "$date": "2024-06-19T18:24:51.749Z"
+      },
+      "updatedAt": {
+        "$date": "2024-06-19T18:24:51.749Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "66732311f88b698c0c1bdd71"
+      },
+      "email": "admin@yopmail.com",
+      "phoneNumber": "9876543210",
+      "isActive": true,
+      "createdAt": {
+        "$date": "2024-06-19T18:27:29.246Z"
+      },
+      "updatedAt": {
+        "$date": "2024-06-19T18:27:29.246Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "6673232ef88b698c0c1bdd79"
+      },
+      "email": "admin@yopmail.com",
+      "phoneNumber": "9876543210",
+      "isActive": true,
+      "createdAt": {
+        "$date": "2024-06-19T18:27:58.936Z"
+      },
+      "updatedAt": {
+        "$date": "2024-06-19T18:27:58.936Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "66732455f88b698c0c1bdd7f"
+      },
+      "email": "admin@yopmail.com",
+      "phoneNumber": "9876543210",
+      "isActive": true,
+      "createdAt": {
+        "$date": "2024-06-19T18:32:53.378Z"
+      },
+      "updatedAt": {
+        "$date": "2024-06-19T18:32:53.378Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "66732878f88b698c0c1bdd88"
+      },
+      "email": "admin@yopmail.com",
+      "phoneNumber": "9876543210",
+      "isActive": true,
+      "createdAt": {
+        "$date": "2024-06-19T18:50:32.559Z"
+      },
+      "updatedAt": {
+        "$date": "2024-06-19T18:50:32.559Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "66732880f88b698c0c1bdd8f"
+      },
+      "email": "ceodesk@thelawmens.com",
+      "phoneNumber": "9876543210",
+      "isActive": true,
+      "createdAt": {
+        "$date": "2024-06-19T18:50:40.169Z"
+      },
+      "updatedAt": {
+        "$date": "2024-06-19T18:50:40.169Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "66732920f88b698c0c1bdd95"
+      },
+      "email": "admin@yopmail.com",
+      "phoneNumber": "9876543210",
+      "isActive": true,
+      "createdAt": {
+        "$date": "2024-06-19T18:53:20.332Z"
+      },
+      "updatedAt": {
+        "$date": "2024-06-19T18:53:20.332Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "667329e4f88b698c0c1bdd9e"
+      },
+      "email": "admin@yopmail.com",
+      "phoneNumber": "9876543210",
+      "isActive": true,
+      "createdAt": {
+        "$date": "2024-06-19T18:56:36.304Z"
+      },
+      "updatedAt": {
+        "$date": "2024-06-19T18:56:36.304Z"
+      }
+    },
+    {
+      "_id": {
+        "$oid": "667329f1f88b698c0c1bdda3"
+      },
+      "email": "ceodesk@thelawmens.com",
+      "phoneNumber": "9876543210",
+      "isActive": true,
+      "createdAt": {
+        "$date": "2024-06-19T18:56:49.578Z"
+      },
+      "updatedAt": {
+        "$date": "2024-06-19T18:56:49.578Z"
+      }
+    }
+  ]
+}
