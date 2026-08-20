@@ -1,16 +1,18 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ApiService } from './apiService';
+import { BASE_URL } from '../Actions/constant';
 
 const SYNC_TIMESTAMP_KEY = '@last_sync_timestamp';
 const DYNAMIC_UPDATES_KEY = '@dynamic_casebook_updates';
 
 export const SyncService = {
-  // Pull latest changes from Admin Portal / Backend
+  // Pull latest changes from Admin Portal (https://www.the-lawmens.com/content)
   pullLatestChanges: async () => {
     try {
       const lastSync = await AsyncStorage.getItem(SYNC_TIMESTAMP_KEY);
       const timestamp = lastSync ? parseInt(lastSync, 10) : 0;
 
+      // 1. First attempt sync API
       const res = await ApiService.sync.pull(timestamp);
       if (res && res.status && res.data) {
         const { newSyncTimestamp, changes } = res.data;
@@ -32,6 +34,16 @@ export const SyncService = {
         }
         return { success: true, updatedCount: (changes?.casebooks || []).length };
       }
+
+      // 2. Direct fetch from www.the-lawmens.com API category
+      try {
+        const catRes = await fetch(`${BASE_URL}/category`);
+        const catJson = await catRes.json();
+        if (catJson && catJson.status && catJson.data) {
+          await AsyncStorage.setItem('@live_categories', JSON.stringify(catJson.data));
+        }
+      } catch (err) {}
+
       return { success: true, updatedCount: 0 };
     } catch (e) {
       console.log('Sync error:', e.message);
