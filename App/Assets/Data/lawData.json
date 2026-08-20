@@ -24114,11 +24114,8 @@
           "name": "22",
           "content": [
             {
-              "content": "No content available",
-              "page": 1,
-              "_id": {
-                "$oid": "66844919aef3cbe00ef77c65"
-              }
+              "content": "A confession made by an accused person is irrelevant in a criminal proceeding, if the making of the confession appears to the Court to have been caused by any inducement, threat, coercion or promise having reference to the charge against the accused person, proceeding from a person in authority and sufficient, in the opinion of the Court, to give the accused person grounds which would appear to him reasonable for supposing that by making it he would gain any advantage or avoid any evil of a temporal nature in reference to the proceedings against him.",
+              "page": 1
             }
           ],
           "oldversion": "24",
@@ -24132,11 +24129,8 @@
           "name": "22,1st Prov",
           "content": [
             {
-              "content": "No content available",
-              "page": 1,
-              "_id": {
-                "$oid": "66844919aef3cbe00ef77c67"
-              }
+              "content": "Provided that if such a confession is made after the impression caused by any such inducement, threat, coercion or promise has, in the opinion of the Court, been fully removed, it is relevant.",
+              "page": 1
             }
           ],
           "oldversion": "28",
@@ -24150,11 +24144,8 @@
           "name": "22,2nd Prov",
           "content": [
             {
-              "content": "No content available",
-              "page": 1,
-              "_id": {
-                "$oid": "66844919aef3cbe00ef77c69"
-              }
+              "content": "Provided further that if such a confession is otherwise relevant, it does not become irrelevant merely because it was made under a promise of secrecy, or in consequence of a deception practised on the accused person for the purpose of obtaining it, or when he was drunk, or because it was made in answer to questions which he need not have answered, whatever may have been the form of those questions, or because he was not warned that he was not bound to make such confession, and that evidence of it might be given against him.",
+              "page": 1
             }
           ],
           "oldversion": "29",
@@ -37577,11 +37568,8 @@
           "name": "6",
           "content": [
             {
-              "content": "No content available",
-              "page": 1,
-              "_id": {
-                "$oid": "668449b3aef3cbe00ef7828e"
-              }
+              "content": "Besides the High Courts and the Courts constituted under any law, other than this Sanhita, there shall be, in every State, the following classes of Criminal Courts, namely:—\n(i) Courts of Session;\n(ii) Judicial Magistrates of the first class;\n(iii) Judicial Magistrates of the second class; and\n(iv) Executive Magistrates.",
+              "page": 1
             }
           ],
           "oldversion": "6",
@@ -38672,11 +38660,8 @@
           "name": "62",
           "content": [
             {
-              "content": "No content available",
-              "page": 1,
-              "_id": {
-                "$oid": "668449b3aef3cbe00ef78305"
-              }
+              "content": "No arrest shall be made except in accordance with the provisions of this Sanhita or any other law for the time being in force providing for arrest.",
+              "page": 1
             }
           ],
           "oldversion": "60A",

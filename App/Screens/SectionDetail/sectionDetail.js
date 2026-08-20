@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import { ApiService } from '../../Services/apiService';
+import mappingData from '../../Assets/Data/comprehensiveMappings.json';
 
 export default function SectionDetailScreen({ route, navigation }) {
   const {
@@ -22,9 +23,49 @@ export default function SectionDetailScreen({ route, navigation }) {
 
   const [isBookmarked, setIsBookmarked] = useState(false);
 
-  const secNumber = sectionData.name || '1';
+  const secNumber = String(sectionData.name || '1').trim();
   const secTitle = sectionData.keyword || `Section ${secNumber}`;
-  const paragraphs = sectionData.content || [];
+
+  // Robust content resolver
+  const fullContent = useMemo(() => {
+    const rawParagraphs = (sectionData.content || [])
+      .map(c => typeof c === 'string' ? c : c.content)
+      .filter(Boolean)
+      .filter(t => t.trim() !== 'No content available' && t.trim() !== 'No content');
+
+    if (rawParagraphs.length > 0) {
+      return rawParagraphs.join('\n\n');
+    }
+
+    // Fallback: look up in comprehensive statutory mapping
+    const code = String(actCode || '').toUpperCase();
+    if (code.includes('BNSS')) {
+      const found = (mappingData.crpcToBnss || []).find(x => String(x.newSec).trim() === secNumber);
+      if (found && found.newContent && !found.newContent.includes('No content')) return found.newContent;
+    }
+    if (code.includes('CRPC')) {
+      const found = (mappingData.crpcToBnss || []).find(x => String(x.oldSec).trim() === secNumber);
+      if (found && found.oldContent && !found.oldContent.includes('No content')) return found.oldContent;
+    }
+    if (code.includes('BNS')) {
+      const found = (mappingData.ipcToBns || []).find(x => String(x.newSec).trim() === secNumber);
+      if (found && found.newContent && !found.newContent.includes('No content')) return found.newContent;
+    }
+    if (code.includes('IPC')) {
+      const found = (mappingData.ipcToBns || []).find(x => String(x.oldSec).trim() === secNumber);
+      if (found && found.oldContent && !found.oldContent.includes('No content')) return found.oldContent;
+    }
+    if (code.includes('BSA')) {
+      const found = (mappingData.ieaToBsa || []).find(x => String(x.newSec).trim() === secNumber);
+      if (found && found.newContent && !found.newContent.includes('No content')) return found.newContent;
+    }
+    if (code.includes('IEA')) {
+      const found = (mappingData.ieaToBsa || []).find(x => String(x.oldSec).trim() === secNumber);
+      if (found && found.oldContent && !found.oldContent.includes('No content')) return found.oldContent;
+    }
+
+    return `Statutory provisions and legal text for Section ${secNumber}.`;
+  }, [sectionData, actCode, secNumber]);
 
   const handleCopy = () => {
     Alert.alert('Copied', `Section ${secNumber}: ${secTitle} copied to clipboard.`);
@@ -37,16 +78,15 @@ export default function SectionDetailScreen({ route, navigation }) {
       actTitle: actTitle,
       secName: secNumber,
       title: secTitle,
-      desc: paragraphs[0]?.content || ''
+      desc: fullContent.substring(0, 120)
     });
     Alert.alert('Bookmark', isBookmarked ? 'Bookmark removed.' : 'Section bookmarked successfully.');
   };
 
   const handleShare = async () => {
     try {
-      const fullText = paragraphs.map(p => p.content).join('\n\n');
       await Share.share({
-        message: `${actTitle}\n${chapterName}\n\nSection ${secNumber}: ${secTitle}\n\n${fullText}\n\nDownload THE-LAWMEN'S app for full legal access.`
+        message: `${actTitle}\n${chapterName}\n\nSection ${secNumber}: ${secTitle}\n\n${fullContent}\n\nDownload THE-LAWMEN'S app for full legal access.`
       });
     } catch (e) {}
   };
@@ -91,19 +131,9 @@ export default function SectionDetailScreen({ route, navigation }) {
           <View style={styles.cardDivider} />
 
           {/* Full Statutory Provisions */}
-          {paragraphs.length > 0 ? (
-            paragraphs.map((item, idx) => (
-              <View key={idx} style={styles.paragraphBlock}>
-                <Text style={styles.statutoryText}>
-                  {item.content}
-                </Text>
-              </View>
-            ))
-          ) : (
-            <Text style={styles.statutoryText}>
-              Statutory provisions and legal text for Section {secNumber}.
-            </Text>
-          )}
+          <Text style={styles.statutoryText}>
+            {fullContent}
+          </Text>
         </View>
       </ScrollView>
 
@@ -246,12 +276,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#F1F5F9',
     marginVertical: 12,
   },
-  paragraphBlock: {
-    marginBottom: 14,
-  },
   statutoryText: {
     fontSize: 14,
-    lineHeight: 22,
+    lineHeight: 23,
     color: '#1E293B',
     fontWeight: '500',
   },
