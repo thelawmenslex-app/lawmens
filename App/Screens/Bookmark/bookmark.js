@@ -86,7 +86,11 @@ export default function BookmarkScreen({ navigation }) {
             <TouchableOpacity
               style={styles.openBtn}
               activeOpacity={0.85}
-              onPress={() => navigation.navigate('Comparison', { ipcSec: item.secName })}
+              onPress={() => navigation.navigate('Comparison', {
+                ipcSec: item.secName,
+                actTitle: item.actTitle,
+                actCode: item.actCode
+              })}
             >
               <Text style={styles.openBtnText}>Open Legal Reference</Text>
               <Feather name="arrow-right" size={14} color="#00A3FF" />

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -9,19 +9,31 @@ import {
   StatusBar
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
+import { DataService } from '../../Services/dataService';
 import { ApiService } from '../../Services/apiService';
 
 export default function MinorActsScreen({ navigation }) {
   const [search, setSearch] = useState('');
-  const allMinorActs = useMemo(() => {
-    return ApiService.laws.getMinorActs();
+  const [acts, setActs] = useState(() => DataService.getMinorActs() || []);
+
+  useEffect(() => {
+    loadActs();
   }, []);
 
+  const loadActs = async () => {
+    try {
+      const liveActs = await ApiService.laws.getMinorActs();
+      if (liveActs && liveActs.length > 0) {
+        setActs(liveActs);
+      }
+    } catch (e) {}
+  };
+
   const filteredActs = useMemo(() => {
-    if (!search.trim()) return allMinorActs;
+    if (!search.trim()) return acts;
     const q = search.toLowerCase();
-    return allMinorActs.filter(a => (a.title || a.name || '').toLowerCase().includes(q));
-  }, [allMinorActs, search]);
+    return acts.filter(a => (a.title || a.name || '').toLowerCase().includes(q));
+  }, [acts, search]);
 
   return (
     <View style={styles.container}>
@@ -53,7 +65,7 @@ export default function MinorActsScreen({ navigation }) {
 
       <FlatList
         data={filteredActs}
-        keyExtractor={(item, index) => item._id?.$oid || index.toString()}
+        keyExtractor={(item, index) => item._id?.$oid || item._id || index.toString()}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         renderItem={({ item }) => (
@@ -107,56 +119,62 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 14,
   },
-  brandTitle: { fontSize: 22, fontWeight: '900', color: '#00A3FF' },
-  subHeaderTitle: {
-    fontSize: 16,
-    fontWeight: '800',
+  brandTitle: {
+    fontSize: 22,
+    fontWeight: '900',
     color: '#00A3FF',
-    textAlign: 'center',
-    marginTop: 8,
+    letterSpacing: 1.2,
+  },
+  subHeaderTitle: {
+    fontSize: 13,
+    color: '#94A3B8',
+    fontWeight: '600',
   },
   searchBox: {
-    margin: 16,
     backgroundColor: '#FFFFFF',
-    borderRadius: 10,
+    borderRadius: 12,
+    marginHorizontal: 16,
+    marginTop: 14,
+    marginBottom: 8,
+    paddingHorizontal: 14,
     height: 48,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
     borderWidth: 1.5,
-    borderColor: '#D8ECF7',
+    borderColor: '#D0E7F5',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   searchInput: { flex: 1, fontSize: 14, color: '#111827' },
-  listContent: { paddingHorizontal: 16, paddingBottom: 40, gap: 10 },
+  listContent: { padding: 16, paddingBottom: 32, gap: 12 },
   actCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 14,
+    borderRadius: 16,
+    padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: '#D8ECF7',
+    borderColor: '#D0E7F5',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   iconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: 10,
+    width: 42,
+    height: 42,
+    borderRadius: 12,
     backgroundColor: '#DEF3FA',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 12,
+    marginRight: 14,
   },
-  actTitle: { fontSize: 13, fontWeight: '800', color: '#111827', lineHeight: 18 },
-  actSubtitle: { fontSize: 11, color: '#64748B', marginTop: 2 },
-  emptyStateContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 60,
-  },
-  emptyStateText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#64748B',
-    marginTop: 14,
-  },
+  actTitle: { fontSize: 15, fontWeight: '800', color: '#111827', marginBottom: 2 },
+  actSubtitle: { fontSize: 12, color: '#64748B', fontWeight: '600' },
+  emptyStateContainer: { padding: 40, alignItems: 'center' },
+  emptyStateText: { marginTop: 12, color: '#64748B', fontSize: 14 },
 });

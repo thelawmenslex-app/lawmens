@@ -368,7 +368,10 @@ export default function SearchScreen({ navigation }) {
                   <TouchableOpacity
                     style={styles.compareBtn}
                     activeOpacity={0.85}
-                    onPress={() => navigation.navigate('Comparison', { ipcSec: item.secNum })}
+                    onPress={() => navigation.navigate('Comparison', {
+                      ipcSec: item.secNum,
+                      actCode: item.lawCode
+                    })}
                   >
                     <Text style={styles.compareBtnText}>
                       ⇄ Compare Side-by-Side Detailed Screen

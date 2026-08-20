@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Modal,
+  ScrollView,
   Alert
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
@@ -60,7 +61,7 @@ export default function SideDrawerModal({ visible, onClose, navigation }) {
             </View>
             <View style={styles.userInfo}>
               <Text style={styles.userName} numberOfLines={1}>{user.name}</Text>
-              <Text style={styles.userPhone} numberOfLines={1}>{user.phone}</Text>
+              <Text style={styles.userPhone} numberOfLines={1}>{user.phone || 'Advocate / Legal Professional'}</Text>
             </View>
             <TouchableOpacity
               style={styles.closeBtn}
@@ -71,14 +72,45 @@ export default function SideDrawerModal({ visible, onClose, navigation }) {
             </TouchableOpacity>
           </View>
 
-          {/* Menu Items */}
-          <View style={styles.menuList}>
+          {/* Scrollable Menu Items */}
+          <ScrollView
+            style={styles.menuList}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 20 }}
+          >
             <TouchableOpacity
               style={styles.menuItem}
               onPress={() => navigateTo('Subscription')}
             >
-              <Feather name="tv" size={20} color="#FFFFFF" style={styles.menuItemIcon} />
+              <Feather name="tv" size={20} color="#00A3FF" style={styles.menuItemIcon} />
               <Text style={styles.menuItemText}>My Subscription</Text>
+              <Feather name="arrow-right" size={18} color="#94A3B8" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => navigateTo('History')}
+            >
+              <Feather name="clock" size={20} color="#00A3FF" style={styles.menuItemIcon} />
+              <Text style={styles.menuItemText}>Reading History</Text>
+              <Feather name="arrow-right" size={18} color="#94A3B8" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => navigateTo('MinorActs')}
+            >
+              <Feather name="book" size={20} color="#00A3FF" style={styles.menuItemIcon} />
+              <Text style={styles.menuItemText}>Criminal Minor Acts</Text>
+              <Feather name="arrow-right" size={18} color="#94A3B8" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuItem}
+              onPress={() => navigateTo('Schedules')}
+            >
+              <Feather name="calendar" size={20} color="#00A3FF" style={styles.menuItemIcon} />
+              <Text style={styles.menuItemText}>First & Second Schedules</Text>
               <Feather name="arrow-right" size={18} color="#94A3B8" />
             </TouchableOpacity>
 
@@ -86,8 +118,8 @@ export default function SideDrawerModal({ visible, onClose, navigation }) {
               style={styles.menuItem}
               onPress={() => navigateTo('Contact')}
             >
-              <Feather name="users" size={20} color="#FFFFFF" style={styles.menuItemIcon} />
-              <Text style={styles.menuItemText}>Contact us</Text>
+              <Feather name="mail" size={20} color="#00A3FF" style={styles.menuItemIcon} />
+              <Text style={styles.menuItemText}>Contact Us & Inquiries</Text>
               <Feather name="arrow-right" size={18} color="#94A3B8" />
             </TouchableOpacity>
 
@@ -95,8 +127,8 @@ export default function SideDrawerModal({ visible, onClose, navigation }) {
               style={styles.menuItem}
               onPress={() => navigateTo('About')}
             >
-              <Feather name="help-circle" size={20} color="#FFFFFF" style={styles.menuItemIcon} />
-              <Text style={styles.menuItemText}>About</Text>
+              <Feather name="help-circle" size={20} color="#00A3FF" style={styles.menuItemIcon} />
+              <Text style={styles.menuItemText}>About THE-LAWMEN'S</Text>
               <Feather name="arrow-right" size={18} color="#94A3B8" />
             </TouchableOpacity>
 
@@ -104,7 +136,7 @@ export default function SideDrawerModal({ visible, onClose, navigation }) {
               style={styles.menuItem}
               onPress={() => navigateTo('Disclaimer')}
             >
-              <Feather name="alert-triangle" size={20} color="#FFFFFF" style={styles.menuItemIcon} />
+              <Feather name="alert-triangle" size={20} color="#00A3FF" style={styles.menuItemIcon} />
               <Text style={styles.menuItemText}>Disclaimer</Text>
               <Feather name="arrow-right" size={18} color="#94A3B8" />
             </TouchableOpacity>
@@ -113,11 +145,11 @@ export default function SideDrawerModal({ visible, onClose, navigation }) {
               style={styles.menuItem}
               onPress={() => navigateTo('PrivacyPolicy')}
             >
-              <Feather name="info" size={20} color="#FFFFFF" style={styles.menuItemIcon} />
+              <Feather name="shield" size={20} color="#00A3FF" style={styles.menuItemIcon} />
               <Text style={styles.menuItemText}>Privacy Policy</Text>
               <Feather name="arrow-right" size={18} color="#94A3B8" />
             </TouchableOpacity>
-          </View>
+          </ScrollView>
 
           {/* Bottom Logout Button */}
           <TouchableOpacity
@@ -125,10 +157,11 @@ export default function SideDrawerModal({ visible, onClose, navigation }) {
             activeOpacity={0.85}
             onPress={() => {
               onClose();
-              Alert.alert('Logout', 'Are you sure you want to logout?', [
-                { text: 'Cancel' },
+              Alert.alert('Logout', 'Are you sure you want to logout from this device?', [
+                { text: 'Cancel', style: 'cancel' },
                 {
                   text: 'Logout',
+                  style: 'destructive',
                   onPress: async () => {
                     await ApiService.auth.logout();
                     navigation.navigate('Welcome');
@@ -156,21 +189,21 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.6)',
   },
   drawerContainer: {
-    width: '78%',
+    width: '80%',
     backgroundColor: '#22252D',
     paddingTop: 50,
     paddingHorizontal: 20,
-    paddingBottom: 30,
+    paddingBottom: 24,
     justifyContent: 'space-between',
   },
   backdrop: {
-    width: '22%',
+    width: '20%',
     height: '100%',
   },
   userRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingBottom: 24,
+    paddingBottom: 20,
     borderBottomWidth: 1,
     borderColor: '#323744',
   },
@@ -194,22 +227,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  menuList: { flex: 1, paddingTop: 20 },
+  menuList: { flex: 1, paddingTop: 14 },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 18,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#2C303B',
   },
   menuItemIcon: { marginRight: 16 },
-  menuItemText: { flex: 1, fontSize: 16, fontWeight: '600', color: '#FFFFFF' },
+  menuItemText: { flex: 1, fontSize: 15, fontWeight: '600', color: '#FFFFFF' },
   logoutBtn: {
-    height: 52,
+    height: 50,
     backgroundColor: '#00A3FF',
     borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
+    marginTop: 10,
   },
-  logoutText: { fontSize: 16, fontWeight: '800', color: '#111827' },
+  logoutText: { fontSize: 15, fontWeight: '800', color: '#111827' },
 });

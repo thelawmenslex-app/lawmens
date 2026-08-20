@@ -58,7 +58,7 @@ export default function HomeScreen({ navigation }) {
           {/* Notification Bell */}
           <TouchableOpacity
             style={styles.bellButton}
-            onPress={() => alert('No notifications')}
+            onPress={() => navigation.navigate('Notifications')}
             activeOpacity={0.8}
           >
             <Icon name="notifications-outline" size={24} color="#FFFFFF" />
