@@ -1,3 +1,4 @@
+import { SyncService } from '../../Services/syncService';
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -6,7 +7,8 @@ import {
   ScrollView,
   TouchableOpacity,
   Dimensions,
-  StatusBar
+  StatusBar,
+  Alert
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Feather from 'react-native-vector-icons/Feather';
@@ -27,7 +29,7 @@ export default function HomeScreen({ navigation }) {
     setSynced(false);
     await SyncService.pullLatestChanges();
     setSynced(true);
-    alert('Synchronized with Admin Portal.');
+    Alert.alert('Synced', 'Synchronized with Admin Portal.');
   };
   const [drawerVisible, setDrawerVisible] = useState(false);
 
