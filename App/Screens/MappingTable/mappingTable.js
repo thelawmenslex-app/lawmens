@@ -10,45 +10,77 @@ import {
 } from 'react-native';
 import mappingData from '../../Assets/Data/comprehensiveMappings.json';
 
+function parseSection(s) {
+  if (!s) return { num: 0, suffix: '' };
+  const str = String(s).trim();
+  const match = str.match(/^(\d+)(.*)$/);
+  if (match) {
+    return { num: parseInt(match[1], 10), suffix: match[2].trim() };
+  }
+  return { num: 9999, suffix: str };
+}
+
+function sortPairs(list, key) {
+  return [...list].sort((a, b) => {
+    const pa = parseSection(a[key]);
+    const pb = parseSection(b[key]);
+    if (pa.num !== pb.num) return pa.num - pb.num;
+    return pa.suffix.localeCompare(pb.suffix);
+  });
+}
+
 export default function MappingTableScreen({ route, navigation }) {
   const type = route?.params?.type || 'IPC_TO_BNS';
 
   const isCrpcBnss = type.includes('CRPC') || type.includes('BNSS');
   const isIeaBsa = type.includes('IEA') || type.includes('BSA');
+  const isReversed = type.startsWith('BNS_') || type.startsWith('BNSS_') || type.startsWith('BSA_');
 
   const [search, setSearch] = useState('');
 
-  const { rawPairs, titleText, subtitleText, oldCode, newCode } = useMemo(() => {
+  const { rawPairs, titleText, subtitleText, oldCode, newCode, oldTitle, newTitle } = useMemo(() => {
     if (isCrpcBnss) {
       const isBnssToCrpc = type === 'BNSS_TO_CRPC';
+      const basePairs = mappingData.crpcToBnss || [];
+      const sorted = sortPairs(basePairs, isBnssToCrpc ? 'newSec' : 'oldSec');
       return {
-        rawPairs: mappingData.crpcToBnss || [],
+        rawPairs: sorted,
         titleText: isBnssToCrpc ? 'BNSS ↔ CrPC' : 'CrPC ↔ BNSS',
         subtitleText: 'CrPC 1973 to BNSS 2023 Section Mapping Table',
         oldCode: 'CrPC',
-        newCode: 'BNSS'
+        newCode: 'BNSS',
+        oldTitle: 'Code of Criminal Procedure , 1973',
+        newTitle: 'Bharatiya Nagarik Suraksha Sanhita , 2023'
       };
     }
 
     if (isIeaBsa) {
       const isBsaToIea = type === 'BSA_TO_IEA';
+      const basePairs = mappingData.ieaToBsa || [];
+      const sorted = sortPairs(basePairs, isBsaToIea ? 'newSec' : 'oldSec');
       return {
-        rawPairs: mappingData.ieaToBsa || [],
+        rawPairs: sorted,
         titleText: isBsaToIea ? 'BSA ↔ IEA' : 'IEA ↔ BSA',
         subtitleText: 'IEA 1872 to BSA 2023 Section Mapping Table',
         oldCode: 'IEA',
-        newCode: 'BSA'
+        newCode: 'BSA',
+        oldTitle: 'India Evidence Act , 1872',
+        newTitle: 'Bharatiya Sakshya Adhiniyam , 2023'
       };
     }
 
     // Default IPC <-> BNS
     const isBnsToIpc = type === 'BNS_TO_IPC';
+    const basePairs = mappingData.ipcToBns || [];
+    const sorted = sortPairs(basePairs, isBnsToIpc ? 'newSec' : 'oldSec');
     return {
-      rawPairs: mappingData.ipcToBns || [],
+      rawPairs: sorted,
       titleText: isBnsToIpc ? 'BNS ↔ IPC' : 'IPC ↔ BNS',
       subtitleText: 'IPC 1860 to BNS 2023 Section Mapping Table',
       oldCode: 'IPC',
-      newCode: 'BNS'
+      newCode: 'BNS',
+      oldTitle: 'Indian Penal Code , 1860',
+      newTitle: 'Bharatiya Nyaya Sanhita , 2023'
     };
   }, [type, isCrpcBnss, isIeaBsa]);
 
@@ -61,8 +93,6 @@ export default function MappingTableScreen({ route, navigation }) {
       (p.title || '').toLowerCase().includes(q)
     );
   }, [rawPairs, search]);
-
-  const isReversed = type.startsWith('BNS_') || type.startsWith('BNSS_') || type.startsWith('BSA_');
 
   return (
     <View style={styles.container}>
@@ -95,39 +125,49 @@ export default function MappingTableScreen({ route, navigation }) {
         </View>
       </View>
 
-      {/* Mapping Cards List */}
+      {/* Mapping Cards List in Ascending Order */}
       <FlatList
         data={filteredPairs}
         keyExtractor={(item, index) => `${item.oldSec}_${item.newSec}_${index}`}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         initialNumToRender={20}
-        maxToRenderPerBatch={25}
+        maxToRenderPerBatch={30}
         windowSize={10}
         renderItem={({ item }) => {
-          const leftSec = isReversed ? `Sec ${item.newSec}` : `Sec ${item.oldSec}`;
+          const leftSecNum = isReversed ? item.newSec : item.oldSec;
           const leftLabel = item.title;
-          const rightSec = isReversed ? `Sec ${item.oldSec}` : `Sec ${item.newSec}`;
+          const rightSecNum = isReversed ? item.oldSec : item.newSec;
           const rightLabel = isReversed ? `${oldCode} Equivalent` : `${newCode} Equivalent`;
 
           return (
             <TouchableOpacity
               style={styles.mapCard}
               activeOpacity={0.85}
-              onPress={() => navigation.navigate('Comparison', {
-                ipcSec: item.oldSec,
-                actCode: oldCode
-              })}
+              onPress={() => {
+                navigation.navigate('Comparison', {
+                  ipcSec: item.oldSec,
+                  actCode: oldCode,
+                  actTitle: oldTitle,
+                  oldSec: item.oldSec,
+                  newSec: item.newSec,
+                  sectionData: {
+                    keyword: item.title,
+                    name: item.oldSec,
+                    content: [{ content: item.oldContent }]
+                  }
+                });
+              }}
             >
               <View style={styles.leftCol}>
-                <Text style={styles.leftSecText}>{leftSec}</Text>
+                <Text style={styles.leftSecText}>Sec {leftSecNum}</Text>
                 <Text style={styles.leftDescText} numberOfLines={2}>{leftLabel}</Text>
               </View>
 
               <Text style={styles.arrowIcon}>➔</Text>
 
               <View style={styles.rightCol}>
-                <Text style={styles.rightSecText}>{rightSec}</Text>
+                <Text style={styles.rightSecText}>Sec {rightSecNum}</Text>
                 <Text style={styles.rightDescText}>{rightLabel}</Text>
               </View>
             </TouchableOpacity>

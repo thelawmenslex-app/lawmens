@@ -12,10 +12,13 @@ import {
 import { ApiService } from '../../Services/apiService';
 import { ComparisonService, computeLegalDiff } from '../../Services/comparisonService';
 import rawData from '../../Assets/Data/lawData.json';
+import mappingData from '../../Assets/Data/comprehensiveMappings.json';
 
 export default function ComparisonScreen({ route, navigation }) {
   const {
     ipcSec = '1',
+    oldSec = null,
+    newSec = null,
     sectionData = null,
     actTitle = 'Indian Penal Code , 1860',
     actCode = 'IPC'
@@ -30,19 +33,33 @@ export default function ComparisonScreen({ route, navigation }) {
 
   // Dynamic content mapping based on the selected law pair and section
   const comparisonData = useMemo(() => {
-    const secStr = String(ipcSec || '1').trim();
-    const mapEntry = pairInfo.mapping ? pairInfo.mapping[secStr] : null;
+    const querySec = String(oldSec || ipcSec || '1').trim();
+    let pairList = mappingData.ipcToBns || [];
+    if (pairInfo.oldCode === 'CrPC') {
+      pairList = mappingData.crpcToBnss || [];
+    } else if (pairInfo.oldCode === 'IEA') {
+      pairList = mappingData.ieaToBsa || [];
+    }
 
-    let leftSecNum = secStr;
-    let rightSecNum = mapEntry?.bnsSec || mapEntry?.bnssSec || mapEntry?.bsaSec || secStr;
+    // Find in comprehensive mapping table
+    let foundPair = pairList.find(p => p.oldSec === querySec);
+    if (!foundPair && newSec) {
+      foundPair = pairList.find(p => p.newSec === newSec);
+    }
+    if (!foundPair) {
+      foundPair = pairList.find(p => p.newSec === querySec);
+    }
 
-    let leftHeading = sectionData?.keyword || mapEntry?.title || `Section ${leftSecNum}`;
-    let rightHeading = mapEntry?.title || leftHeading;
+    let leftSecNum = foundPair ? foundPair.oldSec : (oldSec || querySec);
+    let rightSecNum = foundPair ? foundPair.newSec : (newSec || querySec);
 
-    let leftContentText = sectionData?.content?.[0]?.content || '';
-    let rightContentText = '';
+    let leftHeading = sectionData?.keyword || foundPair?.title || `Section ${leftSecNum}`;
+    let rightHeading = foundPair?.title || leftHeading;
 
-    // Search rawData for old law text if not passed
+    let leftContentText = sectionData?.content?.[0]?.content || foundPair?.oldContent || '';
+    let rightContentText = foundPair?.newContent || '';
+
+    // Search rawData for old law text if not yet resolved
     if (!leftContentText) {
       for (const ch of rawData.casebooks || []) {
         const cId = (ch.categoryId && ch.categoryId['$oid']) || ch.categoryId;
@@ -58,15 +75,17 @@ export default function ComparisonScreen({ route, navigation }) {
       }
     }
 
-    // Search rawData for new law text
-    for (const ch of rawData.casebooks || []) {
-      const cId = (ch.categoryId && ch.categoryId['$oid']) || ch.categoryId;
-      if (cId === pairInfo.newCatId) {
-        for (const s of ch.section || []) {
-          if (s.name === rightSecNum || s.name?.toLowerCase() === rightSecNum.toLowerCase() || s.name?.startsWith(rightSecNum)) {
-            rightContentText = s.content?.[0]?.content || '';
-            if (s.keyword) rightHeading = s.keyword;
-            break;
+    // Search rawData for new law text if not yet resolved
+    if (!rightContentText) {
+      for (const ch of rawData.casebooks || []) {
+        const cId = (ch.categoryId && ch.categoryId['$oid']) || ch.categoryId;
+        if (cId === pairInfo.newCatId) {
+          for (const s of ch.section || []) {
+            if (s.name === rightSecNum || s.name?.toLowerCase() === rightSecNum.toLowerCase() || s.name?.startsWith(rightSecNum)) {
+              rightContentText = s.content?.[0]?.content || '';
+              if (s.keyword) rightHeading = s.keyword;
+              break;
+            }
           }
         }
       }
@@ -86,7 +105,7 @@ export default function ComparisonScreen({ route, navigation }) {
       oldLawLabel: `${pairInfo.oldTitle} (Old Law)`,
       newLawLabel: `${pairInfo.newTitle} (New Law)`,
       headerSubtitle: `${pairInfo.oldTitle} vs ${pairInfo.newTitle} Comparison`,
-      status: mapEntry ? 'UPDATED' : 'PROVISION',
+      status: foundPair ? 'UPDATED' : 'PROVISION',
       diffBlocks: diffCount > 0 ? diffCount : 1,
       leftSec: leftSecNum,
       leftHeading: leftHeading,
@@ -96,7 +115,7 @@ export default function ComparisonScreen({ route, navigation }) {
       rightContentText: rightContentText,
       diffItems: diffItems
     };
-  }, [ipcSec, sectionData, pairInfo]);
+  }, [ipcSec, oldSec, newSec, sectionData, pairInfo]);
 
   const handleCopy = () => {
     Alert.alert('Copied', 'Comparison text copied to clipboard.');
@@ -174,13 +193,13 @@ export default function ComparisonScreen({ route, navigation }) {
         <View style={styles.dualCardRow}>
           {/* Left Heading Card (Old Law) */}
           <View style={styles.sectionHeadingCard}>
-            <Text style={styles.secNumberText}>{comparisonData.leftSec}</Text>
+            <Text style={styles.secNumberText}>Sec {comparisonData.leftSec}</Text>
             <Text style={styles.secTitleText}>{comparisonData.leftHeading}</Text>
           </View>
 
           {/* Right Heading Card (New Law) */}
           <View style={styles.sectionHeadingCard}>
-            <Text style={styles.secNumberText}>{comparisonData.rightSec}</Text>
+            <Text style={styles.secNumberText}>Sec {comparisonData.rightSec}</Text>
             <Text style={styles.secTitleText}>{comparisonData.rightHeading}</Text>
           </View>
         </View>
