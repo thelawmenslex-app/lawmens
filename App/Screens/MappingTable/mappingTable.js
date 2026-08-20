@@ -30,59 +30,68 @@ function sortPairs(list, key) {
 }
 
 export default function MappingTableScreen({ route, navigation }) {
-  const type = route?.params?.type || 'IPC_TO_BNS';
+  const rawType = (route?.params?.type || '').toUpperCase();
+  const actCode = (route?.params?.act?.code || '').toUpperCase();
 
-  const isCrpcBnss = type.includes('CRPC') || type.includes('BNSS');
-  const isIeaBsa = type.includes('IEA') || type.includes('BSA');
-  const isReversed = type.startsWith('BNS_') || type.startsWith('BNSS_') || type.startsWith('BSA_');
+  const isCrpcBnss = rawType.includes('CRPC') || rawType.includes('BNSS') || actCode.includes('CRPC') || actCode.includes('BNSS');
+  const isIeaBsa = rawType.includes('IEA') || rawType.includes('BSA') || actCode.includes('IEA') || actCode.includes('BSA');
 
   const [search, setSearch] = useState('');
 
-  const { rawPairs, titleText, subtitleText, oldCode, newCode, oldTitle, newTitle } = useMemo(() => {
+  const { rawPairs, titleText, subtitleText, oldCode, newCode, oldTitle, newTitle, isReversed } = useMemo(() => {
     if (isCrpcBnss) {
-      const isBnssToCrpc = type === 'BNSS_TO_CRPC';
+      const isBnssToCrpc = rawType.startsWith('BNSS_') || rawType === 'BNSS_TO_CRPC' || actCode === 'BNSS';
       const basePairs = mappingData.crpcToBnss || [];
       const sorted = sortPairs(basePairs, isBnssToCrpc ? 'newSec' : 'oldSec');
       return {
         rawPairs: sorted,
         titleText: isBnssToCrpc ? 'BNSS ↔ CrPC' : 'CrPC ↔ BNSS',
-        subtitleText: 'CrPC 1973 to BNSS 2023 Section Mapping Table',
+        subtitleText: isBnssToCrpc
+          ? 'BNSS 2023 to CrPC 1973 Section Mapping Table'
+          : 'CrPC 1973 to BNSS 2023 Section Mapping Table',
         oldCode: 'CrPC',
         newCode: 'BNSS',
         oldTitle: 'Code of Criminal Procedure , 1973',
-        newTitle: 'Bharatiya Nagarik Suraksha Sanhita , 2023'
+        newTitle: 'Bharatiya Nagarik Suraksha Sanhita , 2023',
+        isReversed: isBnssToCrpc
       };
     }
 
     if (isIeaBsa) {
-      const isBsaToIea = type === 'BSA_TO_IEA';
+      const isBsaToIea = rawType.startsWith('BSA_') || rawType === 'BSA_TO_IEA' || actCode === 'BSA';
       const basePairs = mappingData.ieaToBsa || [];
       const sorted = sortPairs(basePairs, isBsaToIea ? 'newSec' : 'oldSec');
       return {
         rawPairs: sorted,
         titleText: isBsaToIea ? 'BSA ↔ IEA' : 'IEA ↔ BSA',
-        subtitleText: 'IEA 1872 to BSA 2023 Section Mapping Table',
+        subtitleText: isBsaToIea
+          ? 'BSA 2023 to IEA 1872 Section Mapping Table'
+          : 'IEA 1872 to BSA 2023 Section Mapping Table',
         oldCode: 'IEA',
         newCode: 'BSA',
         oldTitle: 'India Evidence Act , 1872',
-        newTitle: 'Bharatiya Sakshya Adhiniyam , 2023'
+        newTitle: 'Bharatiya Sakshya Adhiniyam , 2023',
+        isReversed: isBsaToIea
       };
     }
 
     // Default IPC <-> BNS
-    const isBnsToIpc = type === 'BNS_TO_IPC';
+    const isBnsToIpc = rawType.startsWith('BNS_') || rawType === 'BNS_TO_IPC' || actCode === 'BNS';
     const basePairs = mappingData.ipcToBns || [];
     const sorted = sortPairs(basePairs, isBnsToIpc ? 'newSec' : 'oldSec');
     return {
       rawPairs: sorted,
       titleText: isBnsToIpc ? 'BNS ↔ IPC' : 'IPC ↔ BNS',
-      subtitleText: 'IPC 1860 to BNS 2023 Section Mapping Table',
+      subtitleText: isBnsToIpc
+        ? 'BNS 2023 to IPC 1860 Section Mapping Table'
+        : 'IPC 1860 to BNS 2023 Section Mapping Table',
       oldCode: 'IPC',
       newCode: 'BNS',
       oldTitle: 'Indian Penal Code , 1860',
-      newTitle: 'Bharatiya Nyaya Sanhita , 2023'
+      newTitle: 'Bharatiya Nyaya Sanhita , 2023',
+      isReversed: isBnsToIpc
     };
-  }, [type, isCrpcBnss, isIeaBsa]);
+  }, [rawType, actCode, isCrpcBnss, isIeaBsa]);
 
   const filteredPairs = useMemo(() => {
     if (!search.trim()) return rawPairs;
@@ -125,7 +134,7 @@ export default function MappingTableScreen({ route, navigation }) {
         </View>
       </View>
 
-      {/* Mapping Cards List in Ascending Order */}
+      {/* Mapping Cards List in Natural Ascending Order */}
       <FlatList
         data={filteredPairs}
         keyExtractor={(item, index) => `${item.oldSec}_${item.newSec}_${index}`}
