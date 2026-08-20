@@ -8,11 +8,7 @@ import {
   TextInput,
   StatusBar
 } from 'react-native';
-import {
-  IPC_BNS_MAPPING,
-  CRPC_BNSS_MAPPING,
-  IEA_BSA_MAPPING
-} from '../../Services/comparisonService';
+import mappingData from '../../Assets/Data/comprehensiveMappings.json';
 
 export default function MappingTableScreen({ route, navigation }) {
   const type = route?.params?.type || 'IPC_TO_BNS';
@@ -25,13 +21,8 @@ export default function MappingTableScreen({ route, navigation }) {
   const { rawPairs, titleText, subtitleText, oldCode, newCode } = useMemo(() => {
     if (isCrpcBnss) {
       const isBnssToCrpc = type === 'BNSS_TO_CRPC';
-      const pairs = Object.keys(CRPC_BNSS_MAPPING).map(crpcSec => ({
-        oldSec: crpcSec,
-        newSec: CRPC_BNSS_MAPPING[crpcSec].bnssSec,
-        title: CRPC_BNSS_MAPPING[crpcSec].title,
-      }));
       return {
-        rawPairs: pairs,
+        rawPairs: mappingData.crpcToBnss || [],
         titleText: isBnssToCrpc ? 'BNSS ↔ CrPC' : 'CrPC ↔ BNSS',
         subtitleText: 'CrPC 1973 to BNSS 2023 Section Mapping Table',
         oldCode: 'CrPC',
@@ -41,13 +32,8 @@ export default function MappingTableScreen({ route, navigation }) {
 
     if (isIeaBsa) {
       const isBsaToIea = type === 'BSA_TO_IEA';
-      const pairs = Object.keys(IEA_BSA_MAPPING).map(ieaSec => ({
-        oldSec: ieaSec,
-        newSec: IEA_BSA_MAPPING[ieaSec].bsaSec,
-        title: IEA_BSA_MAPPING[ieaSec].title,
-      }));
       return {
-        rawPairs: pairs,
+        rawPairs: mappingData.ieaToBsa || [],
         titleText: isBsaToIea ? 'BSA ↔ IEA' : 'IEA ↔ BSA',
         subtitleText: 'IEA 1872 to BSA 2023 Section Mapping Table',
         oldCode: 'IEA',
@@ -57,13 +43,8 @@ export default function MappingTableScreen({ route, navigation }) {
 
     // Default IPC <-> BNS
     const isBnsToIpc = type === 'BNS_TO_IPC';
-    const pairs = Object.keys(IPC_BNS_MAPPING).map(ipcSec => ({
-      oldSec: ipcSec,
-      newSec: IPC_BNS_MAPPING[ipcSec].bnsSec,
-      title: IPC_BNS_MAPPING[ipcSec].title,
-    }));
     return {
-      rawPairs: pairs,
+      rawPairs: mappingData.ipcToBns || [],
       titleText: isBnsToIpc ? 'BNS ↔ IPC' : 'IPC ↔ BNS',
       subtitleText: 'IPC 1860 to BNS 2023 Section Mapping Table',
       oldCode: 'IPC',
@@ -75,9 +56,9 @@ export default function MappingTableScreen({ route, navigation }) {
     if (!search.trim()) return rawPairs;
     const q = search.toLowerCase();
     return rawPairs.filter(p =>
-      p.oldSec.toLowerCase().includes(q) ||
-      p.newSec.toLowerCase().includes(q) ||
-      p.title.toLowerCase().includes(q)
+      (p.oldSec || '').toLowerCase().includes(q) ||
+      (p.newSec || '').toLowerCase().includes(q) ||
+      (p.title || '').toLowerCase().includes(q)
     );
   }, [rawPairs, search]);
 
@@ -117,9 +98,12 @@ export default function MappingTableScreen({ route, navigation }) {
       {/* Mapping Cards List */}
       <FlatList
         data={filteredPairs}
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={(item, index) => `${item.oldSec}_${item.newSec}_${index}`}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        initialNumToRender={20}
+        maxToRenderPerBatch={25}
+        windowSize={10}
         renderItem={({ item }) => {
           const leftSec = isReversed ? `Sec ${item.newSec}` : `Sec ${item.oldSec}`;
           const leftLabel = item.title;
