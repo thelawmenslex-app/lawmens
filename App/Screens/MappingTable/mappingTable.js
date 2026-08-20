@@ -20,88 +20,149 @@ function parseSection(s) {
   return { num: 9999, suffix: str };
 }
 
-function sortPairs(list, key) {
+function sortListBySec(list, secKey) {
   return [...list].sort((a, b) => {
-    const pa = parseSection(a[key]);
-    const pb = parseSection(b[key]);
+    const pa = parseSection(a[secKey]);
+    const pb = parseSection(b[secKey]);
     if (pa.num !== pb.num) return pa.num - pb.num;
     return pa.suffix.localeCompare(pb.suffix);
   });
 }
 
 export default function MappingTableScreen({ route, navigation }) {
-  const rawType = (route?.params?.type || '').toUpperCase();
+  const type = (route?.params?.type || '').toUpperCase();
   const actCode = (route?.params?.act?.code || '').toUpperCase();
-
-  const isCrpcBnss = rawType.includes('CRPC') || rawType.includes('BNSS') || actCode.includes('CRPC') || actCode.includes('BNSS');
-  const isIeaBsa = rawType.includes('IEA') || rawType.includes('BSA') || actCode.includes('IEA') || actCode.includes('BSA');
-
   const [search, setSearch] = useState('');
 
-  const { rawPairs, titleText, subtitleText, oldCode, newCode, oldTitle, newTitle, isReversed } = useMemo(() => {
-    if (isCrpcBnss) {
-      const isBnssToCrpc = rawType.startsWith('BNSS_') || rawType === 'BNSS_TO_CRPC' || actCode === 'BNSS';
-      const basePairs = mappingData.crpcToBnss || [];
-      const sorted = sortPairs(basePairs, isBnssToCrpc ? 'newSec' : 'oldSec');
+  const config = useMemo(() => {
+    // 1. BNSS -> CrPC
+    if (type === 'BNSS_TO_CRPC' || (actCode === 'BNSS' && type.includes('CRPC'))) {
+      const list = (mappingData.crpcToBnss || []).map(item => ({
+        leftSec: item.newSec,
+        rightSec: item.oldSec,
+        title: item.title,
+        leftContent: item.newContent,
+        rightContent: item.oldContent,
+        rawOldSec: item.oldSec,
+        rawNewSec: item.newSec
+      }));
       return {
-        rawPairs: sorted,
-        titleText: isBnssToCrpc ? 'BNSS ↔ CrPC' : 'CrPC ↔ BNSS',
-        subtitleText: isBnssToCrpc
-          ? 'BNSS 2023 to CrPC 1973 Section Mapping Table'
-          : 'CrPC 1973 to BNSS 2023 Section Mapping Table',
-        oldCode: 'CrPC',
-        newCode: 'BNSS',
-        oldTitle: 'Code of Criminal Procedure , 1973',
-        newTitle: 'Bharatiya Nagarik Suraksha Sanhita , 2023',
-        isReversed: isBnssToCrpc
+        titleText: 'BNSS ↔ CrPC',
+        subtitleText: 'Corresponding Section Table of BNSS with Code of Criminal Procedure',
+        leftCode: 'BNSS',
+        rightCode: 'CrPC',
+        pairs: sortListBySec(list, 'leftSec')
       };
     }
 
-    if (isIeaBsa) {
-      const isBsaToIea = rawType.startsWith('BSA_') || rawType === 'BSA_TO_IEA' || actCode === 'BSA';
-      const basePairs = mappingData.ieaToBsa || [];
-      const sorted = sortPairs(basePairs, isBsaToIea ? 'newSec' : 'oldSec');
+    // 2. CrPC -> BNSS
+    if (type === 'CRPC_TO_BNSS' || (actCode === 'CRPC' && type.includes('BNSS'))) {
+      const list = (mappingData.crpcToBnss || []).map(item => ({
+        leftSec: item.oldSec,
+        rightSec: item.newSec,
+        title: item.title,
+        leftContent: item.oldContent,
+        rightContent: item.newContent,
+        rawOldSec: item.oldSec,
+        rawNewSec: item.newSec
+      }));
       return {
-        rawPairs: sorted,
-        titleText: isBsaToIea ? 'BSA ↔ IEA' : 'IEA ↔ BSA',
-        subtitleText: isBsaToIea
-          ? 'BSA 2023 to IEA 1872 Section Mapping Table'
-          : 'IEA 1872 to BSA 2023 Section Mapping Table',
-        oldCode: 'IEA',
-        newCode: 'BSA',
-        oldTitle: 'India Evidence Act , 1872',
-        newTitle: 'Bharatiya Sakshya Adhiniyam , 2023',
-        isReversed: isBsaToIea
+        titleText: 'CrPC ↔ BNSS',
+        subtitleText: 'Corresponding Section Table of CrPC with BNSS',
+        leftCode: 'CrPC',
+        rightCode: 'BNSS',
+        pairs: sortListBySec(list, 'leftSec')
       };
     }
 
-    // Default IPC <-> BNS
-    const isBnsToIpc = rawType.startsWith('BNS_') || rawType === 'BNS_TO_IPC' || actCode === 'BNS';
-    const basePairs = mappingData.ipcToBns || [];
-    const sorted = sortPairs(basePairs, isBnsToIpc ? 'newSec' : 'oldSec');
+    // 3. BSA -> IEA
+    if (type === 'BSA_TO_IEA' || (actCode === 'BSA' && type.includes('IEA'))) {
+      const list = (mappingData.ieaToBsa || []).map(item => ({
+        leftSec: item.newSec,
+        rightSec: item.oldSec,
+        title: item.title,
+        leftContent: item.newContent,
+        rightContent: item.oldContent,
+        rawOldSec: item.oldSec,
+        rawNewSec: item.newSec
+      }));
+      return {
+        titleText: 'BSA ↔ IEA',
+        subtitleText: 'Corresponding Section Table of BSA with Indian Evidence Act',
+        leftCode: 'BSA',
+        rightCode: 'IEA',
+        pairs: sortListBySec(list, 'leftSec')
+      };
+    }
+
+    // 4. IEA -> BSA
+    if (type === 'IEA_TO_BSA' || (actCode === 'IEA' && type.includes('BSA'))) {
+      const list = (mappingData.ieaToBsa || []).map(item => ({
+        leftSec: item.oldSec,
+        rightSec: item.newSec,
+        title: item.title,
+        leftContent: item.oldContent,
+        rightContent: item.newContent,
+        rawOldSec: item.oldSec,
+        rawNewSec: item.newSec
+      }));
+      return {
+        titleText: 'IEA ↔ BSA',
+        subtitleText: 'Corresponding Section Table of IEA with BSA',
+        leftCode: 'IEA',
+        rightCode: 'BSA',
+        pairs: sortListBySec(list, 'leftSec')
+      };
+    }
+
+    // 5. IPC -> BNS
+    if (type === 'IPC_TO_BNS' || (actCode === 'IPC' && type.includes('BNS'))) {
+      const list = (mappingData.ipcToBns || []).map(item => ({
+        leftSec: item.oldSec,
+        rightSec: item.newSec,
+        title: item.title,
+        leftContent: item.oldContent,
+        rightContent: item.newContent,
+        rawOldSec: item.oldSec,
+        rawNewSec: item.newSec
+      }));
+      return {
+        titleText: 'IPC ↔ BNS',
+        subtitleText: 'Corresponding Section Table of IPC with BNS',
+        leftCode: 'IPC',
+        rightCode: 'BNS',
+        pairs: sortListBySec(list, 'leftSec')
+      };
+    }
+
+    // 6. Default: BNS -> IPC
+    const list = (mappingData.ipcToBns || []).map(item => ({
+      leftSec: item.newSec,
+      rightSec: item.oldSec,
+      title: item.title,
+      leftContent: item.newContent,
+      rightContent: item.oldContent,
+      rawOldSec: item.oldSec,
+      rawNewSec: item.newSec
+    }));
     return {
-      rawPairs: sorted,
-      titleText: isBnsToIpc ? 'BNS ↔ IPC' : 'IPC ↔ BNS',
-      subtitleText: isBnsToIpc
-        ? 'BNS 2023 to IPC 1860 Section Mapping Table'
-        : 'IPC 1860 to BNS 2023 Section Mapping Table',
-      oldCode: 'IPC',
-      newCode: 'BNS',
-      oldTitle: 'Indian Penal Code , 1860',
-      newTitle: 'Bharatiya Nyaya Sanhita , 2023',
-      isReversed: isBnsToIpc
+      titleText: 'BNS ↔ IPC',
+      subtitleText: 'Corresponding Section Table of BNS with Indian Penal Code (IPC)',
+      leftCode: 'BNS',
+      rightCode: 'IPC',
+      pairs: sortListBySec(list, 'leftSec')
     };
-  }, [rawType, actCode, isCrpcBnss, isIeaBsa]);
+  }, [type, actCode]);
 
   const filteredPairs = useMemo(() => {
-    if (!search.trim()) return rawPairs;
+    if (!search.trim()) return config.pairs;
     const q = search.toLowerCase();
-    return rawPairs.filter(p =>
-      (p.oldSec || '').toLowerCase().includes(q) ||
-      (p.newSec || '').toLowerCase().includes(q) ||
+    return config.pairs.filter(p =>
+      (p.leftSec || '').toLowerCase().includes(q) ||
+      (p.rightSec || '').toLowerCase().includes(q) ||
       (p.title || '').toLowerCase().includes(q)
     );
-  }, [rawPairs, search]);
+  }, [config.pairs, search]);
 
   return (
     <View style={styles.container}>
@@ -117,9 +178,9 @@ export default function MappingTableScreen({ route, navigation }) {
           >
             <Text style={styles.backArrow}>←</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>{titleText}</Text>
+          <Text style={styles.headerTitle}>{config.titleText}</Text>
         </View>
-        <Text style={styles.headerSubtitle}>{subtitleText}</Text>
+        <Text style={styles.headerSubtitle}>{config.subtitleText}</Text>
 
         {/* Search Bar */}
         <View style={styles.searchBox}>
@@ -134,54 +195,46 @@ export default function MappingTableScreen({ route, navigation }) {
         </View>
       </View>
 
-      {/* Mapping Cards List in Natural Ascending Order */}
+      {/* Mapping Cards List */}
       <FlatList
         data={filteredPairs}
-        keyExtractor={(item, index) => `${item.oldSec}_${item.newSec}_${index}`}
+        keyExtractor={(item, index) => `${item.leftSec}_${item.rightSec}_${index}`}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         initialNumToRender={20}
         maxToRenderPerBatch={30}
         windowSize={10}
-        renderItem={({ item }) => {
-          const leftSecNum = isReversed ? item.newSec : item.oldSec;
-          const leftLabel = item.title;
-          const rightSecNum = isReversed ? item.oldSec : item.newSec;
-          const rightLabel = isReversed ? `${oldCode} Equivalent` : `${newCode} Equivalent`;
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.mapCard}
+            activeOpacity={0.85}
+            onPress={() => {
+              navigation.navigate('Comparison', {
+                ipcSec: item.rawOldSec,
+                actCode: config.leftCode,
+                oldSec: item.rawOldSec,
+                newSec: item.rawNewSec,
+                sectionData: {
+                  keyword: item.title,
+                  name: item.leftSec,
+                  content: [{ content: item.leftContent }]
+                }
+              });
+            }}
+          >
+            <View style={styles.leftCol}>
+              <Text style={styles.leftSecText}>Sec {item.leftSec}</Text>
+              <Text style={styles.leftDescText} numberOfLines={2}>{item.title}</Text>
+            </View>
 
-          return (
-            <TouchableOpacity
-              style={styles.mapCard}
-              activeOpacity={0.85}
-              onPress={() => {
-                navigation.navigate('Comparison', {
-                  ipcSec: item.oldSec,
-                  actCode: oldCode,
-                  actTitle: oldTitle,
-                  oldSec: item.oldSec,
-                  newSec: item.newSec,
-                  sectionData: {
-                    keyword: item.title,
-                    name: item.oldSec,
-                    content: [{ content: item.oldContent }]
-                  }
-                });
-              }}
-            >
-              <View style={styles.leftCol}>
-                <Text style={styles.leftSecText}>Sec {leftSecNum}</Text>
-                <Text style={styles.leftDescText} numberOfLines={2}>{leftLabel}</Text>
-              </View>
+            <Text style={styles.arrowIcon}>➔</Text>
 
-              <Text style={styles.arrowIcon}>➔</Text>
-
-              <View style={styles.rightCol}>
-                <Text style={styles.rightSecText}>Sec {rightSecNum}</Text>
-                <Text style={styles.rightDescText}>{rightLabel}</Text>
-              </View>
-            </TouchableOpacity>
-          );
-        }}
+            <View style={styles.rightCol}>
+              <Text style={styles.rightSecText}>Sec {item.rightSec}</Text>
+              <Text style={styles.rightDescText}>{config.rightCode} Equivalent</Text>
+            </View>
+          </TouchableOpacity>
+        )}
       />
     </View>
   );

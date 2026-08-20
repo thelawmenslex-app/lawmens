@@ -10,7 +10,8 @@ import {
   Alert
 } from 'react-native';
 import { ApiService } from '../../Services/apiService';
-import { ComparisonService, computeLegalDiff } from '../../Services/comparisonService';
+import { ComparisonService } from '../../Services/comparisonService';
+import { computeLegalDiff } from '../../Utilities/legalDiffEngine';
 import rawData from '../../Assets/Data/lawData.json';
 import mappingData from '../../Assets/Data/comprehensiveMappings.json';
 
@@ -98,22 +99,23 @@ export default function ComparisonScreen({ route, navigation }) {
       rightContentText = `Corresponding statutory legal provision under ${pairInfo.newTitle} Section ${rightSecNum}.`;
     }
 
-    // Compute live diff highlights
-    const { diffItems, diffCount } = computeLegalDiff(leftContentText, rightContentText);
+    // Compute live 100% accurate LCS diff highlights
+    const diffResult = computeLegalDiff(leftContentText, rightContentText);
 
     return {
       oldLawLabel: `${pairInfo.oldTitle} (Old Law)`,
       newLawLabel: `${pairInfo.newTitle} (New Law)`,
       headerSubtitle: `${pairInfo.oldTitle} vs ${pairInfo.newTitle} Comparison`,
-      status: foundPair ? 'UPDATED' : 'PROVISION',
-      diffBlocks: diffCount > 0 ? diffCount : 1,
+      status: diffResult.status.toUpperCase(),
+      diffBlocks: diffResult.diffCount,
       leftSec: leftSecNum,
       leftHeading: leftHeading,
       rightSec: rightSecNum,
       rightHeading: rightHeading,
+      leftSegments: diffResult.leftSegments,
+      rightSegments: diffResult.rightSegments,
       leftContentText: leftContentText,
-      rightContentText: rightContentText,
-      diffItems: diffItems
+      rightContentText: rightContentText
     };
   }, [ipcSec, oldSec, newSec, sectionData, pairInfo]);
 
@@ -139,6 +141,25 @@ export default function ComparisonScreen({ route, navigation }) {
         message: `THE-LAWMEN'S Legal Comparison:\n${comparisonData.headerSubtitle}\n${pairInfo.oldCode} Sec ${comparisonData.leftSec} vs ${pairInfo.newCode} Sec ${comparisonData.rightSec}\nDownload THE-LAWMEN'S app for full legal research.`
       });
     } catch (e) {}
+  };
+
+  const renderSegments = (segments) => {
+    return (
+      <Text style={styles.contentText}>
+        {segments.map((seg, idx) => (
+          <Text
+            key={idx}
+            style={[
+              seg.color ? { color: seg.color } : { color: '#1E293B' },
+              seg.bold ? { fontWeight: 'bold' } : {},
+              seg.bg ? { backgroundColor: seg.bg } : {}
+            ]}
+          >
+            {seg.text}
+          </Text>
+        ))}
+      </Text>
+    );
   };
 
   return (
@@ -206,36 +227,16 @@ export default function ComparisonScreen({ route, navigation }) {
 
         {/* Section Content Cards Row */}
         <View style={styles.dualCardRow}>
-          {/* Left Content Card (Old Law) */}
+          {/* Left Content Card (Old Law with Delete Highlights) */}
           <View style={styles.contentCard}>
             <Text style={styles.contentHeaderLabel}>Content</Text>
-            <Text style={styles.contentText}>
-              {comparisonData.leftContentText}
-            </Text>
+            {renderSegments(comparisonData.leftSegments)}
           </View>
 
-          {/* Right Content Card (New Law with Highlights) */}
+          {/* Right Content Card (New Law with 100% Precision New/Change Highlights) */}
           <View style={styles.contentCard}>
             <Text style={styles.contentHeaderLabel}>Content</Text>
-            <Text style={styles.contentText}>
-              {comparisonData.diffItems.map((item, idx) => {
-                if (item.type === 'INSERTED') {
-                  return (
-                    <Text key={idx} style={styles.diffInserted}>
-                      {item.text}
-                    </Text>
-                  );
-                }
-                if (item.type === 'UPDATED') {
-                  return (
-                    <Text key={idx} style={styles.diffUpdated}>
-                      {item.newText || item.text}
-                    </Text>
-                  );
-                }
-                return <Text key={idx}>{item.text}</Text>;
-              })}
-            </Text>
+            {renderSegments(comparisonData.rightSegments)}
           </View>
         </View>
       </ScrollView>
@@ -436,16 +437,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#1E293B',
     lineHeight: 20,
-  },
-  diffInserted: {
-    backgroundColor: '#DCFCE7',
-    color: '#166534',
-    fontWeight: 'bold',
-  },
-  diffUpdated: {
-    backgroundColor: '#E0F2FE',
-    color: '#0284C7',
-    fontWeight: 'bold',
   },
   bottomBarContainer: {
     position: 'absolute',
