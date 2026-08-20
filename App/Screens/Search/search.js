@@ -11,7 +11,7 @@ import {
   ActivityIndicator
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
-import mappingData from '../../Assets/Data/comprehensiveMappings.json';
+import { DataService } from '../../Services/dataService';
 import { computeLegalDiff } from '../../Utilities/legalDiffEngine';
 
 export default function SearchScreen({ navigation }) {
@@ -20,96 +20,30 @@ export default function SearchScreen({ navigation }) {
   const [voiceModalVisible, setVoiceModalVisible] = useState(false);
   const [voiceListening, setVoiceListening] = useState(false);
 
-  // Combine all mapped statutory sections with law names (no chapter names)
-  const allSections = useMemo(() => {
-    const list = [];
-    (mappingData.ipcToBns || []).forEach((item, idx) => {
-      list.push({
-        id: `ipc_${item.oldSec}_${item.newSec}_${idx}`,
-        primaryLawCode: 'IPC',
-        primarySecNum: item.oldSec,
-        companionLawCode: 'BNS',
-        companionSecNum: item.newSec,
-        primaryLawName: item.oldLawName || 'Indian Penal Code, 1860',
-        companionLawName: item.newLawName || 'Bharatiya Nyaya Sanhita, 2023',
-        title: item.title,
-        oldContent: item.oldContent,
-        newContent: item.newContent,
-      });
-    });
-    (mappingData.crpcToBnss || []).forEach((item, idx) => {
-      list.push({
-        id: `crpc_${item.oldSec}_${item.newSec}_${idx}`,
-        primaryLawCode: 'CrPC',
-        primarySecNum: item.oldSec,
-        companionLawCode: 'BNSS',
-        companionSecNum: item.newSec,
-        primaryLawName: item.oldLawName || 'Code of Criminal Procedure, 1973',
-        companionLawName: item.newLawName || 'Bharatiya Nagarik Suraksha Sanhita, 2023',
-        title: item.title,
-        oldContent: item.oldContent,
-        newContent: item.newContent,
-      });
-    });
-    (mappingData.ieaToBsa || []).forEach((item, idx) => {
-      list.push({
-        id: `iea_${item.oldSec}_${item.newSec}_${idx}`,
-        primaryLawCode: 'IEA',
-        primarySecNum: item.oldSec,
-        companionLawCode: 'BSA',
-        companionSecNum: item.newSec,
-        primaryLawName: item.oldLawName || 'Indian Evidence Act, 1872',
-        companionLawName: item.newLawName || 'Bharatiya Sakshya Adhiniyam, 2023',
-        title: item.title,
-        oldContent: item.oldContent,
-        newContent: item.newContent,
-      });
-    });
-    return list;
-  }, []);
-
-  // Filter and dynamically compute 100% accurate LCS diffs
+  // Dynamic filter matching search with 100% accurate law names and diffs
   const filteredResults = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    let matches = [];
-
-    if (!q) {
-      // Default curated list
-      matches = allSections.filter(s =>
-        ['420', '302', '218', '376', '124A', '41', '154', '65B', '42'].includes(s.primarySecNum) ||
-        ['318(4)', '103', '255', '64', '152', '35', '173', '63', '36'].includes(s.companionSecNum)
-      );
-    } else {
-      matches = allSections.filter(item =>
-        item.primarySecNum.toLowerCase() === q ||
-        item.companionSecNum.toLowerCase() === q ||
-        item.primarySecNum.toLowerCase().startsWith(q) ||
-        item.companionSecNum.toLowerCase().startsWith(q) ||
-        (item.title || '').toLowerCase().includes(q) ||
-        item.primaryLawCode.toLowerCase().includes(q) ||
-        item.companionLawCode.toLowerCase().includes(q)
-      );
-    }
+    const q = query.trim() || '121';
+    const rawMatches = DataService.searchSections(q);
 
     // Compute live 100% accurate LCS diff for each matching result
-    return matches.slice(0, 30).map(item => {
-      const diffResult = computeLegalDiff(item.oldContent, item.newContent);
+    return rawMatches.slice(0, 30).map(item => {
+      const diffResult = computeLegalDiff(item.sourceContent, item.companionContent);
       return {
         ...item,
         status: diffResult.status,
         diffCount: diffResult.diffCount,
-        leftSegments: diffResult.rightSegments, // New Law (BNS/BNSS/BSA) on Left
-        rightSegments: diffResult.leftSegments  // Old Law (IPC/CrPC/IEA) on Right
+        sourceSegments: diffResult.leftSegments,
+        companionSegments: diffResult.rightSegments
       };
     });
-  }, [allSections, query]);
+  }, [query]);
 
   const triggerVoiceSearch = () => {
     setVoiceModalVisible(true);
     setVoiceListening(true);
     setTimeout(() => {
       setVoiceListening(false);
-      setQuery('218');
+      setQuery('121');
       setTimeout(() => {
         setVoiceModalVisible(false);
       }, 500);
@@ -147,7 +81,7 @@ export default function SearchScreen({ navigation }) {
               <Feather name="mic" size={32} color="#FFFFFF" />
             </View>
             <Text style={styles.voiceModalTitle}>
-              {voiceListening ? 'Listening...' : 'Searching for "218"...'}
+              {voiceListening ? 'Listening...' : 'Searching for "121"...'}
             </Text>
             <Text style={styles.voiceModalSubtitle}>Speak legal section or keywords</Text>
             {voiceListening && (
@@ -181,7 +115,7 @@ export default function SearchScreen({ navigation }) {
         <View style={styles.searchContainer}>
           <TextInput
             style={styles.searchInput}
-            placeholder="Search section number or keyword (e.g. 218, 420, 302)..."
+            placeholder="Search section number or keyword (e.g. 121, 420, 302)..."
             placeholderTextColor="#7C8698"
             value={query}
             onChangeText={setQuery}
@@ -211,7 +145,7 @@ export default function SearchScreen({ navigation }) {
           <View style={styles.emptyContainer}>
             <Feather name="search" size={48} color="#94A3B8" style={{ marginBottom: 12 }} />
             <Text style={styles.emptyTitle}>No matching provisions found</Text>
-            <Text style={styles.emptyDesc}>Try searching by section number (e.g. 218, 420, 302) or legal topic.</Text>
+            <Text style={styles.emptyDesc}>Try searching by section number (e.g. 121, 420, 302) or legal topic.</Text>
           </View>
         }
         renderItem={({ item }) => {
@@ -226,13 +160,13 @@ export default function SearchScreen({ navigation }) {
                 onPress={() => setExpandedId(isExpanded ? null : item.id)}
               >
                 <View style={styles.bsaBadge}>
-                  <Text style={styles.badgeText}>{item.primaryLawCode}</Text>
-                  <Text style={styles.badgeSec}>Sec {item.primarySecNum}</Text>
+                  <Text style={styles.badgeText}>{item.sourceLawCode}</Text>
+                  <Text style={styles.badgeSec}>Sec {item.sourceSec}</Text>
                 </View>
 
                 <View style={{ flex: 1 }}>
                   <Text style={styles.cardLawHeader} numberOfLines={1}>
-                    {item.primaryLawName} ↔ {item.companionLawName}
+                    {item.sourceLawName}
                   </Text>
                   <Text style={styles.cardTitle} numberOfLines={2}>
                     {item.title}
@@ -269,16 +203,16 @@ export default function SearchScreen({ navigation }) {
                   {/* Dual Column Headings with Law Names */}
                   <View style={styles.colHeaderRow}>
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.colLawName}>{item.companionLawName}</Text>
+                      <Text style={styles.colLawName}>{item.sourceLawName}</Text>
                       <Text style={styles.colTitleLeft}>
-                        {item.companionLawCode} Sec {item.companionSecNum} ({item.status})
+                        {item.sourceLawCode} Sec {item.sourceSec} ({item.status})
                       </Text>
                     </View>
 
                     <View style={{ flex: 1 }}>
-                      <Text style={styles.colLawName}>{item.primaryLawName}</Text>
+                      <Text style={styles.colLawName}>{item.companionLawName}</Text>
                       <Text style={styles.colTitleRight}>
-                        {item.primaryLawCode} Sec {item.primarySecNum}
+                        {item.companionLawCode} Sec {item.companionSec}
                       </Text>
                     </View>
                   </View>
@@ -286,10 +220,10 @@ export default function SearchScreen({ navigation }) {
                   {/* Dual Column Body with 100% Accurate Word Diffs */}
                   <View style={styles.dualTextRow}>
                     <View style={styles.colBodyLeft}>
-                      {renderSegments(item.leftSegments)}
+                      {renderSegments(item.sourceSegments)}
                     </View>
                     <View style={styles.colBodyRight}>
-                      {renderSegments(item.rightSegments)}
+                      {renderSegments(item.companionSegments)}
                     </View>
                   </View>
 
@@ -298,14 +232,14 @@ export default function SearchScreen({ navigation }) {
                     style={styles.compareBtn}
                     activeOpacity={0.85}
                     onPress={() => navigation.navigate('Comparison', {
-                      ipcSec: item.primarySecNum,
-                      oldSec: item.primarySecNum,
-                      newSec: item.companionSecNum,
-                      actCode: item.primaryLawCode,
+                      ipcSec: item.sourceSec,
+                      oldSec: item.sourceSec,
+                      newSec: item.companionSec,
+                      actCode: item.sourceLawCode,
                       sectionData: {
                         keyword: item.title,
-                        name: item.primarySecNum,
-                        content: [{ content: item.oldContent }]
+                        name: item.sourceSec,
+                        content: [{ content: item.sourceContent }]
                       }
                     })}
                   >
