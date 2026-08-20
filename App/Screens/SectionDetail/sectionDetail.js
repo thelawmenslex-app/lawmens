@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,24 +13,25 @@ import Feather from 'react-native-vector-icons/Feather';
 import { ApiService } from '../../Services/apiService';
 import mappingData from '../../Assets/Data/comprehensiveMappings.json';
 import { SyncService } from '../../Services/syncService';
-import { useEffect } from 'react';
 
-// Admin Portal Synced Rich Clause Parser
+// Admin Portal Synced Rich Clause Parser (Exact 1:1 WYSIWYG match)
 function parseAdminPortalClauses(text) {
   if (!text) return [];
 
+  // 1. If text has HTML tags from Admin WYSIWYG editor (<p>, <br>, etc.), preserve natural HTML structure
   let normalized = text
-    .replace(/<p[^>]*>/gi, '')
-    .replace(/<\/p>/gi, '\n\n')
     .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/&nbsp;/gi, ' ');
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<p[^>]*>/gi, '')
+    .replace(/&nbsp;/gi, ' ')
+    .trim();
 
-  // Split clauses like (1), (2), (a), (b), (i), (ii), Explanation, Illustration, Provided that
-  normalized = normalized.replace(/(?<!\n)\s*(\(\d+[a-zA-Z]?\))\s*/g, '\n\n$1 ');
-  normalized = normalized.replace(/(?<!\n)\s*(\([a-z]\))\s*/g, '\n\n$1 ');
-  normalized = normalized.replace(/(?<!\n)\s*(\([ivxLCDM]+\))\s*/g, '\n\n$1 ');
-  normalized = normalized.replace(/(?<!\n)\s*(Illustration(\s*\d*|\s*[A-Z])?\s*[.:])/g, '\n\n$1');
-  normalized = normalized.replace(/(?<!\n)\s*(Explanation(\s*\d*)?\s*[.:])/g, '\n\n$1');
+  // 2. Only split on clause markers if they are NOT part of inline cross-references
+  normalized = normalized.replace(/(?<!(sub-section|sub section|section|clause|sub-clause|under|of|item|paragraph|rule|order|article|proviso|schedule|and|or))\s+(\(\d+[a-zA-Z]?\))(?=\s+[A-Z])/gi, '\n\n$2 ');
+  normalized = normalized.replace(/(?<!(sub-section|sub section|section|clause|sub-clause|under|of|item|paragraph|rule|order|article|proviso|schedule|and|or))\s+(\([a-z]\))(?=\s+[A-Z])/gi, '\n\n$2 ');
+  normalized = normalized.replace(/(?<!(sub-section|sub section|section|clause|sub-clause|under|of|item|paragraph|rule|order|article|proviso|schedule|and|or))\s+(\([ivxLCDM]+\))(?=\s+[A-Z])/gi, '\n\n$2 ');
+  normalized = normalized.replace(/(?<!\n)\s*(Illustration(\s*\d*|\s*[A-Z])?\s*[.:])/gi, '\n\n$1');
+  normalized = normalized.replace(/(?<!\n)\s*(Explanation(\s*\d*)?\s*[.:])/gi, '\n\n$1');
   normalized = normalized.replace(/(?<!\n)\s*(Provided(\s+further)?\s+that)/gi, '\n\n$1');
 
   const rawBlocks = normalized
@@ -64,6 +65,9 @@ export default function SectionDetailScreen({ route, navigation }) {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [liveOverrideContent, setLiveOverrideContent] = useState(null);
 
+  const secNumber = String(sectionData.name || '1').trim();
+  const secTitle = sectionData.keyword || `Section ${secNumber}`;
+
   useEffect(() => {
     (async () => {
       const dynamicSec = await SyncService.getDynamicSection(secNumber);
@@ -74,12 +78,10 @@ export default function SectionDetailScreen({ route, navigation }) {
     })();
   }, [secNumber]);
 
-  const secNumber = String(sectionData.name || '1').trim();
-  const secTitle = sectionData.keyword || `Section ${secNumber}`;
-
   // Robust content resolver matching Admin Portal
   const fullContent = useMemo(() => {
     if (liveOverrideContent) return liveOverrideContent;
+
     const rawParagraphs = (sectionData.content || [])
       .map(c => typeof c === 'string' ? c : c.content)
       .filter(Boolean)
@@ -117,7 +119,7 @@ export default function SectionDetailScreen({ route, navigation }) {
     }
 
     return `Statutory provisions and legal text for Section ${secNumber}.`;
-  }, [sectionData, actCode, secNumber]);
+  }, [sectionData, actCode, secNumber, liveOverrideContent]);
 
   // Formatted clauses matching Admin Portal
   const clauses = useMemo(() => {
