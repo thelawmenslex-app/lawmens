@@ -20,16 +20,18 @@ export default function SearchScreen({ navigation }) {
   const [voiceModalVisible, setVoiceModalVisible] = useState(false);
   const [voiceListening, setVoiceListening] = useState(false);
 
-  // Combine all mapped statutory sections
+  // Combine all mapped statutory sections with law names (no chapter names)
   const allSections = useMemo(() => {
     const list = [];
     (mappingData.ipcToBns || []).forEach((item, idx) => {
       list.push({
-        id: `ipc_${item.oldSec}_${idx}`,
-        oldLawCode: 'IPC',
-        oldSecNum: item.oldSec,
-        newLawCode: 'BNS',
-        newSecNum: item.newSec,
+        id: `ipc_${item.oldSec}_${item.newSec}_${idx}`,
+        primaryLawCode: 'IPC',
+        primarySecNum: item.oldSec,
+        companionLawCode: 'BNS',
+        companionSecNum: item.newSec,
+        primaryLawName: item.oldLawName || 'Indian Penal Code, 1860',
+        companionLawName: item.newLawName || 'Bharatiya Nyaya Sanhita, 2023',
         title: item.title,
         oldContent: item.oldContent,
         newContent: item.newContent,
@@ -37,11 +39,13 @@ export default function SearchScreen({ navigation }) {
     });
     (mappingData.crpcToBnss || []).forEach((item, idx) => {
       list.push({
-        id: `crpc_${item.oldSec}_${idx}`,
-        oldLawCode: 'CrPC',
-        oldSecNum: item.oldSec,
-        newLawCode: 'BNSS',
-        newSecNum: item.newSec,
+        id: `crpc_${item.oldSec}_${item.newSec}_${idx}`,
+        primaryLawCode: 'CrPC',
+        primarySecNum: item.oldSec,
+        companionLawCode: 'BNSS',
+        companionSecNum: item.newSec,
+        primaryLawName: item.oldLawName || 'Code of Criminal Procedure, 1973',
+        companionLawName: item.newLawName || 'Bharatiya Nagarik Suraksha Sanhita, 2023',
         title: item.title,
         oldContent: item.oldContent,
         newContent: item.newContent,
@@ -49,11 +53,13 @@ export default function SearchScreen({ navigation }) {
     });
     (mappingData.ieaToBsa || []).forEach((item, idx) => {
       list.push({
-        id: `iea_${item.oldSec}_${idx}`,
-        oldLawCode: 'IEA',
-        oldSecNum: item.oldSec,
-        newLawCode: 'BSA',
-        newSecNum: item.newSec,
+        id: `iea_${item.oldSec}_${item.newSec}_${idx}`,
+        primaryLawCode: 'IEA',
+        primarySecNum: item.oldSec,
+        companionLawCode: 'BSA',
+        companionSecNum: item.newSec,
+        primaryLawName: item.oldLawName || 'Indian Evidence Act, 1872',
+        companionLawName: item.newLawName || 'Bharatiya Sakshya Adhiniyam, 2023',
         title: item.title,
         oldContent: item.oldContent,
         newContent: item.newContent,
@@ -68,18 +74,20 @@ export default function SearchScreen({ navigation }) {
     let matches = [];
 
     if (!q) {
-      // Default curated sample on empty search
+      // Default curated list
       matches = allSections.filter(s =>
-        ['420', '302', '376', '124A', '41', '154', '65B', '42'].includes(s.oldSecNum) ||
-        ['318(4)', '103', '64', '152', '35', '173', '63', '36'].includes(s.newSecNum)
+        ['420', '302', '218', '376', '124A', '41', '154', '65B', '42'].includes(s.primarySecNum) ||
+        ['318(4)', '103', '255', '64', '152', '35', '173', '63', '36'].includes(s.companionSecNum)
       );
     } else {
       matches = allSections.filter(item =>
-        item.oldSecNum.toLowerCase() === q ||
-        item.newSecNum.toLowerCase() === q ||
-        item.oldSecNum.toLowerCase().startsWith(q) ||
-        item.newSecNum.toLowerCase().startsWith(q) ||
-        (item.title || '').toLowerCase().includes(q)
+        item.primarySecNum.toLowerCase() === q ||
+        item.companionSecNum.toLowerCase() === q ||
+        item.primarySecNum.toLowerCase().startsWith(q) ||
+        item.companionSecNum.toLowerCase().startsWith(q) ||
+        (item.title || '').toLowerCase().includes(q) ||
+        item.primaryLawCode.toLowerCase().includes(q) ||
+        item.companionLawCode.toLowerCase().includes(q)
       );
     }
 
@@ -101,7 +109,7 @@ export default function SearchScreen({ navigation }) {
     setVoiceListening(true);
     setTimeout(() => {
       setVoiceListening(false);
-      setQuery('420');
+      setQuery('218');
       setTimeout(() => {
         setVoiceModalVisible(false);
       }, 500);
@@ -139,7 +147,7 @@ export default function SearchScreen({ navigation }) {
               <Feather name="mic" size={32} color="#FFFFFF" />
             </View>
             <Text style={styles.voiceModalTitle}>
-              {voiceListening ? 'Listening...' : 'Searching for "420"...'}
+              {voiceListening ? 'Listening...' : 'Searching for "218"...'}
             </Text>
             <Text style={styles.voiceModalSubtitle}>Speak legal section or keywords</Text>
             {voiceListening && (
@@ -173,7 +181,7 @@ export default function SearchScreen({ navigation }) {
         <View style={styles.searchContainer}>
           <TextInput
             style={styles.searchInput}
-            placeholder="Search section number or keyword (e.g. 420, 302, bail)..."
+            placeholder="Search section number or keyword (e.g. 218, 420, 302)..."
             placeholderTextColor="#7C8698"
             value={query}
             onChangeText={setQuery}
@@ -193,7 +201,7 @@ export default function SearchScreen({ navigation }) {
         </View>
       </View>
 
-      {/* Search Results List with 100% Precision Diffs */}
+      {/* Search Results List Showing Law Names (No Chapter Names) */}
       <FlatList
         data={filteredResults}
         keyExtractor={(item) => item.id}
@@ -203,7 +211,7 @@ export default function SearchScreen({ navigation }) {
           <View style={styles.emptyContainer}>
             <Feather name="search" size={48} color="#94A3B8" style={{ marginBottom: 12 }} />
             <Text style={styles.emptyTitle}>No matching provisions found</Text>
-            <Text style={styles.emptyDesc}>Try searching by section number (e.g. 420, 302, 124A) or legal topic.</Text>
+            <Text style={styles.emptyDesc}>Try searching by section number (e.g. 218, 420, 302) or legal topic.</Text>
           </View>
         }
         renderItem={({ item }) => {
@@ -211,19 +219,26 @@ export default function SearchScreen({ navigation }) {
 
           return (
             <View style={styles.resultCard}>
-              {/* Card Header Row */}
+              {/* Card Header Row: Shows Law Name & Section Title (No Chapter Name) */}
               <TouchableOpacity
                 style={styles.cardHeader}
                 activeOpacity={0.85}
                 onPress={() => setExpandedId(isExpanded ? null : item.id)}
               >
                 <View style={styles.bsaBadge}>
-                  <Text style={styles.badgeText}>{item.newLawCode}</Text>
-                  <Text style={styles.badgeSec}>Sec {item.newSecNum}</Text>
+                  <Text style={styles.badgeText}>{item.primaryLawCode}</Text>
+                  <Text style={styles.badgeSec}>Sec {item.primarySecNum}</Text>
                 </View>
-                <Text style={styles.cardTitle} numberOfLines={2}>
-                  {item.title}
-                </Text>
+
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.cardLawHeader} numberOfLines={1}>
+                    {item.primaryLawName} ↔ {item.companionLawName}
+                  </Text>
+                  <Text style={styles.cardTitle} numberOfLines={2}>
+                    {item.title}
+                  </Text>
+                </View>
+
                 <Feather
                   name={isExpanded ? 'chevron-up' : 'chevron-down'}
                   size={18}
@@ -232,7 +247,7 @@ export default function SearchScreen({ navigation }) {
                 />
               </TouchableOpacity>
 
-              {/* Expanded Diff View (100% Exact Precision LCS Highlights) */}
+              {/* Expanded Diff View (Law Names and 100% Precision Diffs) */}
               {isExpanded && (
                 <View style={styles.expandedContent}>
                   {/* Indicator row */}
@@ -251,14 +266,21 @@ export default function SearchScreen({ navigation }) {
                     </View>
                   </View>
 
-                  {/* Dual Column Headings */}
+                  {/* Dual Column Headings with Law Names */}
                   <View style={styles.colHeaderRow}>
-                    <Text style={styles.colTitleLeft}>
-                      {item.newLawCode} Sec {item.newSecNum} ({item.status})
-                    </Text>
-                    <Text style={styles.colTitleRight}>
-                      {item.oldLawCode} Sec {item.oldSecNum}
-                    </Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.colLawName}>{item.companionLawName}</Text>
+                      <Text style={styles.colTitleLeft}>
+                        {item.companionLawCode} Sec {item.companionSecNum} ({item.status})
+                      </Text>
+                    </View>
+
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.colLawName}>{item.primaryLawName}</Text>
+                      <Text style={styles.colTitleRight}>
+                        {item.primaryLawCode} Sec {item.primarySecNum}
+                      </Text>
+                    </View>
                   </View>
 
                   {/* Dual Column Body with 100% Accurate Word Diffs */}
@@ -276,13 +298,13 @@ export default function SearchScreen({ navigation }) {
                     style={styles.compareBtn}
                     activeOpacity={0.85}
                     onPress={() => navigation.navigate('Comparison', {
-                      ipcSec: item.oldSecNum,
-                      oldSec: item.oldSecNum,
-                      newSec: item.newSecNum,
-                      actCode: item.oldLawCode,
+                      ipcSec: item.primarySecNum,
+                      oldSec: item.primarySecNum,
+                      newSec: item.companionSecNum,
+                      actCode: item.primaryLawCode,
                       sectionData: {
                         keyword: item.title,
-                        name: item.oldSecNum,
+                        name: item.primarySecNum,
                         content: [{ content: item.oldContent }]
                       }
                     })}
@@ -425,8 +447,15 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#0369A1',
   },
+  cardLawHeader: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#00A3FF',
+    textTransform: 'uppercase',
+    letterSpacing: 0.4,
+    marginBottom: 2,
+  },
   cardTitle: {
-    flex: 1,
     fontSize: 13,
     fontWeight: '800',
     color: '#111827',
@@ -465,15 +494,19 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     gap: 12,
   },
+  colLawName: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#64748B',
+    marginBottom: 2,
+  },
   colTitleLeft: {
-    flex: 1,
     fontSize: 13,
     fontWeight: '900',
     color: '#00A3FF',
     lineHeight: 17,
   },
   colTitleRight: {
-    flex: 1,
     fontSize: 13,
     fontWeight: '900',
     color: '#111827',
