@@ -13,6 +13,7 @@ import Feather from 'react-native-vector-icons/Feather';
 import { ApiService } from '../../Services/apiService';
 import mappingData from '../../Assets/Data/comprehensiveMappings.json';
 import { SyncService } from '../../Services/syncService';
+import { BASE_URL } from '../../Actions/constant';
 
 // Admin Portal Synced Rich Clause Parser (Exact 1:1 WYSIWYG match)
 function parseAdminPortalClauses(text) {
@@ -26,10 +27,17 @@ function parseAdminPortalClauses(text) {
     .replace(/&nbsp;/gi, ' ')
     .trim();
 
-  // 2. Only split on clause markers if they are NOT part of inline cross-references
-  normalized = normalized.replace(/(?<!(sub-section|sub section|section|clause|sub-clause|under|of|item|paragraph|rule|order|article|proviso|schedule|and|or))\s+(\(\d+[a-zA-Z]?\))(?=\s+[A-Z])/gi, '\n\n$2 ');
-  normalized = normalized.replace(/(?<!(sub-section|sub section|section|clause|sub-clause|under|of|item|paragraph|rule|order|article|proviso|schedule|and|or))\s+(\([a-z]\))(?=\s+[A-Z])/gi, '\n\n$2 ');
-  normalized = normalized.replace(/(?<!(sub-section|sub section|section|clause|sub-clause|under|of|item|paragraph|rule|order|article|proviso|schedule|and|or))\s+(\([ivxLCDM]+\))(?=\s+[A-Z])/gi, '\n\n$2 ');
+  // 2. Handle cases where clause marker is preceded by punctuation/newline without space e.g. "Magistrate.(6) Nothing"
+  normalized = normalized.replace(/([.:;?!]|\n)\s*(\(\d+[a-zA-Z]?\))(?=\s+[A-Z])/gi, '$1\n\n$2 ');
+  normalized = normalized.replace(/([.:;?!]|\n)\s*(\([a-z]\))(?=\s+[A-Z])/gi, '$1\n\n$2 ');
+  normalized = normalized.replace(/([.:;?!]|\n)\s*(\([ivxLCDM]+\))(?=\s+[A-Z])/gi, '$1\n\n$2 ');
+
+  // 3. Handle cases where clause marker is preceded by whitespace, but NOT part of inline cross references like "sub-section(4)"
+  normalized = normalized.replace(/(?<!(sub-section|sub section|section|clause|sub-clause|under|of|item|paragraph|rule|order|article|proviso|schedule|and|or)[-( ]*)\s+(\(\d+[a-zA-Z]?\))(?=\s+[A-Z])/gi, '\n\n$2 ');
+  normalized = normalized.replace(/(?<!(sub-section|sub section|section|clause|sub-clause|under|of|item|paragraph|rule|order|article|proviso|schedule|and|or)[-( ]*)\s+(\([a-z]\))(?=\s+[A-Z])/gi, '\n\n$2 ');
+  normalized = normalized.replace(/(?<!(sub-section|sub section|section|clause|sub-clause|under|of|item|paragraph|rule|order|article|proviso|schedule|and|or)[-( ]*)\s+(\([ivxLCDM]+\))(?=\s+[A-Z])/gi, '\n\n$2 ');
+
+  // 4. Handle structural legal blocks
   normalized = normalized.replace(/(?<!\n)\s*(Illustration(\s*\d*|\s*[A-Z])?\s*[.:])/gi, '\n\n$1');
   normalized = normalized.replace(/(?<!\n)\s*(Explanation(\s*\d*)?\s*[.:])/gi, '\n\n$1');
   normalized = normalized.replace(/(?<!\n)\s*(Provided(\s+further)?\s+that)/gi, '\n\n$1');
@@ -69,13 +77,27 @@ export default function SectionDetailScreen({ route, navigation }) {
   const secTitle = sectionData.keyword || `Section ${secNumber}`;
 
   useEffect(() => {
+    let isMounted = true;
     (async () => {
+      // 1. Check local dynamic updates
       const dynamicSec = await SyncService.getDynamicSection(secNumber);
-      if (dynamicSec && dynamicSec.content && dynamicSec.content.length > 0) {
+      if (dynamicSec && dynamicSec.content && dynamicSec.content.length > 0 && isMounted) {
         const txt = dynamicSec.content.map(c => typeof c === 'string' ? c : c.content).join('\n\n');
         if (txt) setLiveOverrideContent(txt);
       }
+
+      // 2. Background live sync from Admin Portal
+      SyncService.pullLatestChanges().then(() => {
+        SyncService.getDynamicSection(secNumber).then(updated => {
+          if (updated && updated.content && updated.content.length > 0 && isMounted) {
+            const txt = updated.content.map(c => typeof c === 'string' ? c : c.content).join('\n\n');
+            if (txt) setLiveOverrideContent(txt);
+          }
+        });
+      }).catch(() => {});
     })();
+
+    return () => { isMounted = false; };
   }, [secNumber]);
 
   // Robust content resolver matching Admin Portal
