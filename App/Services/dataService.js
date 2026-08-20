@@ -1,6 +1,15 @@
 import rawData from '../Assets/Data/lawData.json';
 import mappingData from '../Assets/Data/comprehensiveMappings.json';
 
+const categoryCodeMap = {
+  'bns': '6657529c84091c0faa66efdf',
+  'bnss': '665752a184091c0faa66efe2',
+  'bsa': '665752a784091c0faa66efe5',
+  'ipc': '6657528684091c0faa66efd6',
+  'crpc': '6657528b84091c0faa66efd9',
+  'iea': '6657529084091c0faa66efdc',
+};
+
 const CAT_MAP = {
   '6657528684091c0faa66efd6': { code: 'IPC', name: 'Indian Penal Code, 1860', companion: 'BNS', companionName: 'Bharatiya Nyaya Sanhita, 2023', pairKey: 'ipcToBns' },
   '6657529c84091c0faa66efdf': { code: 'BNS', name: 'Bharatiya Nyaya Sanhita, 2023', companion: 'IPC', companionName: 'Indian Penal Code, 1860', pairKey: 'ipcToBns' },
@@ -16,11 +25,23 @@ export const DataService = {
   },
 
   getChaptersByCategory: (catIdOrCode) => {
+    const codeKey = String(catIdOrCode || '').toLowerCase().trim();
+    const targetCatId = categoryCodeMap[codeKey] || catIdOrCode;
+
     const chapters = (rawData.casebooks || []).filter(c => {
-      const cId = typeof c.categoryId === 'object' ? c.categoryId.$oid : c.categoryId;
-      return cId === catIdOrCode;
+      const cId = typeof c.categoryId === 'object' ? c.categoryId?.$oid : c.categoryId;
+      return cId === targetCatId;
     });
     return chapters;
+  },
+
+  getSections: (catIdOrCode, chapterName) => {
+    const chapters = DataService.getChaptersByCategory(catIdOrCode);
+    if (!chapterName) {
+      return chapters.flatMap(c => c.section || []);
+    }
+    const found = chapters.find(c => (c.name || '').toLowerCase() === String(chapterName).toLowerCase());
+    return found ? (found.section || []) : [];
   },
 
   getMinorActs: () => {
