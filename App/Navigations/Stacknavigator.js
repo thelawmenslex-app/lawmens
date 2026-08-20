@@ -15,6 +15,7 @@ import ChapterlistScreen from '../Screens/Chapterlist/chapterlist';
 import MappingTableScreen from '../Screens/MappingTable/mappingTable';
 import SeclistScreen from '../Screens/Seclist/seclist';
 import ComparisonScreen from '../Screens/Comparison/comparison';
+import SectionDetailScreen from '../Screens/SectionDetail/sectionDetail';
 import MinorActsScreen from '../Screens/MinorActs/minorActs';
 import SearchScreen from '../Screens/Search/search';
 import NotificationsScreen from '../Screens/Notifications/notifications';
@@ -77,6 +78,7 @@ export default function Routes() {
         <Stack.Screen name="MappingTable" component={MappingTableScreen} />
         <Stack.Screen name="Seclist" component={SeclistScreen} />
         <Stack.Screen name="Comparison" component={ComparisonScreen} />
+        <Stack.Screen name="SectionDetail" component={SectionDetailScreen} />
         <Stack.Screen name="MinorActs" component={MinorActsScreen} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} />
         <Stack.Screen name="Schedules" component={SchedulesScreen} />

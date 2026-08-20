@@ -107,7 +107,7 @@ export default function SeclistScreen({ route, navigation }) {
             <TouchableOpacity
               style={styles.sectionCard}
               activeOpacity={0.85}
-              onPress={() => navigation.navigate('Comparison', {
+              onPress={() => navigation.navigate('SectionDetail', {
                 ipcSec: item.name,
                 sectionData: item,
                 actTitle: actTitle,
