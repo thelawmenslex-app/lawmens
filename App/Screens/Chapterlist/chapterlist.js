@@ -117,7 +117,7 @@ export default function ChapterlistScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#EDF7FC',
+    backgroundColor: '#E6EEF8',
   },
   darkHeader: {
     backgroundColor: '#181A20',
@@ -182,17 +182,19 @@ const styles = StyleSheet.create({
   },
   chapterPillCard: {
     backgroundColor: '#00A3FF',
-    borderRadius: 16,
+    borderRadius: 18,
     paddingVertical: 16,
     paddingHorizontal: 18,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    shadowColor: '#00A3FF',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 3,
+    borderWidth: 1.5,
+    borderColor: '#7DD3FC',
+    shadowColor: '#0284C7',
+    shadowOffset: { width: 3, height: 5 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 4,
   },
   chapterTextContainer: {
     flex: 1,

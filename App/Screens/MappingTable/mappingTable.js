@@ -243,7 +243,7 @@ export default function MappingTableScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#EDF7FC',
+    backgroundColor: '#E6EEF8',
   },
   darkHeader: {
     backgroundColor: '#181A20',

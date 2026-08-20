@@ -1,20 +1,20 @@
 import React from 'react';
-import { View, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Icon from 'react-native-vector-icons/Ionicons';
 import Feather from 'react-native-vector-icons/Feather';
+
 import HomeScreen from '../Screens/Home/home';
+import SearchScreen from '../Screens/Search/search';
 import BookmarkScreen from '../Screens/Bookmark/bookmark';
 import ProfileScreen from '../Screens/Profile/profile';
 
 const Tab = createBottomTabNavigator();
 
-function CustomTabBar({ state, descriptors, navigation }) {
+function NeumorphicTabBar({ state, descriptors, navigation }) {
   return (
     <View style={styles.tabBarWrapper}>
       <View style={styles.tabBarContainer}>
         {state.routes.map((route, index) => {
-          const { options } = descriptors[route.key];
           const isFocused = state.index === index;
 
           const onPress = () => {
@@ -29,35 +29,27 @@ function CustomTabBar({ state, descriptors, navigation }) {
             }
           };
 
+          let iconName = 'home';
+          if (route.name === 'HomeTab') iconName = 'home';
+          else if (route.name === 'SearchTab') iconName = 'search';
+          else if (route.name === 'BookmarkTab') iconName = 'bookmark';
+          else if (route.name === 'ProfileTab') iconName = 'user';
+
           return (
             <TouchableOpacity
-              key={index}
-              style={styles.tabButton}
+              key={route.name}
               onPress={onPress}
               activeOpacity={0.8}
+              style={[
+                styles.tabButton,
+                isFocused ? styles.tabButtonActive : styles.tabButtonInactive
+              ]}
             >
-              {route.name === 'Home' && (
-                <Feather
-                  name="home"
-                  size={24}
-                  color={isFocused ? '#00A3FF' : '#5A6E7F'}
-                />
-              )}
-              {route.name === 'Bookmark' && (
-                <Feather
-                  name="bookmark"
-                  size={24}
-                  color={isFocused ? '#00A3FF' : '#5A6E7F'}
-                />
-              )}
-              {route.name === 'Profile' && (
-                <Feather
-                  name="user"
-                  size={24}
-                  color={isFocused ? '#00A3FF' : '#5A6E7F'}
-                />
-              )}
-              {isFocused && <View style={styles.activeBar} />}
+              <Feather
+                name={iconName}
+                size={22}
+                color={isFocused ? '#00A3FF' : '#7C8BA0'}
+              />
             </TouchableOpacity>
           );
         })}
@@ -69,12 +61,13 @@ function CustomTabBar({ state, descriptors, navigation }) {
 export default function BottomTabNavigator() {
   return (
     <Tab.Navigator
-      tabBar={props => <CustomTabBar {...props} />}
+      tabBar={props => <NeumorphicTabBar {...props} />}
       screenOptions={{ headerShown: false }}
     >
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Bookmark" component={BookmarkScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="HomeTab" component={HomeScreen} />
+      <Tab.Screen name="SearchTab" component={SearchScreen} />
+      <Tab.Screen name="BookmarkTab" component={BookmarkScreen} />
+      <Tab.Screen name="ProfileTab" component={ProfileScreen} />
     </Tab.Navigator>
   );
 }
@@ -82,35 +75,46 @@ export default function BottomTabNavigator() {
 const styles = StyleSheet.create({
   tabBarWrapper: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'transparent',
+    bottom: Platform.OS === 'ios' ? 24 : 16,
+    left: 20,
+    right: 20,
+    alignItems: 'center',
   },
   tabBarContainer: {
     flexDirection: 'row',
-    backgroundColor: '#DEF3FA',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    height: 70,
-    paddingBottom: 10,
-    alignItems: 'center',
-    justifyContent: 'space-around',
+    backgroundColor: '#EBF2FA',
+    borderRadius: 24,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
     borderWidth: 1.5,
-    borderBottomWidth: 0,
-    borderColor: '#BAE6FD',
+    borderColor: '#FFFFFF',
+    shadowColor: '#A8BED6',
+    shadowOffset: { width: 4, height: 6 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 8,
+    justifyContent: 'space-between',
+    width: '100%',
   },
   tabButton: {
     flex: 1,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    height: '100%',
+    borderRadius: 18,
+    marginHorizontal: 4,
   },
-  activeBar: {
-    width: 20,
-    height: 4,
-    borderRadius: 2,
-    backgroundColor: '#00A3FF',
-    marginTop: 4,
+  tabButtonActive: {
+    backgroundColor: '#DEF0FC',
+    borderWidth: 1.5,
+    borderColor: '#BAE6FD',
+    shadowColor: '#00A3FF',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  tabButtonInactive: {
+    backgroundColor: 'transparent',
   },
 });

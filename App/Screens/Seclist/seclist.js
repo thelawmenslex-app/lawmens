@@ -142,7 +142,7 @@ export default function SeclistScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#EDF7FC',
+    backgroundColor: '#E6EEF8',
   },
   darkHeader: {
     backgroundColor: '#181A20',
@@ -215,18 +215,18 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   sectionCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
+    backgroundColor: '#F5F9FD',
+    borderRadius: 18,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: '#D0E7F5',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderColor: '#FFFFFF',
+    shadowColor: '#A8BED6',
+    shadowOffset: { width: 3, height: 4 },
+    shadowOpacity: 0.45,
+    shadowRadius: 6,
+    elevation: 3,
   },
   sectionNumberBadge: {
     backgroundColor: '#DEF3FA',
