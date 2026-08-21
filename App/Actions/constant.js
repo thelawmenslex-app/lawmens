@@ -1,4 +1,4 @@
-export const Imageurl = 'https://www.the-lawmens.com';
+export const Imageurl = 'https://lawmens-1.onrender.com';
 export const BASE_URL = 'https://www.the-lawmens.com/api/v1';
 
 export const backendroutes = {

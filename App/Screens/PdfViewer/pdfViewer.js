@@ -19,13 +19,13 @@ export default function PdfViewerScreen({ route, navigation }) {
   const {
     title = 'Minor Act Document',
     pdfUrl = '',
-    actId = '',
-    totalPageCount = 34
+    fallbackPdfUrl = '',
+    actId = ''
   } = route?.params || {};
 
   const webViewRef = useRef(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(totalPageCount);
+  const [totalPages, setTotalPages] = useState('...');
   const [zoomPercent, setZoomPercent] = useState(100);
   const [rotation, setRotation] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -34,12 +34,30 @@ export default function PdfViewerScreen({ route, navigation }) {
   const [pdfBase64, setPdfBase64] = useState(null);
   const [fetchError, setFetchError] = useState(null);
 
-  // Fetch binary PDF data natively in React Native
+  // Fetch binary PDF data with fallback natively
   useEffect(() => {
     let isMounted = true;
 
+    async function downloadPdfBytes(url) {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Status ${response.status}`);
+      }
+      const blob = await response.blob();
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const res = reader.result;
+          const clean = res.includes(',') ? res.split(',')[1] : res;
+          resolve(clean);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+
     async function loadPdfBinary() {
-      if (!pdfUrl) {
+      if (!pdfUrl && !fallbackPdfUrl) {
         setLoading(false);
         return;
       }
@@ -47,25 +65,29 @@ export default function PdfViewerScreen({ route, navigation }) {
         setLoading(true);
         setFetchError(null);
 
-        const response = await fetch(pdfUrl);
-        if (!response.ok) {
-          throw new Error(`Server returned status ${response.status}`);
+        let base64Data = null;
+        try {
+          if (pdfUrl) {
+            base64Data = await downloadPdfBytes(pdfUrl);
+          }
+        } catch (e1) {
+          console.warn('Primary PDF URL failed, trying fallback:', e1.message);
+          if (fallbackPdfUrl && fallbackPdfUrl !== pdfUrl) {
+            base64Data = await downloadPdfBytes(fallbackPdfUrl);
+          } else {
+            throw e1;
+          }
         }
 
-        const blob = await response.blob();
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          if (!isMounted) return;
-          const base64data = reader.result;
-          // Extract pure base64 part
-          const cleanBase64 = base64data.includes(',')
-            ? base64data.split(',')[1]
-            : base64data;
-          setPdfBase64(cleanBase64);
-        };
-        reader.readAsDataURL(blob);
+        if (!base64Data && fallbackPdfUrl) {
+          base64Data = await downloadPdfBytes(fallbackPdfUrl);
+        }
+
+        if (isMounted && base64Data) {
+          setPdfBase64(base64Data);
+        }
       } catch (err) {
-        console.warn('PDF fetch error:', err);
+        console.warn('All PDF fetch sources failed:', err);
         if (isMounted) {
           setFetchError(err.message);
           setLoading(false);
@@ -78,7 +100,7 @@ export default function PdfViewerScreen({ route, navigation }) {
     return () => {
       isMounted = false;
     };
-  }, [pdfUrl]);
+  }, [pdfUrl, fallbackPdfUrl]);
 
   // Handle messages from PDF.js inside WebView
   const handleMessage = (event) => {
@@ -128,7 +150,8 @@ export default function PdfViewerScreen({ route, navigation }) {
 
   // Go to page
   const handleGoToPage = (pageNum) => {
-    const p = Math.max(1, Math.min(parseInt(pageNum, 10) || 1, totalPages));
+    const maxP = typeof totalPages === 'number' ? totalPages : 100;
+    const p = Math.max(1, Math.min(parseInt(pageNum, 10) || 1, maxP));
     setCurrentPage(p);
     setInputPage(String(p));
     setIsEditingPage(false);
@@ -232,7 +255,7 @@ export default function PdfViewerScreen({ route, navigation }) {
           }
         }).catch(function(err) {
           console.error('PDF.js parse error:', err);
-          document.getElementById('loader').innerText = 'Document format notice: Loading pages...';
+          document.getElementById('loader').innerText = 'Rendering PDF document...';
           window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'error', message: err.message }));
         });
       } catch (e) {
