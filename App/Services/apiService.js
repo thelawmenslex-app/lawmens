@@ -84,22 +84,40 @@ export const ApiService = {
       return ch ? ch.section || [] : [];
     },
 
-    getMinorActs: async () => {
+        getMinorActs: async () => {
       try {
         const token = await AsyncStorage.getItem('@authtoken');
-        const headers = { 'Content-Type': 'application/json' };
+        const headers = {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache'
+        };
         if (token) {
           headers['Authorization'] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
         }
-        const res = await fetch(backendroutes.minorActList, { headers });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 8000);
+        const res = await fetch(backendroutes.minorActList, {
+          headers,
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
         const data = await res.json();
         if (data.status && Array.isArray(data.data) && data.data.length > 0) {
-          const sorted = [...data.data].sort((a, b) => (a.order || 0) - (b.order || 0));
+          const sorted = [...data.data].sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0));
+          await AsyncStorage.setItem('@dynamic_minor_acts', JSON.stringify(sorted));
           return sorted;
         }
       } catch (e) {
-        console.warn('Failed to fetch live minor acts, using offline fallback:', e);
+        console.warn('Live minor acts fetch fallback:', e.message);
       }
+      // Check cached dynamic minor acts before static file
+      try {
+        const cached = await AsyncStorage.getItem('@dynamic_minor_acts');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      } catch (e) {}
       return DataService.getMinorActs();
     },
 
