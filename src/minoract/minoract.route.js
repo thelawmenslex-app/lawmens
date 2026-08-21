@@ -1,12 +1,11 @@
 const express = require('express');
 const minoractController = require('./minoract.controller');
-const { auth } = require("../../middleware/auth.middleware");
 
 const router = express.Router();
 
-// Public routes (require standard user auth)
-router.get('/', auth, minoractController.getMinorActs);
+// Public minor acts routes for mobile readers & guests
+router.get('/', minoractController.getMinorActs);
 router.get('/pdf/:id', minoractController.streamMinorActPDF);
-router.get('/:id', auth, minoractController.getMinorActSections);
+router.get('/:id', minoractController.getMinorActSections);
 
 module.exports = router;
