@@ -2166,15 +2166,22 @@ const clearMinorActPdf = async (req, res) => {
 
 const bulkUploadMinorActPdfs = async (req, res) => {
     try {
-        if (!req.files || !Array.isArray(req.files) || req.files.length === 0) {
-            return sendResponse(res, false, 400, 'No PDF files provided.');
+        let uploadedFiles = [];
+        if (req.files && Array.isArray(req.files) && req.files.length > 0) {
+            uploadedFiles = req.files;
+        } else if (req.file) {
+            uploadedFiles = [req.file];
+        }
+
+        if (uploadedFiles.length === 0) {
+            return sendResponse(res, false, 400, 'No PDF files received.');
         }
 
         const results = [];
         let createdCount = 0;
         let updatedCount = 0;
 
-        for (const file of req.files) {
+        for (const file of uploadedFiles) {
             const ext = path.extname(file.originalname).toLowerCase();
             if (ext !== '.pdf') continue;
 
@@ -2186,9 +2193,13 @@ const bulkUploadMinorActPdfs = async (req, res) => {
 
             if (act) {
                 if (act.pdfUrl && act.pdfUrl !== pdfUrl) {
-                    const oldPath = path.join(__dirname, '../../../public', act.pdfUrl);
-                    if (fs.existsSync(oldPath)) {
-                        fs.unlinkSync(oldPath);
+                    try {
+                        const oldPath = path.join(__dirname, '../../../public', act.pdfUrl);
+                        if (fs.existsSync(oldPath)) {
+                            fs.unlinkSync(oldPath);
+                        }
+                    } catch (unlinkErr) {
+                        console.warn('Could not remove old PDF file:', unlinkErr.message);
                     }
                 }
                 act.pdfUrl = pdfUrl;
@@ -2212,12 +2223,14 @@ const bulkUploadMinorActPdfs = async (req, res) => {
             }
         }
 
-        await AuditLog.create({
-            userId: req.userId,
-            action: 'bulk_upload_minor_act_pdfs',
-            details: { totalFiles: req.files.length, createdCount, updatedCount },
-            ipAddress: req.ip
-        });
+        try {
+            await AuditLog.create({
+                userId: req.userId,
+                action: 'bulk_upload_minor_act_pdfs',
+                details: { totalFiles: uploadedFiles.length, createdCount, updatedCount },
+                ipAddress: req.ip
+            });
+        } catch (auditErr) {}
 
         return sendResponse(res, true, 200, `Bulk PDF upload completed. ${createdCount} acts created, ${updatedCount} updated.`, {
             total: results.length,
