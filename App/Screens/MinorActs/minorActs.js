@@ -8,12 +8,9 @@ import {
   TextInput,
   StatusBar,
   RefreshControl,
-  ActivityIndicator,
-  Linking,
-  Alert
+  ActivityIndicator
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { DataService } from '../../Services/dataService';
 import { ApiService } from '../../Services/apiService';
 import { SyncService } from '../../Services/syncService';
@@ -31,14 +28,12 @@ export default function MinorActsScreen({ navigation }) {
 
   const loadActs = async () => {
     try {
-      // 1. Instant load from cached dynamic storage
       const cached = await SyncService.getMinorActs();
       if (cached && cached.length > 0) {
         setActs(cached);
         setLoading(false);
       }
 
-      // 2. Fetch live updates from Admin Portal API
       const liveActs = await ApiService.laws.getMinorActs();
       if (liveActs && liveActs.length > 0) {
         setActs(liveActs);
@@ -73,59 +68,20 @@ export default function MinorActsScreen({ navigation }) {
     return acts.filter(a => (a.title || a.name || '').toLowerCase().includes(q));
   }, [acts, search]);
 
+  // DIRECT IN-APP PDF NAVIGATION (NO POPUP, NO CHROME)
   const handleActPress = (item) => {
     const actTitle = item.name || item.title || 'Minor Act';
-    const pdfUrl = item.pdfUrl;
+    const rawPdf = item.pdfUrl || '';
 
-    if (pdfUrl) {
-      const fullPdfUrl = pdfUrl.startsWith('http')
-        ? pdfUrl
-        : `${Imageurl}${pdfUrl.startsWith('/') ? '' : '/'}${pdfUrl}`;
+    const fullPdfUrl = rawPdf.startsWith('http')
+      ? rawPdf
+      : `${Imageurl}${rawPdf.startsWith('/') ? '' : '/'}${rawPdf}`;
 
-      Alert.alert(
-        actTitle,
-        item.description || 'Document uploaded from Admin Portal.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Open PDF',
-            onPress: () => {
-              Linking.openURL(fullPdfUrl).catch(() => {
-                Alert.alert('PDF Viewer', `Opening PDF document: ${fullPdfUrl}`);
-              });
-            }
-          },
-          {
-            text: 'View Law Text',
-            onPress: () => {
-              navigation.navigate('Seclist', {
-                actTitle: actTitle,
-                chapterName: 'Provisions',
-                sections: item.sections && item.sections.length > 0
-                  ? item.sections
-                  : [{
-                      name: '1',
-                      keyword: actTitle,
-                      content: [{ content: item.description || `Official Legal Act — ${actTitle}. Document is synchronized with Admin Portal.` }]
-                    }]
-              });
-            }
-          }
-        ]
-      );
-    } else {
-      navigation.navigate('Seclist', {
-        actTitle: actTitle,
-        chapterName: 'Sections',
-        sections: item.sections && item.sections.length > 0
-          ? item.sections
-          : [{
-              name: '1',
-              keyword: actTitle,
-              content: [{ content: item.description || `Official Legal Act — ${actTitle}.` }]
-            }]
-      });
-    }
+    navigation.navigate('PdfViewer', {
+      title: actTitle,
+      pdfUrl: fullPdfUrl,
+      totalPageCount: 33
+    });
   };
 
   return (
