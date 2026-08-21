@@ -8,66 +8,85 @@ import {
   StatusBar,
   Alert
 } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import Feather from 'react-native-vector-icons/Feather';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function HistoryScreen({ navigation }) {
-  const [historyItems, setHistoryItems] = useState([
-    {
-      id: 'h1',
-      actTitle: 'Bharatiya Nyaya Sanhita , 2023',
-      actCode: 'BNS',
-      sectionNumber: '4',
-      keyword: 'Punishments (Community Service added)',
-      time: 'Today, 2:45 PM'
-    },
-    {
-      id: 'h2',
-      actTitle: 'Indian Penal Code , 1860',
-      actCode: 'IPC',
-      sectionNumber: '420',
-      keyword: 'Cheating and dishonestly inducing delivery of property',
-      time: 'Yesterday'
-    },
-    {
-      id: 'h3',
-      actTitle: 'Bharatiya Nagarik Suraksha Sanhita , 2023',
-      actCode: 'BNSS',
-      sectionNumber: '63',
-      keyword: 'Form of summons',
-      time: '2 days ago'
-    }
-  ]);
+  const [history, setHistory] = useState([]);
 
   useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadHistory();
+    });
     loadHistory();
-  }, []);
+    return unsubscribe;
+  }, [navigation]);
 
   const loadHistory = async () => {
     try {
-      const stored = await AsyncStorage.getItem('@reading_history');
-      if (stored) {
-        setHistoryItems(JSON.parse(stored));
+      const histStr = await AsyncStorage.getItem('@read_history');
+      if (histStr) {
+        setHistory(JSON.parse(histStr));
+      } else {
+        // Default sample fallback
+        setHistory([
+          {
+            actTitle: 'Bharatiya Nyaya Sanhita , 2023',
+            sectionNumber: '4',
+            keyword: 'Punishments',
+            title: 'Section 4: Punishments',
+            chapterName: 'Punishments',
+            timestamp: Date.now() - 1000 * 60 * 5
+          },
+          {
+            actTitle: 'Indian Penal Code , 1860',
+            sectionNumber: '369',
+            keyword: 'Kidnapping or abducting child under ten years',
+            title: 'Section 369: Kidnapping or abducting child under ten years',
+            chapterName: 'Offences against the Human Body',
+            timestamp: Date.now() - 1000 * 60 * 60 * 2
+          }
+        ]);
       }
+    } catch (e) {
+      console.warn('Load history error:', e);
+    }
+  };
+
+  const removeHistoryItem = async (indexToRemove) => {
+    try {
+      const updated = history.filter((_, i) => i !== indexToRemove);
+      setHistory(updated);
+      await AsyncStorage.setItem('@read_history', JSON.stringify(updated));
     } catch (e) {}
   };
 
-  const handleClearHistory = () => {
+  const clearAllHistory = () => {
     Alert.alert(
       'Clear History',
-      'Are you sure you want to clear your reading history?',
+      'Are you sure you want to clear your entire reading history?',
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Clear All',
           style: 'destructive',
           onPress: async () => {
-            await AsyncStorage.removeItem('@reading_history');
-            setHistoryItems([]);
+            setHistory([]);
+            await AsyncStorage.removeItem('@read_history');
           }
         }
       ]
     );
+  };
+
+  const formatTime = (ts) => {
+    if (!ts) return 'Recent';
+    const diffMin = Math.floor((Date.now() - Number(ts)) / (1000 * 60));
+    if (diffMin < 1) return 'Just now';
+    if (diffMin < 60) return `${diffMin} mins ago`;
+    const diffHours = Math.floor(diffMin / 60);
+    if (diffHours < 24) return `${diffHours} hours ago`;
+    return `${Math.floor(diffHours / 24)} days ago`;
   };
 
   return (
@@ -82,59 +101,73 @@ export default function HistoryScreen({ navigation }) {
             onPress={() => navigation.goBack()}
             activeOpacity={0.8}
           >
-            <Text style={styles.backArrow}>←</Text>
+            <Feather name="arrow-left" size={20} color="#111827" />
           </TouchableOpacity>
           <Text style={styles.brandTitle}>Reading History</Text>
-          {historyItems.length > 0 && (
-            <TouchableOpacity onPress={handleClearHistory} style={styles.clearBtn}>
-              <Feather name="trash-2" size={18} color="#EF4444" />
+          {history.length > 0 && (
+            <TouchableOpacity onPress={clearAllHistory} style={styles.clearBtn}>
+              <Text style={styles.clearBtnText}>Clear All</Text>
             </TouchableOpacity>
           )}
         </View>
-        <Text style={styles.headerSubtitle}>Recently viewed legal sections & acts</Text>
+        <Text style={styles.subHeaderCount}>{history.length} Recently Viewed Provisions</Text>
       </View>
 
-      {/* History List */}
       <FlatList
-        data={historyItems}
-        keyExtractor={item => item.id}
+        data={history}
+        keyExtractor={(item, index) => `hist_${item.actTitle}_${item.sectionNumber}_${index}`}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
-        ListEmptyComponent={() => (
-          <View style={styles.emptyContainer}>
-            <Feather name="clock" size={48} color="#94A3B8" style={{ marginBottom: 14 }} />
-            <Text style={styles.emptyTitle}>No Reading History</Text>
-            <Text style={styles.emptyDesc}>Sections and legal provisions you read will appear here.</Text>
-            <TouchableOpacity
-              style={styles.exploreBtn}
-              onPress={() => navigation.navigate('MainTabs')}
-            >
-              <Text style={styles.exploreBtnText}>Explore Statutes</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-        renderItem={({ item }) => (
+        renderItem={({ item, index }) => (
           <TouchableOpacity
-            style={styles.historyCard}
+            style={styles.card}
             activeOpacity={0.85}
-            onPress={() => navigation.navigate('Comparison', {
-              ipcSec: item.sectionNumber,
-              actTitle: item.actTitle,
-              actCode: item.actCode
-            })}
+            onPress={() => {
+              navigation.navigate('Sectiondetail', {
+                sectionData: item.sectionData || {
+                  name: item.sectionNumber,
+                  keyword: item.keyword,
+                  content: typeof item.content === 'string' ? [{ content: item.content }] : (item.content || [])
+                },
+                actTitle: item.actTitle,
+                chapterName: item.chapterName || 'Provisions'
+              });
+            }}
           >
             <View style={styles.cardTopRow}>
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{item.actCode || 'ACT'}</Text>
+              <View style={styles.badgeBox}>
+                <Text style={styles.badgeText}>Sec {item.sectionNumber}</Text>
               </View>
-              <Text style={styles.timeText}>{item.time}</Text>
+              <Text style={styles.actTitle} numberOfLines={1}>{item.actTitle}</Text>
+              <TouchableOpacity
+                onPress={() => removeHistoryItem(index)}
+                style={styles.deleteBtn}
+              >
+                <Feather name="x" size={16} color="#94A3B8" />
+              </TouchableOpacity>
             </View>
 
-            <Text style={styles.secTitle}>Section {item.sectionNumber}</Text>
-            <Text style={styles.keywordText} numberOfLines={2}>{item.keyword}</Text>
-            <Text style={styles.actSubtitle} numberOfLines={1}>{item.actTitle}</Text>
+            <Text style={styles.itemTitle}>{item.title || `Section ${item.sectionNumber}: ${item.keyword}`}</Text>
+            
+            <View style={styles.cardBottomRow}>
+              <View style={styles.timeTag}>
+                <Feather name="clock" size={12} color="#64748B" style={{ marginRight: 4 }} />
+                <Text style={styles.timeText}>{formatTime(item.timestamp)}</Text>
+              </View>
+              <View style={styles.reopenTag}>
+                <Text style={styles.reopenText}>Reopen Section</Text>
+                <Feather name="chevron-right" size={14} color="#00A3FF" />
+              </View>
+            </View>
           </TouchableOpacity>
         )}
+        ListEmptyComponent={
+          <View style={styles.emptyStateContainer}>
+            <Feather name="clock" size={54} color="#94A3B8" />
+            <Text style={styles.emptyStateText}>No reading history yet.</Text>
+            <Text style={styles.emptyStateSub}>Sections you read will automatically appear here.</Text>
+          </View>
+        }
       />
     </View>
   );
@@ -143,20 +176,21 @@ export default function HistoryScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#EDF7FC',
+    backgroundColor: '#E6EEF8',
   },
   darkHeader: {
     backgroundColor: '#181A20',
     paddingTop: 45,
     paddingHorizontal: 20,
-    paddingBottom: 22,
+    paddingBottom: 18,
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
   },
   headerTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 6,
+    justifyContent: 'space-between',
+    marginBottom: 4,
   },
   backBtnCircle: {
     width: 36,
@@ -165,112 +199,122 @@ const styles = StyleSheet.create({
     backgroundColor: '#00A3FF',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 14,
-  },
-  backArrow: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#111827',
+    marginRight: 10,
   },
   brandTitle: {
     flex: 1,
-    fontSize: 22,
-    fontWeight: '900',
-    color: '#00A3FF',
-    letterSpacing: 1.2,
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
   clearBtn: {
-    padding: 6,
+    backgroundColor: '#2A2E39',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
   },
-  headerSubtitle: {
-    fontSize: 13,
+  clearBtnText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: '#EF4444',
+  },
+  subHeaderCount: {
+    fontSize: 12,
     color: '#94A3B8',
     fontWeight: '600',
+    marginLeft: 46,
   },
   listContent: {
     padding: 16,
-    paddingBottom: 32,
     gap: 12,
   },
-  historyCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
+  card: {
+    backgroundColor: '#F5F9FD',
+    borderRadius: 18,
+    padding: 14,
     borderWidth: 1.5,
-    borderColor: '#D0E7F5',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    borderColor: '#FFFFFF',
+    shadowColor: '#A8BED6',
+    shadowOffset: { width: 3, height: 4 },
+    shadowOpacity: 0.45,
+    shadowRadius: 6,
+    elevation: 3,
   },
   cardTopRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
   },
-  badge: {
+  badgeBox: {
     backgroundColor: '#DEF3FA',
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
+    marginRight: 8,
   },
   badgeText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '900',
-    color: '#0284C7',
+    color: '#00A3FF',
   },
-  timeText: {
+  actTitle: {
+    flex: 1,
     fontSize: 12,
-    color: '#94A3B8',
-    fontWeight: '600',
-  },
-  secTitle: {
-    fontSize: 16,
-    fontWeight: '900',
-    color: '#111827',
-    marginBottom: 4,
-  },
-  keywordText: {
-    fontSize: 13.5,
+    color: '#64748B',
     fontWeight: '700',
-    color: '#334155',
-    marginBottom: 6,
-    lineHeight: 18,
   },
-  actSubtitle: {
-    fontSize: 12,
-    color: '#64748B',
-    fontWeight: '600',
+  deleteBtn: {
+    padding: 4,
   },
-  emptyContainer: {
-    padding: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: '#111827',
-    marginBottom: 6,
-  },
-  emptyDesc: {
-    fontSize: 13.5,
-    color: '#64748B',
-    textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 20,
-  },
-  exploreBtn: {
-    backgroundColor: '#00A3FF',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  exploreBtnText: {
+  itemTitle: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#FFFFFF',
+    color: '#111827',
+    marginBottom: 10,
+  },
+  cardBottomRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
+    paddingTop: 8,
+  },
+  timeTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  timeText: {
+    fontSize: 11.5,
+    color: '#64748B',
+    fontWeight: '600',
+  },
+  reopenTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  reopenText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#00A3FF',
+    marginRight: 2,
+  },
+  emptyStateContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 80,
+  },
+  emptyStateText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#64748B',
+    marginTop: 12,
+  },
+  emptyStateSub: {
+    fontSize: 12,
+    color: '#94A3B8',
+    marginTop: 4,
   },
 });

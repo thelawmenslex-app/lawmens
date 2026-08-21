@@ -164,7 +164,7 @@ export default function LoginScreen({ navigation }) {
         <TouchableOpacity
           style={styles.googleBtn}
           activeOpacity={0.85}
-          onPress={() => Alert.alert('Google Sign-In', 'Connecting with Google Play Services...')}
+          onPress={handleGoogleLogin}
         >
           <FontAwesome name="google" size={18} color="#EA4335" />
           <Text style={styles.googleBtnText}>Continue with Google</Text>

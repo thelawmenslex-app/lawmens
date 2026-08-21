@@ -19,6 +19,23 @@ const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 56) / 3;
 
 export default function HomeScreen({ navigation }) {
+  const [lastRead, setLastRead] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadLastRead();
+    });
+    loadLastRead();
+    return unsubscribe;
+  }, [navigation]);
+
+  const loadLastRead = async () => {
+    try {
+      const saved = await AsyncStorage.getItem('@last_read_section');
+      if (saved) setLastRead(JSON.parse(saved));
+    } catch (e) {}
+  };
+
   const [synced, setSynced] = useState(true);
 
   useEffect(() => {
@@ -115,25 +132,35 @@ export default function HomeScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-        {/* Continue Reading Card */}
+                {/* Continue Reading Card (Matching Image 2) */}
         <TouchableOpacity
           style={styles.continueCard}
-          activeOpacity={0.9}
-          onPress={() => navigation.navigate('Seclist', {
-            actTitle: 'Bharatiya Nyaya Sanhita , 2023',
-            chapterName: 'CHAPTER II - OF PUNISHMENTS',
-            sections: [{ name: '4', content: [{ content: 'The punishments to which offenders are liable under the provisions of this Sanhita are: Death, Imprisonment for life, Rigorous imprisonment, Simple imprisonment, Forfeiture of property, Fine, Community service.' }] }]
-          })}
+          activeOpacity={0.85}
+          onPress={() => {
+            if (lastRead) {
+              navigation.navigate('Sectiondetail', {
+                sectionData: lastRead.sectionData || {
+                  name: lastRead.sectionNumber,
+                  keyword: lastRead.keyword,
+                  content: typeof lastRead.content === 'string' ? [{ content: lastRead.content }] : (lastRead.content || [])
+                },
+                actTitle: lastRead.actTitle,
+                chapterName: lastRead.chapterName || 'Provisions'
+              });
+            } else {
+              navigation.navigate('ActOptions', { actTitle: 'Bharatiya Nyaya Sanhita , 2023', actCode: 'BNS' });
+            }
+          }}
         >
           <View style={styles.continueTopRow}>
             <Text style={styles.continueBadge}>CONTINUE READING</Text>
             <Feather name="book-open" size={18} color="#00A3FF" />
           </View>
-          <Text style={styles.continueActSubtitle}>
-            Bharatiya Nyaya Sanhita , 2023
+          <Text style={styles.continueSubtitle} numberOfLines={1}>
+            {lastRead ? lastRead.actTitle : 'Bharatiya Nyaya Sanhita , 2023'}
           </Text>
-          <Text style={styles.continueSectionTitle}>
-            Section 4: Punishments
+          <Text style={styles.continueTitle} numberOfLines={1}>
+            {lastRead ? `Section ${lastRead.sectionNumber}: ${lastRead.keyword || 'Punishments'}` : 'Section 4: Punishments'}
           </Text>
         </TouchableOpacity>
 

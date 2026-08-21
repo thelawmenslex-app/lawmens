@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,12 +6,46 @@ import {
   TouchableOpacity,
   ScrollView,
   StatusBar,
-  Modal
+  Modal,
+  Alert,
+  ActivityIndicator
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
+import { SubscriptionService } from '../../Services/subscriptionService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 export default function SubscriptionScreen({ navigation }) {
   const [showPlansModal, setShowPlansModal] = useState(false);
+  const [status, setStatus] = useState({
+    hasAccess: true,
+    isTrialActive: true,
+    isSubscribed: false,
+    daysLeft: 3,
+    planType: '3-Day Free Trial',
+    validTill: '3 Days Left'
+  });
+  const [purchasing, setPurchasing] = useState(false);
+
+  useEffect(() => {
+    loadStatus();
+  }, []);
+
+  const loadStatus = async () => {
+    const s = await SubscriptionService.getStatus();
+    setStatus(s);
+  };
+
+  const handleGooglePlayPurchase = async (plan) => {
+    setPurchasing(true);
+    setTimeout(async () => {
+      await SubscriptionService.activateSubscription(`GP_ORD_${Date.now()}`);
+      await loadStatus();
+      setPurchasing(false);
+      setShowPlansModal(false);
+      Alert.alert('Subscription Activated', `Thank you for subscribing to ${plan.name}! Your Google Play purchase was successful.`);
+    }, 1200);
+  };
 
   const plans = [
     {
@@ -75,11 +109,11 @@ export default function SubscriptionScreen({ navigation }) {
               <View style={styles.greenDot} />
               <Text style={styles.activePillText}>ACTIVE PREMIUM PASS</Text>
             </View>
-            <Text style={styles.daysLeftText}>358 Days Left</Text>
+            <Text style={styles.daysLeftText}>{status.daysLeft} Days Left</Text>
           </View>
 
           {/* Plan Heading */}
-          <Text style={styles.licenseTitle}>Premium License</Text>
+          <Text style={styles.licenseTitle}>{status.planType}</Text>
           <Text style={styles.licenseSubtitle}>Free Access</Text>
 
           {/* Grey Details Box */}
@@ -91,7 +125,7 @@ export default function SubscriptionScreen({ navigation }) {
 
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Valid Till (Expiry):</Text>
-              <Text style={styles.detailValueGreen}>13 Aug 2027</Text>
+              <Text style={styles.detailValueGreen}>{status.validTill}</Text>
             </View>
 
             <View style={styles.detailRow}>

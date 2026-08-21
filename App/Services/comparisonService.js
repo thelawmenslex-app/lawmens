@@ -33,6 +33,8 @@ export const IPC_BNS_MAPPING = {
   '354B': { bnsSec: '76', title: 'Assault or use of criminal force to woman with intent to disrobe' },
   '354C': { bnsSec: '77', title: 'Voyeurism' },
   '354D': { bnsSec: '78', title: 'Stalking' },
+  '369': { bnsSec: '139', title: 'Kidnapping or abducting child under ten years with intent to steal from its person' },
+  '371': { bnsSec: '145', title: 'Habitual dealing in slaves' },
   '375': { bnsSec: '63', title: 'Rape' },
   '376': { bnsSec: '64', title: 'Punishment for rape' },
   '376D': { bnsSec: '70', title: 'Gang rape' },

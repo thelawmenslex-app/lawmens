@@ -4538,10 +4538,10 @@
       "oldSec": "369",
       "newLawCode": "BNS",
       "newLawName": "Bharatiya Nyaya Sanhita, 2023",
-      "newSec": "145",
+      "newSec": "139",
       "title": "Kidnapping or abducting child under ten years with intent to steal from its person",
       "oldContent": "Whoever kidnaps or abducts any child under the age of ten years with the intention of taking dishonestly any movable property from the person of such child, shall be punished with imprisonment of either description for a term which may extend to seven years, and shall also be liable to fine.",
-      "newContent": "Whoever habitually imports, exports, removes, buys, sells, traffics or deals in slaves, shall be punished with imprisonment for life, or with imprisonment of either description for a term not exceeding ten years, and shall also be liable to fine."
+      "newContent": "Whoever kidnaps or abducts any child under the age of ten years with the intention of taking dishonestly any movable property from the person of such child, shall be punished with imprisonment of either description for a term which may extend to seven years, and shall also be liable to fine."
     },
     {
       "oldLawCode": "IPC",
@@ -6291,6 +6291,17 @@
       "title": "Punishment for attempting to commit offences punishable with imprisonment for life or other imprisonment.",
       "oldContent": "Whoever attempts to commit an offence punishable by this Code with 2 [imprisonment for life] or imprisonment, or to cause such an offence to be committed, and in such attempt does any act towards the commission of the offence, shall, where no express provision is made by this Code for the punishment of such attempt, be punished with 3 [imprisonment of any description provided for the offence, for a term which may extend to one-half of the imprisonment for life or, as the case may be, one- half of the longest term of imprisonment provided for that offence], or with such fine as is provided for the offence, or with both. Illustrations (a) A makes an attempt to steal some jewels by breaking open a box, and finds after so opening the box, that there is no jewel in it. He has done an act towards the commission of theft, and therefore is guilty under this section. (b) A makes an attempt to pick the pocket of Z by thrusting his hand into Z's pocket. A fails in the attempt in consequence of Z's having nothing in his pocket. A is guilty under this section.",
       "newContent": "Whoever attempts to commit an offence punishable by this Sanhita with imprisonment for life or imprisonment, or to cause such an offence to be committed, and in such attempt does any act towards the commission of the offence, shall, where no express provision is made by this Sanhita for the punishment of such attempt, be punished with imprisonment of any description provided for the offence, for a term which may extend to one-half of the imprisonment for life or, as the case may be, one-half of the longest term of imprisonment provided for that offence, or with such fine as is provided for the offence, or with both. Illustrations. (a) A makes an attempt to steal some jewels by breaking open a box, and finds after so opening the box, that there is no jewel in it. He has done an act towards the commission of theft, and therefore is guilty under this section. (b) A makes an attempt to pick the pocket of Z by thrusting his hand into Z’s pocket. A fails in the attempt in consequence of Z’s having nothing in his pocket. A is guilty under this section."
+    },
+    {
+      "oldLawCode": "IPC",
+      "oldLawName": "Indian Penal Code, 1860",
+      "oldSec": "371",
+      "newLawCode": "BNS",
+      "newLawName": "Bharatiya Nyaya Sanhita, 2023",
+      "newSec": "145",
+      "title": "Habitual dealing in slaves",
+      "oldContent": "Whoever habitually imports, exports, removes, buys, sells, traffics or deals in slaves, shall be punished with imprisonment for life, or with imprisonment of either description for a term not exceeding ten years, and shall also be liable to fine.",
+      "newContent": "Whoever habitually imports, exports, removes, buys, sells, traffics or deals in slaves, shall be punished with imprisonment for life, or with imprisonment of either description for a term not exceeding ten years, and shall also be liable to fine."
     }
   ],
   "crpcToBnss": [

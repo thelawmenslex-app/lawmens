@@ -63,6 +63,40 @@ function parseAdminPortalClauses(text) {
 }
 
 export default function SectionDetailScreen({ route, navigation }) {
+
+  useEffect(() => {
+    // Record Last Read and History
+    const recordHistory = async () => {
+      try {
+        const itemToSave = {
+          actTitle: actTitle || 'Central Legislation',
+          sectionNumber: secNum,
+          sectionName: secNum,
+          keyword: secTitle,
+          title: `Section ${secNum}: ${secTitle}`,
+          chapterName: chapterName || 'Provisions',
+          content: rawContent,
+          sectionData: sectionData || null,
+          timestamp: Date.now()
+        };
+
+        // 1. Save Last Read
+        await AsyncStorage.setItem('@last_read_section', JSON.stringify(itemToSave));
+
+        // 2. Append to History
+        const histStr = await AsyncStorage.getItem('@read_history');
+        let hist = histStr ? JSON.parse(histStr) : [];
+        hist = hist.filter(h => !(h.actTitle === itemToSave.actTitle && String(h.sectionNumber) === String(itemToSave.sectionNumber)));
+        hist.unshift(itemToSave);
+        if (hist.length > 50) hist = hist.slice(0, 50);
+        await AsyncStorage.setItem('@read_history', JSON.stringify(hist));
+      } catch (e) {
+        console.warn('History tracking error:', e);
+      }
+    };
+    recordHistory();
+  }, [actTitle, secNum, secTitle]);
+
   const {
     actTitle = 'Bharatiya Nagarik Suraksha Sanhita , 2023',
     actCode = 'BNSS',
