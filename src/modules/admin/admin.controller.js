@@ -2243,6 +2243,72 @@ const bulkUploadMinorActPdfs = async (req, res) => {
     }
 };
 
+const updateMinorAct = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, description, order, isActive } = req.body;
+
+        const act = await MinorAct.findById(id);
+        if (!act) {
+            return sendResponse(res, false, 404, 'Minor Act not found.');
+        }
+
+        if (name !== undefined) act.name = String(name).trim();
+        if (description !== undefined) act.description = String(description).trim();
+        if (order !== undefined) act.order = parseInt(order, 10);
+        if (isActive !== undefined) act.isActive = Boolean(isActive);
+
+        await act.save();
+
+        try {
+            await AuditLog.create({
+                userId: req.userId,
+                action: 'update_minor_act',
+                details: { id, name: act.name, description: act.description },
+                ipAddress: req.ip
+            });
+        } catch (e) {}
+
+        return sendResponse(res, true, 200, 'Minor Act updated successfully.', act);
+    } catch (error) {
+        return errorHandler(error, res);
+    }
+};
+
+const clearAllMinorActPdfs = async (req, res) => {
+    try {
+        const acts = await MinorAct.find({ pdfUrl: { $ne: null } });
+        let clearedCount = 0;
+
+        for (const act of acts) {
+            if (act.pdfUrl) {
+                try {
+                    const filePath = path.join(__dirname, '../../../public', act.pdfUrl);
+                    if (fs.existsSync(filePath)) {
+                        fs.unlinkSync(filePath);
+                    }
+                } catch (e) {}
+                act.pdfUrl = null;
+                await act.save();
+                clearedCount++;
+            }
+        }
+
+        try {
+            await AuditLog.create({
+                userId: req.userId,
+                action: 'clear_all_minor_act_pdfs',
+                details: { clearedCount },
+                ipAddress: req.ip
+            });
+        } catch (e) {}
+
+        return sendResponse(res, true, 200, `Cleared attached PDF files from ${clearedCount} Minor Acts.`, { clearedCount });
+    } catch (error) {
+        return errorHandler(error, res);
+    }
+};
+
 const bulkDeleteAllMinorActs = async (req, res) => {
     try {
         const acts = await MinorAct.find({}).lean();
@@ -2263,12 +2329,14 @@ const bulkDeleteAllMinorActs = async (req, res) => {
         await MinorAct.deleteMany({});
         await MinorActSection.deleteMany({});
 
-        await AuditLog.create({
-            userId: req.userId,
-            action: 'bulk_delete_all_minor_acts',
-            details: { totalActsDeleted: acts.length, deletedPdfsCount },
-            ipAddress: req.ip
-        });
+        try {
+            await AuditLog.create({
+                userId: req.userId,
+                action: 'bulk_delete_all_minor_acts',
+                details: { totalActsDeleted: acts.length, deletedPdfsCount },
+                ipAddress: req.ip
+            });
+        } catch (e) {}
 
         return sendResponse(res, true, 200, `Successfully deleted all ${acts.length} Minor Acts and removed PDF files.`, {
             actsDeleted: acts.length,
@@ -2558,9 +2626,11 @@ module.exports = {
     publishMinorAct,
     getMinorActsList,
     reorderMinorActs,
+    updateMinorAct,
     deleteMinorAct,
     uploadMinorActPdf,
     clearMinorActPdf,
+    clearAllMinorActPdfs,
     bulkUploadMinorActPdfs,
     bulkDeleteAllMinorActs,
     getSignupConfig,
