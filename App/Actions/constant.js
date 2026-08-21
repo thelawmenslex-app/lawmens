@@ -1,5 +1,5 @@
-export const Imageurl = 'https://www.the-lawmens.com';
-export const BASE_URL = 'https://www.the-lawmens.com/api/v1';
+export const Imageurl = 'https://lawmens-1.onrender.com';
+export const BASE_URL = 'https://lawmens-1.onrender.com/api/v1';
 
 export const backendroutes = {
   register: `${BASE_URL}/user/register`,

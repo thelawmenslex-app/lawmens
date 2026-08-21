@@ -86,10 +86,20 @@ export const ApiService = {
 
     getMinorActs: async () => {
       try {
-        const res = await fetch(backendroutes.minorActList);
+        const token = await AsyncStorage.getItem('@authtoken');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) {
+          headers['Authorization'] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+        }
+        const res = await fetch(backendroutes.minorActList, { headers });
         const data = await res.json();
-        if (data.status && data.data) return data.data;
-      } catch (e) {}
+        if (data.status && Array.isArray(data.data) && data.data.length > 0) {
+          const sorted = [...data.data].sort((a, b) => (a.order || 0) - (b.order || 0));
+          return sorted;
+        }
+      } catch (e) {
+        console.warn('Failed to fetch live minor acts, using offline fallback:', e);
+      }
       return DataService.getMinorActs();
     },
 
