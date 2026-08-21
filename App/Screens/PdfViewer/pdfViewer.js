@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   TextInput,
   Share,
-  Platform,
   Dimensions
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
@@ -32,7 +31,7 @@ export default function PdfViewerScreen({ route, navigation }) {
   const [isEditingPage, setIsEditingPage] = useState(false);
   const [inputPage, setInputPage] = useState('1');
 
-  // Handle message from WebView (PDF.js page updates)
+  // Handle message from WebView (PDF page updates)
   const handleMessage = (event) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
@@ -51,28 +50,28 @@ export default function PdfViewerScreen({ route, navigation }) {
   const handleZoomIn = () => {
     const nextZoom = Math.min(zoomLevel + 0.25, 3.0);
     setZoomLevel(nextZoom);
-    executeScript(`if (window.PDFViewerApplication) { window.PDFViewerApplication.pdfViewer.currentScale = ${nextZoom}; } else { document.body.style.zoom = '${nextZoom}'; }`);
+    executeScript(`if (window.changeZoom) { window.changeZoom(${nextZoom}); } else { document.body.style.zoom = '${nextZoom}'; }`);
   };
 
   const handleZoomOut = () => {
     const nextZoom = Math.max(zoomLevel - 0.25, 0.5);
     setZoomLevel(nextZoom);
-    executeScript(`if (window.PDFViewerApplication) { window.PDFViewerApplication.pdfViewer.currentScale = ${nextZoom}; } else { document.body.style.zoom = '${nextZoom}'; }`);
+    executeScript(`if (window.changeZoom) { window.changeZoom(${nextZoom}); } else { document.body.style.zoom = '${nextZoom}'; }`);
   };
 
   const handleFitWidth = () => {
     setZoomLevel(1.0);
-    executeScript(`if (window.PDFViewerApplication) { window.PDFViewerApplication.pdfViewer.currentScaleValue = 'page-width'; } else { document.body.style.zoom = '1.0'; }`);
+    executeScript(`if (window.changeZoom) { window.changeZoom(1.0); } else { document.body.style.zoom = '1.0'; }`);
   };
 
   const handleRotate = () => {
     const nextRotation = (rotation + 90) % 360;
     setRotation(nextRotation);
-    executeScript(`if (window.PDFViewerApplication) { window.PDFViewerApplication.rotatePages(90); } else { document.getElementById('pdf-container').style.transform = 'rotate(${nextRotation}deg)'; }`);
+    executeScript(`if (window.rotateDoc) { window.rotateDoc(${nextRotation}); } else { document.getElementById('pdf-container').style.transform = 'rotate(${nextRotation}deg)'; }`);
   };
 
   const handleToggleFitPage = () => {
-    executeScript(`if (window.PDFViewerApplication) { window.PDFViewerApplication.pdfViewer.currentScaleValue = 'page-fit'; }`);
+    executeScript(`if (window.fitPage) { window.fitPage(); }`);
   };
 
   const handleGoToPage = (pageNum) => {
@@ -80,7 +79,7 @@ export default function PdfViewerScreen({ route, navigation }) {
     setCurrentPage(p);
     setInputPage(String(p));
     setIsEditingPage(false);
-    executeScript(`if (window.PDFViewerApplication) { window.PDFViewerApplication.page = ${p}; }`);
+    executeScript(`if (window.goToPage) { window.goToPage(${p}); }`);
   };
 
   const executeScript = (code) => {
@@ -97,25 +96,25 @@ export default function PdfViewerScreen({ route, navigation }) {
     } catch (e) {}
   };
 
-  // Embedded Modern PDF.js HTML Viewer
+  // Embedded Pure In-App PDF.js Reader
   const viewerHtml = `
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=3, user-scalable=yes">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=4, user-scalable=yes">
   <title>${title}</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background-color: #525659; overflow-x: auto; font-family: -apple-system, sans-serif; }
-    #pdf-container { display: flex; flex-direction: column; align-items: center; padding: 12px 0 60px 0; gap: 14px; }
-    .pdf-page-canvas { box-shadow: 0 4px 12px rgba(0,0,0,0.3); background-color: #ffffff; max-width: 96vw; height: auto; border-radius: 4px; }
-    #loading-spinner { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ffffff; font-size: 16px; font-weight: 600; text-align: center; }
+    body { background-color: #383b40; overflow-x: auto; font-family: -apple-system, sans-serif; }
+    #pdf-container { display: flex; flex-direction: column; align-items: center; padding: 16px 8px 80px 8px; gap: 16px; transition: transform 0.2s ease; }
+    .pdf-page-canvas { box-shadow: 0 6px 18px rgba(0,0,0,0.4); background-color: #ffffff; max-width: 98vw; height: auto; border-radius: 4px; }
+    #loading-box { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ffffff; font-size: 15px; font-weight: 700; text-align: center; background: rgba(0,0,0,0.7); padding: 16px 24px; borderRadius: 12px; }
   </style>
 </head>
 <body>
-  <div id="loading-spinner">Loading PDF Document...</div>
+  <div id="loading-box">Loading In-App PDF...</div>
   <div id="pdf-container"></div>
 
   <script>
@@ -123,11 +122,11 @@ export default function PdfViewerScreen({ route, navigation }) {
 
     const url = '${pdfUrl}';
     let pdfDoc = null;
-    let scale = 1.3;
+    let currentScale = 1.3;
 
     function renderPage(num) {
       pdfDoc.getPage(num).then(function(page) {
-        const viewport = page.getViewport({ scale: scale });
+        const viewport = page.getViewport({ scale: currentScale });
         const canvas = document.createElement('canvas');
         canvas.className = 'pdf-page-canvas';
         canvas.id = 'page-' + num;
@@ -141,7 +140,7 @@ export default function PdfViewerScreen({ route, navigation }) {
         };
         page.render(renderContext).promise.then(function() {
           if (num === 1) {
-            document.getElementById('loading-spinner').style.display = 'none';
+            document.getElementById('loading-box').style.display = 'none';
           }
         });
         document.getElementById('pdf-container').appendChild(canvas);
@@ -156,11 +155,27 @@ export default function PdfViewerScreen({ route, navigation }) {
         renderPage(i);
       }
     }).catch(function(err) {
-      document.getElementById('loading-spinner').innerText = 'Loading fallback viewer...';
+      // Direct embedded fallback
+      document.getElementById('loading-box').innerText = 'Rendering PDF stream...';
       window.location.href = 'https://docs.google.com/gview?embedded=true&url=' + encodeURIComponent(url);
     });
 
-    // Scroll spy for current page
+    window.changeZoom = function(scale) {
+      currentScale = scale;
+      document.getElementById('pdf-container').style.zoom = scale;
+    };
+
+    window.rotateDoc = function(deg) {
+      document.getElementById('pdf-container').style.transform = 'rotate(' + deg + 'deg)';
+    };
+
+    window.goToPage = function(p) {
+      const el = document.getElementById('page-' + p);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' });
+      }
+    };
+
     window.addEventListener('scroll', function() {
       if (!pdfDoc) return;
       const pages = document.querySelectorAll('.pdf-page-canvas');
@@ -203,7 +218,7 @@ export default function PdfViewerScreen({ route, navigation }) {
         </TouchableOpacity>
       </View>
 
-      {/* 2. EXACT PDF CONTROLS TOOLBAR (Image from user) */}
+      {/* 2. EXACT PDF CONTROLS TOOLBAR (Matching User Image) */}
       <View style={styles.toolbarContainer}>
         <View style={styles.toolbarRow}>
           {/* Zoom Out (-) */}
@@ -288,7 +303,7 @@ export default function PdfViewerScreen({ route, navigation }) {
         </View>
       </View>
 
-      {/* 3. PDF RENDERING VIEW */}
+      {/* 3. IN-APP PDF RENDERING VIEW */}
       <View style={styles.pdfViewWrapper}>
         <WebView
           ref={webViewRef}
@@ -304,7 +319,7 @@ export default function PdfViewerScreen({ route, navigation }) {
           renderLoading={() => (
             <View style={styles.loaderContainer}>
               <ActivityIndicator size="large" color="#00A3FF" />
-              <Text style={styles.loadingText}>Rendering PDF Document...</Text>
+              <Text style={styles.loadingText}>Opening Document Inside App...</Text>
             </View>
           )}
         />
@@ -427,11 +442,11 @@ const styles = StyleSheet.create({
   },
   pdfViewWrapper: {
     flex: 1,
-    backgroundColor: '#525659',
+    backgroundColor: '#383b40',
   },
   webView: {
     flex: 1,
-    backgroundColor: '#525659',
+    backgroundColor: '#383b40',
   },
   loaderContainer: {
     position: 'absolute',
@@ -439,7 +454,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: '#525659',
+    backgroundColor: '#383b40',
     alignItems: 'center',
     justifyContent: 'center',
   },
