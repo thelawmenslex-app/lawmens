@@ -22,21 +22,25 @@ const app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
-app.use("/uploads", express.static(path.join(__dirname, 'uploads')));
+// Static file directories with cross-origin access
 app.use("/uploads", express.static(path.join(__dirname, 'public/uploads')));
-app.use("/api/v1/uploads", express.static(path.join(__dirname, 'uploads')));
+app.use("/uploads", express.static(path.join(__dirname, 'uploads')));
 app.use("/api/v1/uploads", express.static(path.join(__dirname, 'public/uploads')));
-app.use("/api/uploads", express.static(path.join(__dirname, 'uploads')));
+app.use("/api/v1/uploads", express.static(path.join(__dirname, 'uploads')));
 app.use("/api/uploads", express.static(path.join(__dirname, 'public/uploads')));
+app.use("/api/uploads", express.static(path.join(__dirname, 'uploads')));
 app.use("/public", express.static(path.join(__dirname, 'public')));
 app.use("/", express.static(path.join(__dirname, 'public')));
 
-app.use(express.json({ limit: 52428800 }));
-app.use(express.urlencoded({ limit: 52428800, extended: true }));
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ limit: '100mb', extended: true }));
 app.options('*', cors());
 app.use(cors());
 
-app.use(helmet());
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+
 app.use(
     helmet.contentSecurityPolicy({
         useDefaults: true,
@@ -53,16 +57,18 @@ passport.use('jwt', jwtStrategy);
 
 app.get("/", (req, res) => {
     res.send({
-        title: 'Test route',
+        title: 'THE-LAWMENS API Server',
+        status: 'Operational',
+        time: new Date().toISOString()
     });
 });
 
 doConnect(process.env.DBURL);
-subscriptionCron();
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`THE-LAWMENS Backend Running on port ${PORT}`);
+    subscriptionCron();
 });
 
 module.exports = app;
