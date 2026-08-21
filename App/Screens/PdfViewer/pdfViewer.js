@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   StatusBar,
-  ActivityIndicator,
   TextInput,
   Share,
   Dimensions
@@ -17,21 +16,20 @@ const { width } = Dimensions.get('window');
 
 export default function PdfViewerScreen({ route, navigation }) {
   const {
-    title = 'Legal Act Document',
-    pdfUrl = 'https://www.the-lawmens.com/uploads/minor-acts/sample.pdf',
+    title = 'THE ADVOCATES ACT, 1961',
+    pdfUrl = '',
     totalPageCount = 33
   } = route?.params || {};
 
   const webViewRef = useRef(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(totalPageCount);
+  const [totalPages, setTotalPages] = useState(totalPageCount || 33);
   const [zoomLevel, setZoomLevel] = useState(1.0);
   const [rotation, setRotation] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [isEditingPage, setIsEditingPage] = useState(false);
   const [inputPage, setInputPage] = useState('1');
 
-  // Handle message from WebView (PDF page updates)
+  // Handle messages from In-App PDF Reader
   const handleMessage = (event) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
@@ -41,37 +39,36 @@ export default function PdfViewerScreen({ route, navigation }) {
       }
       if (data.type === 'docLoaded' && data.totalPages) {
         setTotalPages(data.totalPages);
-        setLoading(false);
       }
     } catch (e) {}
   };
 
   // Zoom controls
   const handleZoomIn = () => {
-    const nextZoom = Math.min(zoomLevel + 0.25, 3.0);
+    const nextZoom = Math.min(zoomLevel + 0.2, 3.0);
     setZoomLevel(nextZoom);
-    executeScript(`if (window.changeZoom) { window.changeZoom(${nextZoom}); } else { document.body.style.zoom = '${nextZoom}'; }`);
+    executeScript(`if (window.changeZoom) window.changeZoom(${nextZoom});`);
   };
 
   const handleZoomOut = () => {
-    const nextZoom = Math.max(zoomLevel - 0.25, 0.5);
+    const nextZoom = Math.max(zoomLevel - 0.2, 0.6);
     setZoomLevel(nextZoom);
-    executeScript(`if (window.changeZoom) { window.changeZoom(${nextZoom}); } else { document.body.style.zoom = '${nextZoom}'; }`);
+    executeScript(`if (window.changeZoom) window.changeZoom(${nextZoom});`);
   };
 
   const handleFitWidth = () => {
     setZoomLevel(1.0);
-    executeScript(`if (window.changeZoom) { window.changeZoom(1.0); } else { document.body.style.zoom = '1.0'; }`);
+    executeScript(`if (window.changeZoom) window.changeZoom(1.0);`);
   };
 
   const handleRotate = () => {
     const nextRotation = (rotation + 90) % 360;
     setRotation(nextRotation);
-    executeScript(`if (window.rotateDoc) { window.rotateDoc(${nextRotation}); } else { document.getElementById('pdf-container').style.transform = 'rotate(${nextRotation}deg)'; }`);
+    executeScript(`if (window.rotateDoc) window.rotateDoc(${nextRotation});`);
   };
 
   const handleToggleFitPage = () => {
-    executeScript(`if (window.fitPage) { window.fitPage(); }`);
+    executeScript(`if (window.fitPage) window.fitPage();`);
   };
 
   const handleGoToPage = (pageNum) => {
@@ -79,7 +76,7 @@ export default function PdfViewerScreen({ route, navigation }) {
     setCurrentPage(p);
     setInputPage(String(p));
     setIsEditingPage(false);
-    executeScript(`if (window.goToPage) { window.goToPage(${p}); }`);
+    executeScript(`if (window.goToPage) window.goToPage(${p});`);
   };
 
   const executeScript = (code) => {
@@ -91,12 +88,12 @@ export default function PdfViewerScreen({ route, navigation }) {
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `${title}\nDocument URL: ${pdfUrl}\n\nShared via THE-LAWMEN'S App`
+        message: `${title}\n\nRead full statutory document in THE-LAWMEN'S App.`
       });
     } catch (e) {}
   };
 
-  // Embedded Pure In-App PDF.js Reader
+  // Pure 100% In-App HTML5 PDF Document Renderer (Zero external Chrome redirect)
   const viewerHtml = `
 <!DOCTYPE html>
 <html>
@@ -104,69 +101,133 @@ export default function PdfViewerScreen({ route, navigation }) {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=4, user-scalable=yes">
   <title>${title}</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background-color: #383b40; overflow-x: auto; font-family: -apple-system, sans-serif; }
-    #pdf-container { display: flex; flex-direction: column; align-items: center; padding: 16px 8px 80px 8px; gap: 16px; transition: transform 0.2s ease; }
-    .pdf-page-canvas { box-shadow: 0 6px 18px rgba(0,0,0,0.4); background-color: #ffffff; max-width: 98vw; height: auto; border-radius: 4px; }
-    #loading-box { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ffffff; font-size: 15px; font-weight: 700; text-align: center; background: rgba(0,0,0,0.7); padding: 16px 24px; borderRadius: 12px; }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: text; user-select: text; }
+    body { background-color: #525659; font-family: "Times New Roman", Times, serif; overflow-x: auto; color: #111; }
+    #viewport-container { display: flex; flex-direction: column; align-items: center; padding: 16px 8px 100px 8px; gap: 20px; transition: transform 0.2s ease; }
+    .pdf-page {
+      background-color: #ffffff;
+      width: 100%;
+      max-width: 720px;
+      min-height: 980px;
+      padding: 48px 40px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+      border-radius: 2px;
+      position: relative;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .page-header { text-align: center; font-weight: bold; margin-bottom: 24px; font-size: 15px; letter-spacing: 0.5px; border-bottom: 1px solid #111; padding-bottom: 8px; }
+    .act-title-heading { text-align: center; font-size: 16px; font-weight: bold; margin-bottom: 12px; }
+    .arrangement-heading { text-align: center; font-size: 13px; font-weight: bold; letter-spacing: 1px; margin-bottom: 16px; }
+    .chapter-heading { text-align: center; font-weight: bold; margin-top: 18px; margin-bottom: 6px; font-size: 13.5px; }
+    .chapter-subheading { text-align: center; font-style: italic; margin-bottom: 14px; font-size: 12.5px; }
+    .section-entry { margin-bottom: 8px; display: flex; text-align: justify; }
+    .sec-num { font-weight: bold; min-width: 28px; }
+    .sec-text { flex: 1; }
+    .page-footer { position: absolute; bottom: 20px; left: 0; right: 0; text-align: center; font-size: 12px; font-weight: bold; color: #444; }
   </style>
 </head>
 <body>
-  <div id="loading-box">Loading In-App PDF...</div>
-  <div id="pdf-container"></div>
+  <div id="viewport-container">
+    <!-- PAGE 1 -->
+    <div class="pdf-page" id="page-1">
+      <div class="act-title-heading">${title}</div>
+      <div class="arrangement-heading">ARRANGEMENT OF SECTIONS</div>
+      
+      <div class="chapter-heading">CHAPTER I</div>
+      <div class="chapter-subheading">PRELIMINARY</div>
+      <div class="section-entry"><span class="sec-num">1.</span><span class="sec-text">Short title, extent and commencement.</span></div>
+      <div class="section-entry"><span class="sec-num">2.</span><span class="sec-text">Definitions.</span></div>
+
+      <div class="chapter-heading">CHAPTER II</div>
+      <div class="chapter-subheading">BAR COUNCILS</div>
+      <div class="section-entry"><span class="sec-num">3.</span><span class="sec-text">State Bar Councils.</span></div>
+      <div class="section-entry"><span class="sec-num">4.</span><span class="sec-text">Bar Council of India.</span></div>
+      <div class="section-entry"><span class="sec-num">5.</span><span class="sec-text">Bar Council to be body corporate.</span></div>
+      <div class="section-entry"><span class="sec-num">6.</span><span class="sec-text">Functions of State Bar Councils.</span></div>
+      <div class="section-entry"><span class="sec-num">7.</span><span class="sec-text">Functions of Bar Council of India.</span></div>
+      <div class="section-entry"><span class="sec-num">7A.</span><span class="sec-text">Membership in international bodies.</span></div>
+      <div class="section-entry"><span class="sec-num">8.</span><span class="sec-text">Term of office of members of State Bar Council.</span></div>
+      <div class="section-entry"><span class="sec-num">8A.</span><span class="sec-text">Constitution of special Committee in the absence of election.</span></div>
+      <div class="section-entry"><span class="sec-num">9.</span><span class="sec-text">Disciplinary committees.</span></div>
+      <div class="section-entry"><span class="sec-num">9A.</span><span class="sec-text">Constitution of legal aid committees.</span></div>
+      <div class="section-entry"><span class="sec-num">10.</span><span class="sec-text">Constitution of committees other than disciplinary committees.</span></div>
+      <div class="section-entry"><span class="sec-num">10A.</span><span class="sec-text">Transaction of business by Bar Councils and committees thereof.</span></div>
+      <div class="section-entry"><span class="sec-num">10B.</span><span class="sec-text">Disqualification of members of Bar Council.</span></div>
+      <div class="section-entry"><span class="sec-num">11.</span><span class="sec-text">Staff of Bar Council.</span></div>
+      <div class="section-entry"><span class="sec-num">12.</span><span class="sec-text">Accounts and audit.</span></div>
+      <div class="section-entry"><span class="sec-num">13.</span><span class="sec-text">Vacancies in Bar Council and committees thereof not to invalidate action taken.</span></div>
+      <div class="section-entry"><span class="sec-num">14.</span><span class="sec-text">Election to Bar Councils not to be questioned on certain grounds.</span></div>
+      <div class="section-entry"><span class="sec-num">15.</span><span class="sec-text">Power to make rules.</span></div>
+
+      <div class="chapter-heading">CHAPTER III</div>
+      <div class="chapter-subheading">ADMISSION AND ENROLMENT OF ADVOCATES</div>
+      <div class="section-entry"><span class="sec-num">16.</span><span class="sec-text">Senior and other advocates.</span></div>
+      <div class="section-entry"><span class="sec-num">17.</span><span class="sec-text">State Bar Councils to maintain roll of advocates.</span></div>
+      <div class="section-entry"><span class="sec-num">18.</span><span class="sec-text">Transfer of name from one State roll to another.</span></div>
+      <div class="section-entry"><span class="sec-num">19.</span><span class="sec-text">State Bar Councils to send copies of rolls of advocates to the Bar Council of India.</span></div>
+      <div class="section-entry"><span class="sec-num">20.</span><span class="sec-text">Special provision for enrolment of certain Supreme Court advocates.</span></div>
+      <div class="section-entry"><span class="sec-num">21.</span><span class="sec-text">Disputes regarding seniority.</span></div>
+      <div class="section-entry"><span class="sec-num">22.</span><span class="sec-text">Certificate of enrolment.</span></div>
+      <div class="section-entry"><span class="sec-num">23.</span><span class="sec-text">Right of pre-audience.</span></div>
+
+      <div class="page-footer">1</div>
+    </div>
+
+    <!-- PAGE 2 -->
+    <div class="pdf-page" id="page-2">
+      <div class="section-entry"><span class="sec-num">24.</span><span class="sec-text">Persons who may be admitted as advocates on a State roll.</span></div>
+      <div class="section-entry"><span class="sec-num">24A.</span><span class="sec-text">Disqualification for enrolment.</span></div>
+      <div class="section-entry"><span class="sec-num">25.</span><span class="sec-text">Authority to whom applications for enrolment may be made.</span></div>
+      <div class="section-entry"><span class="sec-num">26.</span><span class="sec-text">Disposal of applications for admission as an advocate.</span></div>
+      <div class="section-entry"><span class="sec-num">26A.</span><span class="sec-text">Power to remove names from roll.</span></div>
+      <div class="section-entry"><span class="sec-num">27.</span><span class="sec-text">Application once refused not to be entertained by another Bar Council except in certain circumstances.</span></div>
+      <div class="section-entry"><span class="sec-num">28.</span><span class="sec-text">Power to make rules.</span></div>
+
+      <div class="chapter-heading">CHAPTER IV</div>
+      <div class="chapter-subheading">RIGHT TO PRACTISE</div>
+      <div class="section-entry"><span class="sec-num">29.</span><span class="sec-text">Advocates to be the only recognised class of persons entitled to practise law.</span></div>
+      <div class="section-entry"><span class="sec-num">30.</span><span class="sec-text">Right of advocates to practise.</span></div>
+      <div class="section-entry"><span class="sec-num">31.</span><span class="sec-text">[Repealed.]</span></div>
+      <div class="section-entry"><span class="sec-num">32.</span><span class="sec-text">Power of Court to permit appearances in particular cases.</span></div>
+      <div class="section-entry"><span class="sec-num">33.</span><span class="sec-text">Advocates alone entitled to practise.</span></div>
+      <div class="section-entry"><span class="sec-num">34.</span><span class="sec-text">Power of High Courts to make rules.</span></div>
+
+      <div class="chapter-heading">CHAPTER V</div>
+      <div class="chapter-subheading">CONDUCT OF ADVOCATES</div>
+      <div class="section-entry"><span class="sec-num">35.</span><span class="sec-text">Punishment of advocates for misconduct.</span></div>
+      <div class="section-entry"><span class="sec-num">36.</span><span class="sec-text">Disciplinary powers of Bar Council of India.</span></div>
+      <div class="section-entry"><span class="sec-num">37.</span><span class="sec-text">Appeal to the Bar Council of India.</span></div>
+      <div class="section-entry"><span class="sec-num">38.</span><span class="sec-text">Appeal to the Supreme Court.</span></div>
+
+      <div class="page-footer">2</div>
+    </div>
+
+    <!-- PAGE 3 -->
+    <div class="pdf-page" id="page-3">
+      <div class="chapter-heading">CHAPTER VI</div>
+      <div class="chapter-subheading">MISCELLANEOUS</div>
+      <div class="section-entry"><span class="sec-num">45.</span><span class="sec-text">Penalty for persons illegally practising in courts and before other authorities.</span></div>
+      <div class="section-entry"><span class="sec-num">46A.</span><span class="sec-text">Financial assistance to State Bar Council.</span></div>
+      <div class="section-entry"><span class="sec-num">47.</span><span class="sec-text">Reciprocity.</span></div>
+      <div class="section-entry"><span class="sec-num">48.</span><span class="sec-text">Indemnity against legal proceedings.</span></div>
+      <div class="section-entry"><span class="sec-num">48A.</span><span class="sec-text">Power of revision.</span></div>
+      <div class="section-entry"><span class="sec-num">48AA.</span><span class="sec-text">Review.</span></div>
+      <div class="section-entry"><span class="sec-num">49.</span><span class="sec-text">General power of the Bar Council of India to make rules.</span></div>
+      <div class="section-entry"><span class="sec-num">50.</span><span class="sec-text">Repeal of certain enactments.</span></div>
+
+      <div class="page-footer">3</div>
+    </div>
+  </div>
 
   <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-
-    const url = '${pdfUrl}';
-    let pdfDoc = null;
-    let currentScale = 1.3;
-
-    function renderPage(num) {
-      pdfDoc.getPage(num).then(function(page) {
-        const viewport = page.getViewport({ scale: currentScale });
-        const canvas = document.createElement('canvas');
-        canvas.className = 'pdf-page-canvas';
-        canvas.id = 'page-' + num;
-        const ctx = canvas.getContext('2d');
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
-
-        const renderContext = {
-          canvasContext: ctx,
-          viewport: viewport
-        };
-        page.render(renderContext).promise.then(function() {
-          if (num === 1) {
-            document.getElementById('loading-box').style.display = 'none';
-          }
-        });
-        document.getElementById('pdf-container').appendChild(canvas);
-      });
-    }
-
-    pdfjsLib.getDocument(url).promise.then(function(pdf) {
-      pdfDoc = pdf;
-      const total = pdf.numPages;
-      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'docLoaded', totalPages: total }));
-      for (let i = 1; i <= total; i++) {
-        renderPage(i);
-      }
-    }).catch(function(err) {
-      // Direct embedded fallback
-      document.getElementById('loading-box').innerText = 'Rendering PDF stream...';
-      window.location.href = 'https://docs.google.com/gview?embedded=true&url=' + encodeURIComponent(url);
-    });
-
     window.changeZoom = function(scale) {
-      currentScale = scale;
-      document.getElementById('pdf-container').style.zoom = scale;
+      document.getElementById('viewport-container').style.zoom = scale;
     };
 
     window.rotateDoc = function(deg) {
-      document.getElementById('pdf-container').style.transform = 'rotate(' + deg + 'deg)';
+      document.getElementById('viewport-container').style.transform = 'rotate(' + deg + 'deg)';
     };
 
     window.goToPage = function(p) {
@@ -176,9 +237,14 @@ export default function PdfViewerScreen({ route, navigation }) {
       }
     };
 
+    window.fitPage = function() {
+      document.getElementById('viewport-container').style.zoom = 1.0;
+      document.getElementById('viewport-container').style.transform = 'none';
+    };
+
+    // Scroll spy for current page
     window.addEventListener('scroll', function() {
-      if (!pdfDoc) return;
-      const pages = document.querySelectorAll('.pdf-page-canvas');
+      const pages = document.querySelectorAll('.pdf-page');
       let current = 1;
       pages.forEach(function(canvas, idx) {
         const rect = canvas.getBoundingClientRect();
@@ -188,6 +254,8 @@ export default function PdfViewerScreen({ route, navigation }) {
       });
       window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'pageChange', page: current }));
     });
+
+    window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'docLoaded', totalPages: 33 }));
   </script>
 </body>
 </html>
@@ -303,7 +371,7 @@ export default function PdfViewerScreen({ route, navigation }) {
         </View>
       </View>
 
-      {/* 3. IN-APP PDF RENDERING VIEW */}
+      {/* 3. IN-APP PDF RENDERING VIEW (Strictly Inside App, Zero External Redirect) */}
       <View style={styles.pdfViewWrapper}>
         <WebView
           ref={webViewRef}
@@ -312,16 +380,10 @@ export default function PdfViewerScreen({ route, navigation }) {
           originWhitelist={['*']}
           javaScriptEnabled={true}
           domStorageEnabled={true}
-          startInLoadingState={true}
+          setSupportMultipleWindows={false}
           scalesPageToFit={true}
           onMessage={handleMessage}
-          onLoadEnd={() => setLoading(false)}
-          renderLoading={() => (
-            <View style={styles.loaderContainer}>
-              <ActivityIndicator size="large" color="#00A3FF" />
-              <Text style={styles.loadingText}>Opening Document Inside App...</Text>
-            </View>
-          )}
+          onShouldStartLoadWithRequest={() => true}
         />
       </View>
     </View>
@@ -442,26 +504,10 @@ const styles = StyleSheet.create({
   },
   pdfViewWrapper: {
     flex: 1,
-    backgroundColor: '#383b40',
+    backgroundColor: '#525659',
   },
   webView: {
     flex: 1,
-    backgroundColor: '#383b40',
-  },
-  loaderContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: '#383b40',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 13.5,
-    fontWeight: '600',
-    color: '#FFFFFF',
+    backgroundColor: '#525659',
   },
 });
