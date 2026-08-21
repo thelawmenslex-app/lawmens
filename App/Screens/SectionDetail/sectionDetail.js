@@ -14,6 +14,7 @@ import { ApiService } from '../../Services/apiService';
 import mappingData from '../../Assets/Data/comprehensiveMappings.json';
 import { SyncService } from '../../Services/syncService';
 import { BASE_URL } from '../../Actions/constant';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Admin Portal Synced Rich Clause Parser (Exact 1:1 WYSIWYG match)
 function parseAdminPortalClauses(text) {
@@ -63,6 +64,15 @@ function parseAdminPortalClauses(text) {
 }
 
 export default function SectionDetailScreen({ route, navigation }) {
+    const {
+    actTitle = 'Bharatiya Nagarik Suraksha Sanhita , 2023',
+    actCode = 'BNSS',
+    chapterName = 'CHAPTER II - CONSTITUTION OF CRIMINAL COURTS AND OFFICES',
+    sectionData = {}
+  } = route?.params || {};
+
+  const secNumber = String(sectionData?.name || sectionData?.section || '1').trim();
+  const secTitle = sectionData?.keyword || `Section ${secNumber}`;
 
   useEffect(() => {
     // Record Last Read and History
@@ -70,12 +80,12 @@ export default function SectionDetailScreen({ route, navigation }) {
       try {
         const itemToSave = {
           actTitle: actTitle || 'Central Legislation',
-          sectionNumber: secNum,
-          sectionName: secNum,
+          sectionNumber: secNumber,
+          sectionName: secNumber,
           keyword: secTitle,
-          title: `Section ${secNum}: ${secTitle}`,
+          title: `Section ${secNumber}: ${secTitle}`,
           chapterName: chapterName || 'Provisions',
-          content: rawContent,
+          content: sectionData?.content || '',
           sectionData: sectionData || null,
           timestamp: Date.now()
         };
@@ -95,20 +105,7 @@ export default function SectionDetailScreen({ route, navigation }) {
       }
     };
     recordHistory();
-  }, [actTitle, secNum, secTitle]);
-
-  const {
-    actTitle = 'Bharatiya Nagarik Suraksha Sanhita , 2023',
-    actCode = 'BNSS',
-    chapterName = 'CHAPTER II - CONSTITUTION OF CRIMINAL COURTS AND OFFICES',
-    sectionData = {}
-  } = route?.params || {};
-
-  const [isBookmarked, setIsBookmarked] = useState(false);
-  const [liveOverrideContent, setLiveOverrideContent] = useState(null);
-
-  const secNumber = String(sectionData.name || '1').trim();
-  const secTitle = sectionData.keyword || `Section ${secNumber}`;
+  }, [actTitle, secNumber, secTitle]);
 
   useEffect(() => {
     let isMounted = true;
