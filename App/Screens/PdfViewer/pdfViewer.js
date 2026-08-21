@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -31,6 +31,54 @@ export default function PdfViewerScreen({ route, navigation }) {
   const [loading, setLoading] = useState(true);
   const [isEditingPage, setIsEditingPage] = useState(false);
   const [inputPage, setInputPage] = useState('1');
+  const [pdfBase64, setPdfBase64] = useState(null);
+  const [fetchError, setFetchError] = useState(null);
+
+  // Fetch binary PDF data natively in React Native
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadPdfBinary() {
+      if (!pdfUrl) {
+        setLoading(false);
+        return;
+      }
+      try {
+        setLoading(true);
+        setFetchError(null);
+
+        const response = await fetch(pdfUrl);
+        if (!response.ok) {
+          throw new Error(`Server returned status ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (!isMounted) return;
+          const base64data = reader.result;
+          // Extract pure base64 part
+          const cleanBase64 = base64data.includes(',')
+            ? base64data.split(',')[1]
+            : base64data;
+          setPdfBase64(cleanBase64);
+        };
+        reader.readAsDataURL(blob);
+      } catch (err) {
+        console.warn('PDF fetch error:', err);
+        if (isMounted) {
+          setFetchError(err.message);
+          setLoading(false);
+        }
+      }
+    }
+
+    loadPdfBinary();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [pdfUrl]);
 
   // Handle messages from PDF.js inside WebView
   const handleMessage = (event) => {
@@ -45,6 +93,7 @@ export default function PdfViewerScreen({ route, navigation }) {
         setLoading(false);
       }
       if (data.type === 'error') {
+        console.warn('PDF.js render error:', data.message);
         setLoading(false);
       }
     } catch (e) {}
@@ -64,7 +113,7 @@ export default function PdfViewerScreen({ route, navigation }) {
     executeScript(`if (window.setZoom) window.setZoom(${nextZoom / 100});`);
   };
 
-  // Fit to Width ([ ↔ ])
+  // Fit to Width ([ ↔ ]) / Reset 100%
   const handleFitWidth = () => {
     setZoomPercent(100);
     executeScript(`if (window.setZoom) window.setZoom(1.0);`);
@@ -100,7 +149,7 @@ export default function PdfViewerScreen({ route, navigation }) {
     } catch (e) {}
   };
 
-  // Embedded PDF.js Engine that fetches and renders the EXACT backend PDF file
+  // Embedded PDF.js Engine with direct Base64 stream injection
   const viewerHtml = `
 <!DOCTYPE html>
 <html>
@@ -112,20 +161,20 @@ export default function PdfViewerScreen({ route, navigation }) {
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { background-color: #383B40; overflow-x: auto; width: 100%; min-height: 100%; font-family: -apple-system, sans-serif; }
-    #container { display: flex; flex-direction: column; align-items: center; padding: 14px 6px 100px 6px; gap: 14px; transition: transform 0.2s ease; transform-origin: top center; }
-    .page-wrapper { position: relative; background: #ffffff; box-shadow: 0 4px 14px rgba(0,0,0,0.45); border-radius: 2px; }
+    #container { display: flex; flex-direction: column; align-items: center; padding: 14px 6px 120px 6px; gap: 16px; transition: transform 0.2s ease; transform-origin: top center; }
+    .page-wrapper { position: relative; background: #ffffff; box-shadow: 0 4px 16px rgba(0,0,0,0.5); border-radius: 2px; }
     .page-canvas { display: block; max-width: 98vw; height: auto; }
-    #loader { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(24,26,32,0.9); padding: 18px 24px; border-radius: 12px; color: #ffffff; font-size: 14px; font-weight: 700; text-align: center; z-index: 999; }
+    #loader { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(24,26,32,0.92); padding: 18px 26px; border-radius: 12px; color: #ffffff; font-size: 14px; font-weight: 700; text-align: center; z-index: 999; box-shadow: 0 8px 24px rgba(0,0,0,0.4); }
   </style>
 </head>
 <body>
-  <div id="loader">Loading Backend PDF Document...</div>
+  <div id="loader">Loading Exact PDF Document...</div>
   <div id="container"></div>
 
   <script>
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-    const pdfUrl = '${pdfUrl}';
+    const base64Data = '${pdfBase64 || ''}';
     let pdfDoc = null;
     let baseScale = window.devicePixelRatio > 1 ? 1.5 : 1.2;
     let currentZoom = 1.0;
@@ -166,18 +215,30 @@ export default function PdfViewerScreen({ route, navigation }) {
       });
     }
 
-    pdfjsLib.getDocument(pdfUrl).promise.then(function(pdf) {
-      pdfDoc = pdf;
-      const total = pdf.numPages;
-      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'docLoaded', totalPages: total }));
-      for (let i = 1; i <= total; i++) {
-        renderPage(i);
+    if (base64Data && base64Data.length > 50) {
+      try {
+        const raw = atob(base64Data);
+        const uint8Array = new Uint8Array(raw.length);
+        for (let i = 0; i < raw.length; i++) {
+          uint8Array[i] = raw.charCodeAt(i);
+        }
+
+        pdfjsLib.getDocument({ data: uint8Array }).promise.then(function(pdf) {
+          pdfDoc = pdf;
+          const total = pdf.numPages;
+          window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'docLoaded', totalPages: total }));
+          for (let i = 1; i <= total; i++) {
+            renderPage(i);
+          }
+        }).catch(function(err) {
+          console.error('PDF.js parse error:', err);
+          document.getElementById('loader').innerText = 'Document format notice: Loading pages...';
+          window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'error', message: err.message }));
+        });
+      } catch (e) {
+        console.error('Base64 decode error:', e);
       }
-    }).catch(function(err) {
-      console.error('PDF load error:', err);
-      document.getElementById('loader').innerText = 'Rendering statutory text...';
-      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'error', message: err.message }));
-    });
+    }
 
     window.setZoom = function(z) {
       currentZoom = z;
@@ -239,10 +300,10 @@ export default function PdfViewerScreen({ route, navigation }) {
         </TouchableOpacity>
       </View>
 
-      {/* 2. EXACT PDF CONTROLS TOOLBAR (Matching [ 5 ] / 60 | - 100% + | ) */}
+      {/* 2. EXACT PDF CONTROLS TOOLBAR (Matching [ 1 ] / 34 | - 100% + | ↻ [ ↔ ]) */}
       <View style={styles.toolbarContainer}>
         <View style={styles.toolbarRow}>
-          {/* Page Navigator [ 5 ] / 60 */}
+          {/* Page Navigator [ 1 ] / 34 */}
           <View style={styles.pageNavigatorContainer}>
             {isEditingPage ? (
               <TextInput
@@ -321,18 +382,27 @@ export default function PdfViewerScreen({ route, navigation }) {
 
       {/* 3. IN-APP PDF RENDERING VIEW */}
       <View style={styles.pdfViewWrapper}>
-        <WebView
-          ref={webViewRef}
-          source={{ html: viewerHtml }}
-          style={styles.webView}
-          originWhitelist={['*']}
-          javaScriptEnabled={true}
-          domStorageEnabled={true}
-          setSupportMultipleWindows={false}
-          scalesPageToFit={true}
-          onMessage={handleMessage}
-          onShouldStartLoadWithRequest={() => true}
-        />
+        {pdfBase64 ? (
+          <WebView
+            ref={webViewRef}
+            source={{ html: viewerHtml }}
+            style={styles.webView}
+            originWhitelist={['*']}
+            javaScriptEnabled={true}
+            domStorageEnabled={true}
+            setSupportMultipleWindows={false}
+            scalesPageToFit={true}
+            onMessage={handleMessage}
+            onShouldStartLoadWithRequest={() => true}
+          />
+        ) : (
+          <View style={styles.loaderContainer}>
+            <ActivityIndicator size="large" color="#00A3FF" />
+            <Text style={styles.loadingText}>
+              {fetchError ? `Failed to load PDF: ${fetchError}` : 'Downloading Exact PDF from Backend...'}
+            </Text>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -467,5 +537,19 @@ const styles = StyleSheet.create({
   webView: {
     flex: 1,
     backgroundColor: '#383B40',
+  },
+  loaderContainer: {
+    flex: 1,
+    backgroundColor: '#383B40',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 14,
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
   },
 });
