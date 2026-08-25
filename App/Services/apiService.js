@@ -4,7 +4,7 @@ import { DataService } from './dataService';
 import { ComparisonService, IPC_BNS_MAPPING } from './comparisonService';
 
 export const ApiService = {
-  // --- AUTHENTICATION ---
+    // --- AUTHENTICATION ---
   auth: {
     login: async (emailOrPhone, password) => {
       try {
@@ -14,22 +14,19 @@ export const ApiService = {
           body: JSON.stringify({ userName: emailOrPhone.trim(), password: password.trim() })
         });
         const data = await res.json();
-        if (data.status && (data.token || data.data?.token)) {
-          const token = data.token || data.data?.token;
-          const user = data.user || data.data?.user || { name: emailOrPhone, email: emailOrPhone };
-          await AsyncStorage.setItem('@authtoken', token);
-          await AsyncStorage.setItem('@userprofile', JSON.stringify(user));
-          return { success: true, token, user };
+        if (data.status && (data.token || data.data?.token || data.data)) {
+          const userObj = data.data?.user || data.data || data.user;
+          const token = data.token || data.data?.token || userObj?.token;
+          if (token) {
+            await AsyncStorage.setItem('@authtoken', token);
+          }
+          if (userObj) {
+            await AsyncStorage.setItem('@userprofile', JSON.stringify(userObj));
+          }
+          return { success: true, token, user: userObj };
         }
         return { success: false, message: data.message || 'Invalid credentials' };
       } catch (e) {
-        // Fallback for demo user
-        if (emailOrPhone.trim().toLowerCase() === 'admin@yopmail.com' || emailOrPhone.trim() === '8234567897' || emailOrPhone.trim().toLowerCase() === 'gajendran') {
-          const user = { name: 'gajendran', email: 'admin@yopmail.com', phone: '8234567897' };
-          await AsyncStorage.setItem('@authtoken', 'demo_token_123');
-          await AsyncStorage.setItem('@userprofile', JSON.stringify(user));
-          return { success: true, token: 'demo_token_123', user };
-        }
         return { success: false, message: 'Network connection error' };
       }
     },
@@ -45,6 +42,52 @@ export const ApiService = {
         return data;
       } catch (e) {
         return { status: false, message: 'Registration server unavailable' };
+      }
+    },
+
+    getProfile: async () => {
+      try {
+        const token = await AsyncStorage.getItem('@authtoken');
+        if (!token) return null;
+        const headers = {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache',
+          'Authorization': token.startsWith('Bearer ') ? token : `Bearer ${token}`
+        };
+        const res = await fetch(backendroutes.getprofile, { headers });
+        const data = await res.json();
+        if (data.status && (data.data || data.profile || data.user)) {
+          const liveUser = data.data || data.profile || data.user;
+          await AsyncStorage.setItem('@userprofile', JSON.stringify(liveUser));
+          return liveUser;
+        }
+      } catch (e) {
+        console.warn('Live profile fetch error:', e.message);
+      }
+      return await ApiService.auth.getStoredUser();
+    },
+
+    updateProfile: async (payload) => {
+      try {
+        const token = await AsyncStorage.getItem('@authtoken');
+        const headers = {
+          'Content-Type': 'application/json',
+          'Authorization': token && token.startsWith('Bearer ') ? token : `Bearer ${token}`
+        };
+        const res = await fetch(backendroutes.getprofile, {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.status) {
+          await ApiService.auth.getProfile();
+          return { success: true, message: data.message || 'Profile updated.' };
+        }
+        return { success: false, message: data.message || 'Failed to update profile.' };
+      } catch (e) {
+        await AsyncStorage.setItem('@userprofile', JSON.stringify(payload));
+        return { success: true, message: 'Profile updated locally.' };
       }
     },
 

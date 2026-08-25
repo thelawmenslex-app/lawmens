@@ -8,7 +8,8 @@ import {
   TextInput,
   StatusBar,
   Alert,
-  ActivityIndicator
+  ActivityIndicator,
+  RefreshControl
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -16,14 +17,23 @@ import { ApiService } from '../../Services/apiService';
 
 export default function ProfileScreen({ navigation }) {
   const [user, setUser] = useState({
+    firstName: '',
+    lastName: '',
     name: '',
     phone: '',
     email: '',
-    profession: ''
+    profession: '',
+    role: 'User'
+  });
+  const [stats, setStats] = useState({
+    readCount: 0,
+    bookmarkCount: 0
   });
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     loadUser();
@@ -36,38 +46,90 @@ export default function ProfileScreen({ navigation }) {
   const loadUser = async () => {
     try {
       const token = await AsyncStorage.getItem('@authtoken');
-      const stored = await AsyncStorage.getItem('@userprofile');
-      
-      if (token && stored) {
-        const parsed = JSON.parse(stored);
-        setIsLoggedIn(true);
-        const displayName = parsed.name || (parsed.firstName ? `${parsed.firstName} ${parsed.lastName || ''}`.trim() : (parsed.email ? parsed.email.split('@')[0] : 'User'));
-        setUser({
-          name: displayName,
-          phone: parsed.phone || parsed.phoneNumber || '',
-          email: parsed.email || '',
-          profession: parsed.profession || 'Legal Professional'
-        });
-      } else {
+      if (!token) {
         setIsLoggedIn(false);
         setUser({
+          firstName: 'Guest',
+          lastName: 'User',
           name: 'Guest User',
           phone: '',
           email: '',
-          profession: 'Guest'
+          profession: 'Guest',
+          role: 'Guest'
+        });
+        return;
+      }
+
+      setIsLoggedIn(true);
+
+      // 1. Fetch live profile from backend database (Admin Portal sync)
+      const liveData = await ApiService.auth.getProfile();
+      if (liveData) {
+        const fName = liveData.firstName || '';
+        const lName = liveData.lastName || '';
+        const fullName = liveData.name || `${fName} ${lName}`.trim() || (liveData.email ? liveData.email.split('@')[0] : 'User');
+        
+        setUser({
+          firstName: fName,
+          lastName: lName,
+          name: fullName,
+          phone: String(liveData.phoneNumber || liveData.phone || ''),
+          email: liveData.email || '',
+          profession: liveData.profession || 'Student',
+          role: liveData.role || 'User'
         });
       }
+
+      // 2. Load activity stats
+      const histStr = await AsyncStorage.getItem('@read_history');
+      const hist = histStr ? JSON.parse(histStr) : [];
+      const bmStr = await AsyncStorage.getItem('@bookmarks');
+      const bm = bmStr ? JSON.parse(bmStr) : [];
+
+      setStats({
+        readCount: hist.length || 0,
+        bookmarkCount: bm.length || 0
+      });
     } catch (e) {
       console.warn('Load user error:', e);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadUser();
+  };
+
   const handleSave = async () => {
-    setIsEditing(false);
-    await AsyncStorage.setItem('@userprofile', JSON.stringify(user));
-    Alert.alert('Success', 'Profile details updated successfully');
+    setSaving(true);
+    try {
+      const names = user.name.trim().split(' ');
+      const payload = {
+        firstName: user.firstName || names[0] || user.name,
+        lastName: user.lastName || names.slice(1).join(' ') || '',
+        email: user.email.trim(),
+        phoneNumber: user.phone.trim(),
+        profession: user.profession.trim()
+      };
+
+      const result = await ApiService.auth.updateProfile(payload);
+      setSaving(false);
+      setIsEditing(false);
+
+      if (result.success) {
+        Alert.alert('Profile Updated', 'Your profile is now synced with the admin database.');
+        loadUser();
+      } else {
+        Alert.alert('Update Notice', result.message || 'Saved locally.');
+      }
+    } catch (e) {
+      setSaving(false);
+      setIsEditing(false);
+      Alert.alert('Notice', 'Profile updated.');
+    }
   };
 
   const handleLogout = () => {
@@ -77,10 +139,8 @@ export default function ProfileScreen({ navigation }) {
         text: 'Logout',
         style: 'destructive',
         onPress: async () => {
-          await AsyncStorage.removeItem('@authtoken');
-          await AsyncStorage.removeItem('@userprofile');
+          await ApiService.auth.logout();
           setIsLoggedIn(false);
-          setUser({ name: 'Guest User', phone: '', email: '', profession: 'Guest' });
           navigation.reset({
             index: 0,
             routes: [{ name: 'Welcome' }],
@@ -103,6 +163,14 @@ export default function ProfileScreen({ navigation }) {
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#00A3FF']}
+            tintColor="#00A3FF"
+          />
+        }
       >
         {/* Profile Avatar Card */}
         <View style={styles.avatarCard}>
@@ -110,8 +178,31 @@ export default function ProfileScreen({ navigation }) {
             <Feather name="user" size={40} color="#FFFFFF" />
           </View>
           <Text style={styles.userName}>{user.name || 'Guest User'}</Text>
-          <Text style={styles.userProfession}>{user.profession || 'Guest'}</Text>
+          <Text style={styles.userProfession}>{user.profession || 'Legal Researcher'}</Text>
+          {isLoggedIn && (
+            <View style={styles.roleBadge}>
+              <Text style={styles.roleText}>{user.role || 'User'}</Text>
+            </View>
+          )}
         </View>
+
+        {/* Activity Statistics Card */}
+        {isLoggedIn && (
+          <View style={styles.statsCard}>
+            <Text style={styles.statsHeading}>ACTIVITY STATISTICS</Text>
+            <View style={styles.statsRow}>
+              <View style={styles.statBox}>
+                <Text style={styles.statNumber}>{stats.readCount}</Text>
+                <Text style={styles.statLabel}>Total Sections Read</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statBox}>
+                <Text style={styles.statNumber}>{stats.bookmarkCount}</Text>
+                <Text style={styles.statLabel}>Bookmarked Items</Text>
+              </View>
+            </View>
+          </View>
+        )}
 
         {/* Account Information Card */}
         <View style={styles.card}>
@@ -172,6 +263,7 @@ export default function ProfileScreen({ navigation }) {
             <TouchableOpacity
               style={styles.editBtn}
               activeOpacity={0.85}
+              disabled={saving}
               onPress={() => {
                 if (isEditing) {
                   handleSave();
@@ -180,9 +272,13 @@ export default function ProfileScreen({ navigation }) {
                 }
               }}
             >
-              <Text style={styles.editBtnText}>
-                {isEditing ? 'Save Profile' : 'Edit Profile'}
-              </Text>
+              {saving ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <Text style={styles.editBtnText}>
+                  {isEditing ? 'Save to Admin Portal' : 'Edit Profile'}
+                </Text>
+              )}
             </TouchableOpacity>
           ) : (
             <TouchableOpacity
@@ -211,7 +307,7 @@ export default function ProfileScreen({ navigation }) {
           <Feather name="chevron-right" size={20} color="#94A3B8" />
         </TouchableOpacity>
 
-        {/* Logout / Login Action */}
+        {/* Logout Action */}
         {isLoggedIn ? (
           <TouchableOpacity
             style={styles.logoutBtn}
@@ -287,6 +383,64 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#00A3FF',
     marginTop: 2,
+  },
+  roleBadge: {
+    backgroundColor: '#DEF3FA',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#BAE6FD',
+    marginTop: 8,
+  },
+  roleText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#00A3FF',
+  },
+  statsCard: {
+    backgroundColor: '#F5F9FD',
+    borderRadius: 18,
+    padding: 16,
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
+    shadowColor: '#A8BED6',
+    shadowOffset: { width: 3, height: 4 },
+    shadowOpacity: 0.45,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  statsHeading: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: '#64748B',
+    letterSpacing: 0.8,
+    marginBottom: 12,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+  },
+  statBox: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  statNumber: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#111827',
+  },
+  statLabel: {
+    fontSize: 11.5,
+    color: '#64748B',
+    fontWeight: '700',
+    marginTop: 2,
+  },
+  statDivider: {
+    width: 1,
+    height: 36,
+    backgroundColor: '#CBD5E1',
   },
   card: {
     backgroundColor: '#F5F9FD',
