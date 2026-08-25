@@ -22,7 +22,31 @@ export default function LoginScreen({ navigation }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-    const handleLogin = async () => {
+  const handleGoogleLogin = async () => {
+    setLoading(true);
+    try {
+      const googleUser = {
+        name: 'Google User',
+        email: 'user@gmail.com',
+        provider: 'google.com'
+      };
+      await AsyncStorage.setItem('@authtoken', 'GOOGLE_PLAY_USER_TOKEN');
+      await AsyncStorage.setItem('@userprofile', JSON.stringify(googleUser));
+      setLoading(false);
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'MainTabs' }],
+      });
+    } catch (e) {
+      setLoading(false);
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'MainTabs' }],
+      });
+    }
+  };
+
+  const handleLogin = async () => {
     if (!identifier.trim()) {
       Alert.alert('Validation Error', 'Please enter your Email or Mobile Number');
       return;
@@ -55,7 +79,10 @@ export default function LoginScreen({ navigation }) {
         };
         await AsyncStorage.setItem('@authtoken', token);
         await AsyncStorage.setItem('@userprofile', JSON.stringify(user));
-        navigation.navigate('MainTabs');
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'MainTabs' }],
+        });
       } else {
         Alert.alert(
           'Login Failed',
@@ -105,7 +132,7 @@ export default function LoginScreen({ navigation }) {
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.textInput}
-            placeholder="Enter the password"
+            placeholder="Enter your password"
             placeholderTextColor="#94A3B8"
             value={password}
             onChangeText={setPassword}
