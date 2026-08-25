@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { View, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import WelcomeScreen from '../Screens/Welcome/welcome';
 import LoginScreen from '../Screens/Auth/Login/login';
@@ -33,13 +35,40 @@ import ContactScreen from '../Screens/CMS/contact';
 const Stack = createStackNavigator();
 
 export default function Routes() {
+  const [initialRoute, setInitialRoute] = useState(null);
+
+  useEffect(() => {
+    checkAuthSession();
+  }, []);
+
+  const checkAuthSession = async () => {
+    try {
+      const token = await AsyncStorage.getItem('@authtoken');
+      if (token) {
+        setInitialRoute('MainTabs');
+      } else {
+        setInitialRoute('Welcome');
+      }
+    } catch (e) {
+      setInitialRoute('Welcome');
+    }
+  };
+
+  if (!initialRoute) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#181A20', alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator size="large" color="#00A3FF" />
+      </View>
+    );
+  }
+
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="MainTabs" screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="MainTabs" component={BottomTabNavigator} />
+      <Stack.Navigator initialRouteName={initialRoute} screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Signup" component={SignupScreen} />
+        <Stack.Screen name="MainTabs" component={BottomTabNavigator} />
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
         <Stack.Screen name="Forgotpassword" component={ForgotPasswordScreen} />
         <Stack.Screen name="Otp" component={OtpScreen} />

@@ -22,8 +22,7 @@ export default function LoginScreen({ navigation }) {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
-    // 1. Strict validation - do not allow empty login
+    const handleLogin = async () => {
     if (!identifier.trim()) {
       Alert.alert('Validation Error', 'Please enter your Email or Mobile Number');
       return;
@@ -48,32 +47,25 @@ export default function LoginScreen({ navigation }) {
 
       if (data.status && (data.token || data.data?.token)) {
         const token = data.token || data.data?.token;
-        const user = data.user || data.data?.user || { name: identifier, email: identifier };
+        const user = data.user || data.data?.user || {
+          name: identifier.split('@')[0],
+          email: identifier.includes('@') ? identifier : '',
+          phone: !identifier.includes('@') ? identifier : '',
+          profession: 'Advocate'
+        };
         await AsyncStorage.setItem('@authtoken', token);
         await AsyncStorage.setItem('@userprofile', JSON.stringify(user));
         navigation.navigate('MainTabs');
       } else {
-        // If password does not match server or user entered credentials, notify user with option to proceed
         Alert.alert(
-          'Login Notice',
-          data.message || 'Connecting to account...',
-          [
-            { text: 'Cancel', style: 'cancel' },
-            {
-              text: 'Proceed to Dashboard',
-              onPress: async () => {
-                await AsyncStorage.setItem('@userprofile', JSON.stringify({ name: identifier.split('@')[0] || 'Advocate', email: identifier }));
-                navigation.navigate('MainTabs');
-              }
-            }
-          ]
+          'Login Failed',
+          data.message || 'Invalid username or password. Please check your credentials.',
+          [{ text: 'OK' }]
         );
       }
     } catch (e) {
       setLoading(false);
-      // Offline / fallback session
-      await AsyncStorage.setItem('@userprofile', JSON.stringify({ name: identifier.split('@')[0] || 'Advocate', email: identifier }));
-      navigation.navigate('MainTabs');
+      Alert.alert('Network Notice', 'Unable to reach authentication server. Please check your internet connection.');
     }
   };
 

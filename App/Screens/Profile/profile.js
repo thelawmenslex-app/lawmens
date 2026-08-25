@@ -7,7 +7,8 @@ import {
   TouchableOpacity,
   TextInput,
   StatusBar,
-  Alert
+  Alert,
+  ActivityIndicator
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -15,12 +16,14 @@ import { ApiService } from '../../Services/apiService';
 
 export default function ProfileScreen({ navigation }) {
   const [user, setUser] = useState({
-    name: 'Advocate',
+    name: '',
     phone: '',
     email: '',
-    profession: 'Advocate'
+    profession: ''
   });
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadUser();
@@ -31,15 +34,33 @@ export default function ProfileScreen({ navigation }) {
   }, [navigation]);
 
   const loadUser = async () => {
-    const stored = await ApiService.auth.getStoredUser();
-    if (stored) {
-      const displayName = stored.name || (stored.firstName ? `${stored.firstName} ${stored.lastName || ''}`.trim() : (stored.email ? stored.email.split('@')[0] : 'Advocate'));
-      setUser({
-        name: displayName,
-        phone: stored.phone || stored.phoneNumber || '',
-        email: stored.email || '',
-        profession: stored.profession || 'Advocate'
-      });
+    try {
+      const token = await AsyncStorage.getItem('@authtoken');
+      const stored = await AsyncStorage.getItem('@userprofile');
+      
+      if (token && stored) {
+        const parsed = JSON.parse(stored);
+        setIsLoggedIn(true);
+        const displayName = parsed.name || (parsed.firstName ? `${parsed.firstName} ${parsed.lastName || ''}`.trim() : (parsed.email ? parsed.email.split('@')[0] : 'User'));
+        setUser({
+          name: displayName,
+          phone: parsed.phone || parsed.phoneNumber || '',
+          email: parsed.email || '',
+          profession: parsed.profession || 'Legal Professional'
+        });
+      } else {
+        setIsLoggedIn(false);
+        setUser({
+          name: 'Guest User',
+          phone: '',
+          email: '',
+          profession: 'Guest'
+        });
+      }
+    } catch (e) {
+      console.warn('Load user error:', e);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -51,12 +72,19 @@ export default function ProfileScreen({ navigation }) {
 
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
-      { text: 'Cancel' },
+      { text: 'Cancel', style: 'cancel' },
       {
         text: 'Logout',
+        style: 'destructive',
         onPress: async () => {
-          await ApiService.auth.logout();
-          navigation.navigate('Welcome');
+          await AsyncStorage.removeItem('@authtoken');
+          await AsyncStorage.removeItem('@userprofile');
+          setIsLoggedIn(false);
+          setUser({ name: 'Guest User', phone: '', email: '', profession: 'Guest' });
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Welcome' }],
+          });
         }
       }
     ]);
@@ -76,16 +104,16 @@ export default function ProfileScreen({ navigation }) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Profile Card */}
+        {/* Profile Avatar Card */}
         <View style={styles.avatarCard}>
           <View style={styles.avatarCircle}>
             <Feather name="user" size={40} color="#FFFFFF" />
           </View>
-          <Text style={styles.userName}>{user.name}</Text>
-          <Text style={styles.userProfession}>{user.profession}</Text>
+          <Text style={styles.userName}>{user.name || 'Guest User'}</Text>
+          <Text style={styles.userProfession}>{user.profession || 'Guest'}</Text>
         </View>
 
-        {/* User Details */}
+        {/* Account Information Card */}
         <View style={styles.card}>
           <Text style={styles.cardHeading}>Account Information</Text>
 
@@ -94,7 +122,9 @@ export default function ProfileScreen({ navigation }) {
             <TextInput
               style={styles.input}
               value={user.name}
-              editable={isEditing}
+              placeholder="Enter your name"
+              placeholderTextColor="#94A3B8"
+              editable={isEditing && isLoggedIn}
               onChangeText={(text) => setUser({ ...user, name: text })}
             />
           </View>
@@ -104,10 +134,10 @@ export default function ProfileScreen({ navigation }) {
             <TextInput
               style={styles.input}
               value={user.phone}
-              editable={isEditing}
-              keyboardType="phone-pad"
               placeholder="Enter phone number"
               placeholderTextColor="#94A3B8"
+              editable={isEditing && isLoggedIn}
+              keyboardType="phone-pad"
               onChangeText={(text) => setUser({ ...user, phone: text })}
             />
           </View>
@@ -117,10 +147,11 @@ export default function ProfileScreen({ navigation }) {
             <TextInput
               style={styles.input}
               value={user.email}
-              editable={isEditing}
-              keyboardType="email-address"
               placeholder="Enter email address"
               placeholderTextColor="#94A3B8"
+              editable={isEditing && isLoggedIn}
+              keyboardType="email-address"
+              autoCapitalize="none"
               onChangeText={(text) => setUser({ ...user, email: text })}
             />
           </View>
@@ -130,74 +161,112 @@ export default function ProfileScreen({ navigation }) {
             <TextInput
               style={styles.input}
               value={user.profession}
-              editable={isEditing}
-              placeholder="e.g. Advocate"
+              placeholder="Enter profession"
               placeholderTextColor="#94A3B8"
+              editable={isEditing && isLoggedIn}
               onChangeText={(text) => setUser({ ...user, profession: text })}
             />
           </View>
 
-          <TouchableOpacity
-            style={styles.editBtn}
-            onPress={() => (isEditing ? handleSave() : setIsEditing(true))}
-          >
-            <Text style={styles.editBtnText}>
-              {isEditing ? 'Save Profile' : 'Edit Profile'}
-            </Text>
-          </TouchableOpacity>
+          {isLoggedIn ? (
+            <TouchableOpacity
+              style={styles.editBtn}
+              activeOpacity={0.85}
+              onPress={() => {
+                if (isEditing) {
+                  handleSave();
+                } else {
+                  setIsEditing(true);
+                }
+              }}
+            >
+              <Text style={styles.editBtnText}>
+                {isEditing ? 'Save Profile' : 'Edit Profile'}
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={styles.editBtn}
+              activeOpacity={0.85}
+              onPress={() => navigation.navigate('Login')}
+            >
+              <Text style={styles.editBtnText}>Login / Sign Up</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
-        {/* Subscription Quick View */}
+        {/* My Subscription Link */}
         <TouchableOpacity
-          style={styles.subCard}
+          style={styles.menuCard}
           activeOpacity={0.85}
           onPress={() => navigation.navigate('Subscription')}
         >
-          <View style={styles.subIconBox}>
-            <Feather name="tv" size={20} color="#00A3FF" />
+          <View style={styles.menuIconBox}>
+            <Feather name="credit-card" size={20} color="#00A3FF" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.subTitle}>My Subscription</Text>
-            <Text style={styles.subStatus}>Active Premium Pass (358 Days Left)</Text>
+            <Text style={styles.menuTitle}>My Subscription</Text>
+            <Text style={styles.menuSubtitle}>View active plan and days left</Text>
           </View>
           <Feather name="chevron-right" size={20} color="#94A3B8" />
         </TouchableOpacity>
 
-        {/* Logout Button */}
-        <TouchableOpacity
-          style={styles.logoutBtn}
-          activeOpacity={0.85}
-          onPress={handleLogout}
-        >
-          <Feather name="log-out" size={18} color="#EF4444" style={{ marginRight: 8 }} />
-          <Text style={styles.logoutBtnText}>Logout</Text>
-        </TouchableOpacity>
+        {/* Logout / Login Action */}
+        {isLoggedIn ? (
+          <TouchableOpacity
+            style={styles.logoutBtn}
+            activeOpacity={0.85}
+            onPress={handleLogout}
+          >
+            <Feather name="log-out" size={18} color="#EF4444" style={{ marginRight: 8 }} />
+            <Text style={styles.logoutBtnText}>Logout</Text>
+          </TouchableOpacity>
+        ) : null}
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#EDF7FC' },
+  container: {
+    flex: 1,
+    backgroundColor: '#E6EEF8',
+  },
   darkHeader: {
     backgroundColor: '#181A20',
     paddingTop: 45,
     paddingHorizontal: 20,
-    paddingBottom: 22,
+    paddingBottom: 20,
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
     alignItems: 'center',
   },
-  headerTitle: { fontSize: 20, fontWeight: '900', color: '#00A3FF' },
-  scroll: { flex: 1 },
-  scrollContent: { padding: 16, paddingBottom: 110, gap: 14 },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#00A3FF',
+    letterSpacing: 1.2,
+  },
+  scroll: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 32,
+    gap: 14,
+  },
   avatarCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
+    backgroundColor: '#F5F9FD',
+    borderRadius: 20,
     padding: 20,
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: '#D8ECF7',
+    borderColor: '#FFFFFF',
+    shadowColor: '#A8BED6',
+    shadowOffset: { width: 3, height: 4 },
+    shadowOpacity: 0.45,
+    shadowRadius: 6,
+    elevation: 3,
   },
   avatarCircle: {
     width: 80,
@@ -206,49 +275,87 @@ const styles = StyleSheet.create({
     backgroundColor: '#00A3FF',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 10,
-  },
-  userName: { fontSize: 18, fontWeight: '900', color: '#111827' },
-  userProfession: { fontSize: 13, color: '#00A3FF', fontWeight: '700', marginTop: 2 },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 18,
-    padding: 18,
-    borderWidth: 1.5,
-    borderColor: '#D8ECF7',
-  },
-  cardHeading: { fontSize: 15, fontWeight: '900', color: '#111827', marginBottom: 14 },
-  fieldLabel: { fontSize: 12, fontWeight: '700', color: '#64748B', marginBottom: 4 },
-  inputBox: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    paddingHorizontal: 12,
-    height: 44,
-    justifyContent: 'center',
     marginBottom: 12,
   },
-  input: { fontSize: 14, color: '#111827', fontWeight: '600' },
+  userName: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#111827',
+  },
+  userProfession: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#00A3FF',
+    marginTop: 2,
+  },
+  card: {
+    backgroundColor: '#F5F9FD',
+    borderRadius: 20,
+    padding: 18,
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
+    shadowColor: '#A8BED6',
+    shadowOffset: { width: 3, height: 4 },
+    shadowOpacity: 0.45,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  cardHeading: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: '#111827',
+    marginBottom: 14,
+  },
+  fieldLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#64748B',
+    marginBottom: 6,
+  },
+  inputBox: {
+    backgroundColor: '#EBF3FB',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    height: 46,
+    justifyContent: 'center',
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#D8ECF7',
+  },
+  input: {
+    fontSize: 13.5,
+    color: '#111827',
+    fontWeight: '600',
+  },
   editBtn: {
     backgroundColor: '#00A3FF',
-    borderRadius: 10,
-    height: 46,
+    borderRadius: 12,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 6,
+    marginTop: 8,
+    elevation: 2,
   },
-  editBtnText: { fontSize: 14, fontWeight: '800', color: '#FFFFFF' },
-  subCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
+  editBtnText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  menuCard: {
+    backgroundColor: '#F5F9FD',
+    borderRadius: 18,
+    padding: 14,
     flexDirection: 'row',
     alignItems: 'center',
     borderWidth: 1.5,
-    borderColor: '#D8ECF7',
+    borderColor: '#FFFFFF',
+    shadowColor: '#A8BED6',
+    shadowOffset: { width: 3, height: 4 },
+    shadowOpacity: 0.45,
+    shadowRadius: 6,
+    elevation: 3,
   },
-  subIconBox: {
+  menuIconBox: {
     width: 40,
     height: 40,
     borderRadius: 12,
@@ -257,17 +364,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 12,
   },
-  subTitle: { fontSize: 14, fontWeight: '800', color: '#111827' },
-  subStatus: { fontSize: 12, color: '#10B981', fontWeight: '600', marginTop: 2 },
+  menuTitle: {
+    fontSize: 13.5,
+    fontWeight: '800',
+    color: '#111827',
+  },
+  menuSubtitle: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 2,
+  },
   logoutBtn: {
     backgroundColor: '#FEE2E2',
-    borderRadius: 12,
-    height: 48,
+    borderRadius: 18,
+    height: 50,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: '#FECACA',
+    marginTop: 4,
   },
-  logoutBtnText: { fontSize: 14, fontWeight: '800', color: '#EF4444' },
+  logoutBtnText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#EF4444',
+  },
 });
