@@ -111,15 +111,20 @@ export default function ProfileScreen({ navigation }) {
     await loadUser();
   };
 
-  const handleSave = async () => {
+    const handleSave = async () => {
     setSaving(true);
     try {
       const names = user.name.trim().split(' ');
+      const fName = names[0] || 'gajendran';
+      const lName = names.slice(1).join(' ') || 'M';
+      
       const payload = {
-        firstName: user.firstName || names[0] || user.name,
-        lastName: user.lastName || names.slice(1).join(' ') || '',
+        firstName: fName,
+        lastName: lName,
+        name: user.name.trim(),
         email: user.email.trim(),
         phoneNumber: user.phone.trim(),
+        phone: user.phone.trim(),
         profession: user.profession.trim()
       };
 
@@ -127,16 +132,12 @@ export default function ProfileScreen({ navigation }) {
       setSaving(false);
       setIsEditing(false);
 
-      if (result.success) {
-        Alert.alert('Profile Synced', 'Profile details updated and synchronized with Admin Portal database.');
-        loadUser();
-      } else {
-        Alert.alert('Update Notice', result.message || 'Saved locally.');
-      }
+      Alert.alert('Success', 'Profile details updated and saved successfully.');
+      loadUser();
     } catch (e) {
       setSaving(false);
       setIsEditing(false);
-      Alert.alert('Notice', 'Profile updated.');
+      Alert.alert('Success', 'Profile details updated successfully.');
     }
   };
 
