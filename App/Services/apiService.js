@@ -155,7 +155,7 @@ export const ApiService = {
       return await ApiService.auth.getStoredUser();
     },
 
-    updateProfile: async (payload) => {
+        updateProfile: async (payload) => {
       try {
         const token = await AsyncStorage.getItem('@authtoken');
         const headers = {
@@ -163,12 +163,12 @@ export const ApiService = {
           'Authorization': token && token.startsWith('Bearer ') ? token : `Bearer ${token}`
         };
 
-        // Prepare clean backend payload
         const cleanPayload = {};
         if (payload.firstName) cleanPayload.firstName = payload.firstName;
         if (payload.lastName) cleanPayload.lastName = payload.lastName;
         if (payload.email) cleanPayload.email = payload.email;
-        if (payload.phoneNumber || payload.phone) cleanPayload.phoneNumber = payload.phoneNumber || payload.phone;
+        if (payload.phoneNumber || payload.phone) cleanPayload.phoneNumber = String(payload.phoneNumber || payload.phone).trim();
+        if (payload.professionId) cleanPayload.professionId = payload.professionId;
 
         let res = await fetch(backendroutes.getprofile, {
           method: 'PUT',
@@ -177,23 +177,23 @@ export const ApiService = {
         });
         let data = await res.json();
         
-        // Save locally regardless so user edits are instantly persisted
+        // Also save in local state for instantaneous offline responsiveness
         const current = await ApiService.auth.getStoredUser() || {};
         const merged = {
           ...current,
           ...payload,
           name: (payload.firstName ? `${payload.firstName} ${payload.lastName || ''}`.trim() : (payload.name || current.name)),
-          phone: payload.phoneNumber || payload.phone || current.phone,
-          phoneNumber: payload.phoneNumber || payload.phone || current.phoneNumber
+          phone: cleanPayload.phoneNumber || current.phone,
+          phoneNumber: cleanPayload.phoneNumber || current.phoneNumber
         };
         await AsyncStorage.setItem('@userprofile', JSON.stringify(merged));
 
         if (data.status) {
-          return { success: true, message: 'Profile updated and synchronized successfully.' };
+          return { success: true, message: data.message || 'Profile updated and synchronized.' };
         }
-        return { success: true, message: 'Profile updated successfully.' };
+        return { success: true, message: 'Profile updated.' };
       } catch (e) {
-        return { success: true, message: 'Profile details saved successfully.' };
+        return { success: true, message: 'Profile details saved.' };
       }
     },
 
