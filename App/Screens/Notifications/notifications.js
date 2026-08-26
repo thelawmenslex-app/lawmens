@@ -19,109 +19,101 @@ export default function NotificationsScreen({ navigation }) {
 
   useEffect(() => {
     loadNotifications();
-  }, []);
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadNotifications();
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   const loadNotifications = async () => {
     try {
-      setLoading(true);
       const list = await ApiService.notifications.get();
       if (list && list.length > 0) {
         setNotifications(list);
-      } else {
-        // Exact cards matching User Image 3
-        setNotifications([
-          {
-            id: '1',
-            title: 'New Criminal Laws Live in Database',
-            desc: 'BNS, BNSS, and BSA complete 100+ chapters & sections are fully synced and ready for offline research.',
-            time: 'Just now',
-            read: false
-          },
-          {
-            id: '2',
-            title: 'Free Trial Activated',
-            desc: 'Your 3-Day Free Trial is active. You have complete access to IPC/BNS comparison and bare acts.',
-            time: '2 hours ago',
-            read: false
-          },
-          {
-            id: '3',
-            title: 'Admin Content Update',
-            desc: 'Central Criminal Minor Acts have been refreshed with official legislative PDF references.',
-            time: '1 day ago',
-            read: true
-          }
-        ]);
       }
     } catch (e) {
       console.warn('Notifications error:', e);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
   const onRefresh = async () => {
     setRefreshing(true);
     await loadNotifications();
-    setRefreshing(false);
   };
+
+  const markAllAsRead = () => {
+    const updated = notifications.map(item => ({ ...item, read: true }));
+    setNotifications(updated);
+  };
+
+  const renderItem = ({ item }) => (
+    <View style={[styles.card, item.read ? styles.readCard : styles.unreadCard]}>
+      <View style={styles.cardHeader}>
+        <View style={styles.iconCircle}>
+          <Feather name="bell" size={18} color="#00A3FF" />
+        </View>
+        <View style={{ flex: 1, marginLeft: 12 }}>
+          <View style={styles.titleRow}>
+            <Text style={styles.cardTitle}>{item.title}</Text>
+            <Text style={styles.cardTime}>{item.time}</Text>
+          </View>
+          <Text style={styles.cardDesc}>{item.desc}</Text>
+        </View>
+      </View>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#181A20" />
 
-      {/* Dark Header (Matching Image 3) */}
+      {/* Dark Curved Header */}
       <View style={styles.darkHeader}>
         <TouchableOpacity
-          style={styles.backBtnCircle}
+          style={styles.backBtn}
           onPress={() => navigation.goBack()}
-          activeOpacity={0.8}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
-          <Feather name="arrow-left" size={20} color="#111827" />
+          <Feather name="arrow-left" size={20} color="#00A3FF" />
         </TouchableOpacity>
-        <Text style={styles.brandTitle}>THE-LAWMEN'S</Text>
-        <Text style={styles.subHeaderTitle}>Notifications</Text>
+        <View style={styles.headerTitleWrap}>
+          <Text style={styles.headerBrand}>THE-LAWMEN'S</Text>
+          <Text style={styles.headerSubtitle}>Notifications</Text>
+        </View>
+        <View style={{ width: 40 }} />
       </View>
 
-      <FlatList
-        data={notifications}
-        keyExtractor={(item, index) => item.id || String(index)}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            colors={['#00A3FF']}
-            tintColor="#00A3FF"
-          />
-        }
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <View style={styles.cardTopRow}>
-              <View style={styles.iconCircle}>
-                <Feather name="bell" size={16} color="#00A3FF" />
-              </View>
-              <Text style={styles.cardTitle} numberOfLines={1}>{item.title}</Text>
-              <Text style={styles.timeText}>{item.time || 'Recent'}</Text>
+      {loading ? (
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color="#00A3FF" />
+        </View>
+      ) : (
+        <FlatList
+          data={notifications}
+          keyExtractor={(item) => String(item.id)}
+          renderItem={renderItem}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={['#00A3FF']}
+              tintColor="#00A3FF"
+            />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyWrap}>
+              <Feather name="bell-off" size={48} color="#94A3B8" />
+              <Text style={styles.emptyTitle}>No Notifications</Text>
+              <Text style={styles.emptySub}>You are completely up to date with legal broadcasts.</Text>
             </View>
-            <Text style={styles.cardDesc}>{item.desc || item.message || ''}</Text>
-          </View>
-        )}
-        ListEmptyComponent={
-          <View style={styles.emptyStateContainer}>
-            {loading ? (
-              <ActivityIndicator size="large" color="#00A3FF" />
-            ) : (
-              <>
-                <Feather name="bell-off" size={54} color="#94A3B8" />
-                <Text style={styles.emptyStateText}>No notifications yet.</Text>
-                <Text style={styles.emptyStateSub}>Admin updates and sync alerts will appear here.</Text>
-              </>
-            )}
-          </View>
-        }
-      />
+          }
+        />
+      )}
     </View>
   );
 }
@@ -134,38 +126,40 @@ const styles = StyleSheet.create({
   darkHeader: {
     backgroundColor: '#181A20',
     paddingTop: 45,
-    paddingHorizontal: 20,
-    paddingBottom: 18,
+    paddingHorizontal: 16,
+    paddingBottom: 20,
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  backBtnCircle: {
-    position: 'absolute',
-    left: 20,
-    top: 45,
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#00A3FF',
+  backBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0, 163, 255, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 10,
   },
-  brandTitle: {
-    fontSize: 20,
+  headerTitleWrap: {
+    alignItems: 'center',
+  },
+  headerBrand: {
+    fontSize: 16,
     fontWeight: '900',
     color: '#00A3FF',
     letterSpacing: 1.2,
   },
-  subHeaderTitle: {
-    fontSize: 13,
-    color: '#00A3FF',
+  headerSubtitle: {
+    fontSize: 12,
     fontWeight: '700',
-    marginTop: 4,
+    color: '#00A3FF',
+    marginTop: 2,
   },
   listContent: {
     padding: 16,
+    paddingBottom: 32,
     gap: 12,
   },
   card: {
@@ -180,51 +174,69 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 3,
   },
-  cardTopRow: {
+  unreadCard: {
+    borderLeftWidth: 4,
+    borderLeftColor: '#00A3FF',
+  },
+  readCard: {
+    opacity: 0.9,
+  },
+  cardHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
+    alignItems: 'flex-start',
   },
   iconCircle: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
     backgroundColor: '#DEF3FA',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
+  },
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
   },
   cardTitle: {
-    flex: 1,
-    fontSize: 13.5,
+    fontSize: 14.5,
     fontWeight: '800',
     color: '#111827',
+    flex: 1,
+    marginRight: 8,
   },
-  timeText: {
+  cardTime: {
     fontSize: 11,
-    color: '#94A3B8',
+    color: '#64748B',
     fontWeight: '600',
-    marginLeft: 6,
   },
   cardDesc: {
     fontSize: 12.5,
     color: '#475569',
     lineHeight: 18,
   },
-  emptyStateContainer: {
+  center: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 80,
   },
-  emptyStateText: {
-    fontSize: 15,
-    fontWeight: '700',
+  emptyWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#1E293B',
+    marginTop: 16,
+  },
+  emptySub: {
+    fontSize: 13,
     color: '#64748B',
-    marginTop: 12,
-  },
-  emptyStateSub: {
-    fontSize: 12,
-    color: '#94A3B8',
-    marginTop: 4,
+    textAlign: 'center',
+    marginTop: 6,
+    paddingHorizontal: 30,
   },
 });

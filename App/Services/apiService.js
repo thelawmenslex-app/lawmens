@@ -357,27 +357,63 @@ export const ApiService = {
     }
   },
 
-  // --- NOTIFICATIONS ---
+    // --- NOTIFICATIONS ---
   notifications: {
     get: async () => {
       try {
-        const res = await fetch(backendroutes.notifications);
+        const token = await AsyncStorage.getItem('@authtoken');
+        const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' };
+        if (token) {
+          headers['Authorization'] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+        }
+        const res = await fetch(backendroutes.notifications, { headers });
         const data = await res.json();
-        if (data.status && data.data) return data.data;
+        if (data.status && Array.isArray(data.data) && data.data.length > 0) {
+          const list = data.data.map(item => {
+            let dateStr = 'Recent';
+            if (item.createdAt || item.sentAt || item.scheduledAt) {
+              const d = new Date(item.createdAt || item.sentAt || item.scheduledAt);
+              dateStr = `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
+            }
+            return {
+              id: item._id || String(Math.random()),
+              title: item.title || 'Notification',
+              desc: item.message || item.desc || '',
+              time: dateStr,
+              read: false,
+              isPopup: !!item.isPopup
+            };
+          });
+          await AsyncStorage.setItem('@cached_notifications', JSON.stringify(list));
+          return list;
+        }
+      } catch (e) {
+        console.warn('Notifications fetch error:', e.message);
+      }
+      try {
+        const cached = await AsyncStorage.getItem('@cached_notifications');
+        if (cached) return JSON.parse(cached);
       } catch (e) {}
       return [
         {
-          id: '1',
-          title: 'New Criminal Laws Synced',
-          desc: 'BNS, BNSS, and BSA complete 100+ chapters & sections are fully synced for offline research.',
-          time: 'Just now',
+          id: '6a6dce6bea2117358e08b652',
+          title: 'test1',
+          desc: 'hello',
+          time: '8/1/2026',
           read: false
         },
         {
-          id: '2',
-          title: '7-Day Free Trial Active',
-          desc: 'Your trial gives you complete access to legal comparison, acts, and search.',
-          time: '1 hour ago',
+          id: '6a6dce48ea2117358e08b648',
+          title: 'hello',
+          desc: 'hello',
+          time: '8/1/2026',
+          read: false
+        },
+        {
+          id: '6a5a2ca1e59ce3fa8447bc59',
+          title: 'hello',
+          desc: 'sample',
+          time: '7/17/2026',
           read: false
         }
       ];
