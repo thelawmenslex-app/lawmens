@@ -17,11 +17,11 @@ import { ApiService } from '../../Services/apiService';
 
 export default function ProfileScreen({ navigation }) {
   const [user, setUser] = useState({
-    firstName: '',
-    lastName: '',
+    firstName: 'gajendran',
+    lastName: 'M',
     name: 'gajendran M',
-    phone: '8234567897',
-    email: 'example@gmail.com',
+    phone: '1234567890',
+    email: 'example@gmal.com',
     profession: 'Student',
     role: 'User',
     isPremium: true
@@ -30,9 +30,9 @@ export default function ProfileScreen({ navigation }) {
     readCount: 199,
     bookmarkCount: 0
   });
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -47,38 +47,43 @@ export default function ProfileScreen({ navigation }) {
   const loadUser = async () => {
     try {
       const token = await AsyncStorage.getItem('@authtoken');
-      if (!token) {
-        setIsLoggedIn(false);
-        setUser({
-          firstName: 'Guest',
-          lastName: 'User',
-          name: 'Guest User',
-          phone: '',
-          email: '',
-          profession: 'Guest',
-          role: 'Guest',
-          isPremium: false
-        });
-        return;
+      const stored = await AsyncStorage.getItem('@userprofile');
+      
+      let initialUser = {
+        firstName: 'gajendran',
+        lastName: 'M',
+        name: 'gajendran M',
+        phone: '1234567890',
+        email: 'example@gmal.com',
+        profession: 'Student',
+        role: 'User',
+        isPremium: true
+      };
+
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          initialUser = { ...initialUser, ...parsed };
+        } catch (err) {}
       }
 
       setIsLoggedIn(true);
 
-      // 1. Fetch live profile from backend database (Admin Portal sync)
+      // Fetch live data from Admin Portal backend
       const liveData = await ApiService.auth.getProfile();
       if (liveData) {
-        const fName = liveData.firstName || 'gajendran';
-        const lName = liveData.lastName || 'M';
+        const fName = liveData.firstName || initialUser.firstName;
+        const lName = liveData.lastName || initialUser.lastName;
         const fullName = (liveData.firstName || liveData.lastName) 
           ? `${fName} ${lName}`.trim() 
-          : (liveData.name && !liveData.name.includes('@') ? liveData.name : 'gajendran M');
+          : (liveData.name && !liveData.name.includes('@') ? liveData.name : initialUser.name);
 
-        const phoneVal = liveData.phoneNumber || liveData.phone || '8234567897';
-        const emailVal = liveData.email || 'example@gmail.com';
-        const profVal = liveData.profession || 'Student';
-        const roleVal = liveData.role || 'User';
+        const phoneVal = liveData.phoneNumber || liveData.phone || initialUser.phone;
+        const emailVal = liveData.email || initialUser.email;
+        const profVal = liveData.profession || initialUser.profession;
+        const roleVal = liveData.role || initialUser.role;
 
-        setUser({
+        const mergedUser = {
           firstName: fName,
           lastName: lName,
           name: fullName,
@@ -87,9 +92,11 @@ export default function ProfileScreen({ navigation }) {
           profession: profVal,
           role: roleVal,
           isPremium: Boolean(liveData.isPremium || liveData.subscriptionId)
-        });
+        };
 
-        // Activity stats directly from Admin Portal / database
+        setUser(mergedUser);
+        await AsyncStorage.setItem('@userprofile', JSON.stringify(mergedUser));
+
         const totalRead = Number(liveData.readingHistoryCount || liveData.count?.current || 199);
         const totalBm = Number(liveData.bookmarksCount || 0);
 
@@ -97,6 +104,8 @@ export default function ProfileScreen({ navigation }) {
           readCount: totalRead,
           bookmarkCount: totalBm
         });
+      } else {
+        setUser(initialUser);
       }
     } catch (e) {
       console.warn('Load user error:', e);
@@ -111,12 +120,12 @@ export default function ProfileScreen({ navigation }) {
     await loadUser();
   };
 
-    const handleSave = async () => {
+  const handleSave = async () => {
     setSaving(true);
     try {
       const names = user.name.trim().split(' ');
-      const fName = names[0] || 'gajendran';
-      const lName = names.slice(1).join(' ') || 'M';
+      const fName = names[0] || user.firstName || 'gajendran';
+      const lName = names.slice(1).join(' ') || user.lastName || 'M';
       
       const payload = {
         firstName: fName,
@@ -125,15 +134,19 @@ export default function ProfileScreen({ navigation }) {
         email: user.email.trim(),
         phoneNumber: user.phone.trim(),
         phone: user.phone.trim(),
-        profession: user.profession.trim()
+        profession: user.profession.trim(),
+        role: user.role || 'User',
+        isPremium: user.isPremium
       };
 
       const result = await ApiService.auth.updateProfile(payload);
       setSaving(false);
       setIsEditing(false);
 
-      Alert.alert('Success', 'Profile details updated and saved successfully.');
-      loadUser();
+      setUser({ ...user, ...payload, phone: payload.phoneNumber });
+      await AsyncStorage.setItem('@userprofile', JSON.stringify({ ...user, ...payload }));
+
+      Alert.alert('Success', 'Profile details updated and synchronized successfully with Admin Portal.');
     } catch (e) {
       setSaving(false);
       setIsEditing(false);
@@ -227,7 +240,7 @@ export default function ProfileScreen({ navigation }) {
               value={user.name}
               placeholder="Enter your name"
               placeholderTextColor="#94A3B8"
-              editable={isEditing && isLoggedIn}
+              editable={isEditing}
               onChangeText={(text) => setUser({ ...user, name: text })}
             />
           </View>
@@ -239,7 +252,7 @@ export default function ProfileScreen({ navigation }) {
               value={user.phone}
               placeholder="Enter phone number"
               placeholderTextColor="#94A3B8"
-              editable={isEditing && isLoggedIn}
+              editable={isEditing}
               keyboardType="phone-pad"
               onChangeText={(text) => setUser({ ...user, phone: text })}
             />
@@ -252,7 +265,7 @@ export default function ProfileScreen({ navigation }) {
               value={user.email}
               placeholder="Enter email address"
               placeholderTextColor="#94A3B8"
-              editable={isEditing && isLoggedIn}
+              editable={isEditing}
               keyboardType="email-address"
               autoCapitalize="none"
               onChangeText={(text) => setUser({ ...user, email: text })}
@@ -266,41 +279,31 @@ export default function ProfileScreen({ navigation }) {
               value={user.profession}
               placeholder="Enter profession"
               placeholderTextColor="#94A3B8"
-              editable={isEditing && isLoggedIn}
+              editable={isEditing}
               onChangeText={(text) => setUser({ ...user, profession: text })}
             />
           </View>
 
-          {isLoggedIn ? (
-            <TouchableOpacity
-              style={styles.editBtn}
-              activeOpacity={0.85}
-              disabled={saving}
-              onPress={() => {
-                if (isEditing) {
-                  handleSave();
-                } else {
-                  setIsEditing(true);
-                }
-              }}
-            >
-              {saving ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
-              ) : (
-                <Text style={styles.editBtnText}>
-                  {isEditing ? 'Save to Admin Portal' : 'Edit Profile'}
-                </Text>
-              )}
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity
-              style={styles.editBtn}
-              activeOpacity={0.85}
-              onPress={() => navigation.navigate('Login')}
-            >
-              <Text style={styles.editBtnText}>Login / Sign Up</Text>
-            </TouchableOpacity>
-          )}
+          <TouchableOpacity
+            style={styles.editBtn}
+            activeOpacity={0.85}
+            disabled={saving}
+            onPress={() => {
+              if (isEditing) {
+                handleSave();
+              } else {
+                setIsEditing(true);
+              }
+            }}
+          >
+            {saving ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <Text style={styles.editBtnText}>
+                {isEditing ? 'Save to Admin Portal' : 'Edit Profile'}
+              </Text>
+            )}
+          </TouchableOpacity>
         </View>
 
         {/* My Subscription Link */}
@@ -320,16 +323,14 @@ export default function ProfileScreen({ navigation }) {
         </TouchableOpacity>
 
         {/* Logout Action */}
-        {isLoggedIn ? (
-          <TouchableOpacity
-            style={styles.logoutBtn}
-            activeOpacity={0.85}
-            onPress={handleLogout}
-          >
-            <Feather name="log-out" size={18} color="#EF4444" style={{ marginRight: 8 }} />
-            <Text style={styles.logoutBtnText}>Logout</Text>
-          </TouchableOpacity>
-        ) : null}
+        <TouchableOpacity
+          style={styles.logoutBtn}
+          activeOpacity={0.85}
+          onPress={handleLogout}
+        >
+          <Feather name="log-out" size={18} color="#EF4444" style={{ marginRight: 8 }} />
+          <Text style={styles.logoutBtnText}>Logout</Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
