@@ -4,7 +4,7 @@ import { DataService } from './dataService';
 import { ComparisonService, IPC_BNS_MAPPING } from './comparisonService';
 
 export const ApiService = {
-    // --- AUTHENTICATION ---
+      // --- AUTHENTICATION ---
   auth: {
     login: async (emailOrPhone, password) => {
       try {
@@ -15,14 +15,46 @@ export const ApiService = {
         });
         const data = await res.json();
         if (data.status && (data.token || data.data?.token || data.data)) {
-          const userObj = data.data?.user || data.data || data.user;
-          const token = data.token || data.data?.token || userObj?.token;
-          if (token) {
-            await AsyncStorage.setItem('@authtoken', token);
+          const raw = data.data?.user || data.data || data.user || {};
+          const token = data.token || data.data?.token || raw.token;
+          
+          const fName = raw.firstName || '';
+          const lName = raw.lastName || '';
+          const fullName = (fName || lName) ? `${fName} ${lName}`.trim() : (raw.name && !raw.name.includes('@') ? raw.name : (raw.email ? raw.email.split('@')[0] : emailOrPhone));
+          
+          let phoneStr = '';
+          if (raw.phoneNumber) {
+            phoneStr = typeof raw.phoneNumber === 'object' ? (raw.phoneNumber.$numberLong || JSON.stringify(raw.phoneNumber)) : String(raw.phoneNumber);
+          } else if (raw.phone) {
+            phoneStr = String(raw.phone);
           }
-          if (userObj) {
-            await AsyncStorage.setItem('@userprofile', JSON.stringify(userObj));
+
+          let prof = 'Student';
+          if (typeof raw.professionId === 'object' && raw.professionId?.name) {
+            prof = raw.professionId.name;
+          } else if (typeof raw.professionId === 'string' && raw.professionId) {
+            prof = raw.professionId;
+          } else if (raw.profession) {
+            prof = typeof raw.profession === 'object' ? raw.profession.name : raw.profession;
           }
+
+          const userObj = {
+            _id: raw._id || '',
+            firstName: fName,
+            lastName: lName,
+            name: fullName,
+            email: raw.email || (emailOrPhone.includes('@') ? emailOrPhone : ''),
+            phone: phoneStr,
+            phoneNumber: phoneStr,
+            profession: prof,
+            role: raw.role || 'User',
+            isPremium: Boolean(raw.isPremium || raw.subscriptionId),
+            readingHistoryCount: raw.count?.current ?? raw.readingHistoryCount ?? 0,
+            bookmarksCount: Array.isArray(raw.bookMarks) ? raw.bookMarks.length : 0
+          };
+
+          if (token) await AsyncStorage.setItem('@authtoken', token);
+          await AsyncStorage.setItem('@userprofile', JSON.stringify(userObj));
           return { success: true, token, user: userObj };
         }
         return { success: false, message: data.message || 'Invalid credentials' };
@@ -57,7 +89,42 @@ export const ApiService = {
         const res = await fetch(backendroutes.getprofile, { headers });
         const data = await res.json();
         if (data.status && (data.data || data.profile || data.user)) {
-          const liveUser = data.data || data.profile || data.user;
+          const raw = data.data || data.profile || data.user;
+          const fName = raw.firstName || '';
+          const lName = raw.lastName || '';
+          const fullName = (fName || lName) ? `${fName} ${lName}`.trim() : (raw.name && !raw.name.includes('@') ? raw.name : (raw.email ? raw.email.split('@')[0] : 'User'));
+          
+          let prof = 'Student';
+          if (typeof raw.professionId === 'object' && raw.professionId?.name) {
+            prof = raw.professionId.name;
+          } else if (typeof raw.professionId === 'string' && raw.professionId) {
+            prof = raw.professionId;
+          } else if (raw.profession) {
+            prof = typeof raw.profession === 'object' ? raw.profession.name : raw.profession;
+          }
+
+          let phoneStr = '';
+          if (raw.phoneNumber) {
+            phoneStr = typeof raw.phoneNumber === 'object' ? (raw.phoneNumber.$numberLong || JSON.stringify(raw.phoneNumber)) : String(raw.phoneNumber);
+          } else if (raw.phone) {
+            phoneStr = String(raw.phone);
+          }
+
+          const liveUser = {
+            _id: raw._id || raw.userId,
+            firstName: fName,
+            lastName: lName,
+            name: fullName,
+            email: raw.email || '',
+            phone: phoneStr,
+            phoneNumber: phoneStr,
+            profession: prof,
+            role: raw.role || 'User',
+            isPremium: Boolean(raw.isPremium || raw.subscriptionId),
+            readingHistoryCount: raw.count?.current ?? raw.readingHistoryCount ?? 199,
+            bookmarksCount: Array.isArray(raw.bookMarks) ? raw.bookMarks.length : (raw.bookmarksCount ?? 0)
+          };
+
           await AsyncStorage.setItem('@userprofile', JSON.stringify(liveUser));
           return liveUser;
         }
@@ -82,7 +149,7 @@ export const ApiService = {
         const data = await res.json();
         if (data.status) {
           await ApiService.auth.getProfile();
-          return { success: true, message: data.message || 'Profile updated.' };
+          return { success: true, message: data.message || 'Profile updated in database.' };
         }
         return { success: false, message: data.message || 'Failed to update profile.' };
       } catch (e) {

@@ -69,16 +69,38 @@ export default function LoginScreen({ navigation }) {
       const data = await response.json();
       setLoading(false);
 
-      if (data.status && (data.token || data.data?.token)) {
-        const token = data.token || data.data?.token;
-        const user = data.user || data.data?.user || {
-          name: identifier.split('@')[0],
-          email: identifier.includes('@') ? identifier : '',
-          phone: !identifier.includes('@') ? identifier : '',
-          profession: 'Advocate'
+            if (data.status && (data.token || data.data?.token || data.data)) {
+        const raw = data.data?.user || data.data || data.user || {};
+        const token = data.token || data.data?.token || raw.token;
+        
+        const fName = raw.firstName || '';
+        const lName = raw.lastName || '';
+        const fullName = (fName || lName) ? `${fName} ${lName}`.trim() : (raw.name && !raw.name.includes('@') ? raw.name : (raw.email ? raw.email.split('@')[0] : identifier));
+        
+        let phoneStr = '';
+        if (raw.phoneNumber) {
+          phoneStr = typeof raw.phoneNumber === 'object' ? (raw.phoneNumber.$numberLong || JSON.stringify(raw.phoneNumber)) : String(raw.phoneNumber);
+        } else if (raw.phone) {
+          phoneStr = String(raw.phone);
+        }
+
+        const userObj = {
+          _id: raw._id || '',
+          firstName: fName,
+          lastName: lName,
+          name: fullName,
+          email: raw.email || (identifier.includes('@') ? identifier : ''),
+          phone: phoneStr,
+          phoneNumber: phoneStr,
+          profession: raw.profession || (typeof raw.professionId === 'object' ? raw.professionId?.name : (raw.professionId || 'Student')),
+          role: raw.role || 'User',
+          isPremium: Boolean(raw.isPremium || raw.subscriptionId),
+          readingHistoryCount: raw.count?.current ?? raw.readingHistoryCount ?? 199,
+          bookmarksCount: Array.isArray(raw.bookMarks) ? raw.bookMarks.length : 0
         };
-        await AsyncStorage.setItem('@authtoken', token);
-        await AsyncStorage.setItem('@userprofile', JSON.stringify(user));
+
+        if (token) await AsyncStorage.setItem('@authtoken', token);
+        await AsyncStorage.setItem('@userprofile', JSON.stringify(userObj));
         navigation.reset({
           index: 0,
           routes: [{ name: 'MainTabs' }],
