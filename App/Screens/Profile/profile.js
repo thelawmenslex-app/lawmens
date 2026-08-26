@@ -20,7 +20,7 @@ export default function ProfileScreen({ navigation }) {
     firstName: 'gajendran',
     lastName: 'M',
     name: 'gajendran M',
-    phone: '1234567890',
+    phone: '9092811823',
     email: 'example@gmal.com',
     profession: 'Student',
     role: 'User',

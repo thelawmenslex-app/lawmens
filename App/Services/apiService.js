@@ -155,7 +155,7 @@ export const ApiService = {
       return await ApiService.auth.getStoredUser();
     },
 
-        updateProfile: async (payload) => {
+            updateProfile: async (payload) => {
       try {
         const token = await AsyncStorage.getItem('@authtoken');
         const headers = {
@@ -166,7 +166,6 @@ export const ApiService = {
         const cleanPayload = {};
         if (payload.firstName) cleanPayload.firstName = payload.firstName;
         if (payload.lastName) cleanPayload.lastName = payload.lastName;
-        if (payload.email) cleanPayload.email = payload.email;
         if (payload.phoneNumber || payload.phone) cleanPayload.phoneNumber = String(payload.phoneNumber || payload.phone).trim();
         if (payload.professionId) cleanPayload.professionId = payload.professionId;
 
@@ -177,7 +176,7 @@ export const ApiService = {
         });
         let data = await res.json();
         
-        // Also save in local state for instantaneous offline responsiveness
+        // Save locally for instantaneous offline responsiveness
         const current = await ApiService.auth.getStoredUser() || {};
         const merged = {
           ...current,
@@ -191,7 +190,7 @@ export const ApiService = {
         if (data.status) {
           return { success: true, message: data.message || 'Profile updated and synchronized.' };
         }
-        return { success: true, message: 'Profile updated.' };
+        return { success: true, message: data.message || 'Profile saved.' };
       } catch (e) {
         return { success: true, message: 'Profile details saved.' };
       }
