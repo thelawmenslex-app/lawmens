@@ -30,6 +30,10 @@ export default function HomeScreen({ navigation }) {
 
   const checkLivePopups = async () => {
     try {
+      const token = await AsyncStorage.getItem('@authtoken');
+      // STRICT RULE: In-App Broadcast Popups ONLY trigger AFTER the user is logged in
+      if (!token) return;
+
       const list = await ApiService.notifications.get();
       if (Array.isArray(list) && list.length > 0) {
         const popupItem = list.find(n => n.isPopup);
