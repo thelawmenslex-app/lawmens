@@ -62,10 +62,12 @@ export const ApiService = {
           let prof = 'Student';
           if (typeof raw.professionId === 'object' && raw.professionId?.name) {
             prof = raw.professionId.name;
-          } else if (typeof raw.professionId === 'string' && raw.professionId) {
-            prof = raw.professionId;
-          } else if (raw.profession) {
-            prof = typeof raw.profession === 'object' ? raw.profession.name : raw.profession;
+          } else if (typeof raw.profession === 'object' && raw.profession?.name) {
+            prof = raw.profession.name;
+          } else if (raw.profession && !/^[0-9a-fA-F]{24}$/.test(String(raw.profession))) {
+            prof = String(raw.profession);
+          } else {
+            prof = 'Student';
           }
 
           const userObj = {

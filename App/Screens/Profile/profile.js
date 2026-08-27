@@ -15,12 +15,22 @@ import Feather from 'react-native-vector-icons/Feather';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ApiService } from '../../Services/apiService';
 
+const resolveProfessionName = (prof) => {
+  if (!prof) return 'Student';
+  if (typeof prof === 'object' && prof.name) return prof.name;
+  const str = String(prof).trim();
+  if (/^[0-9a-fA-F]{24}$/.test(str)) {
+    return 'Student';
+  }
+  return str;
+};
+
 export default function ProfileScreen({ navigation }) {
   const [user, setUser] = useState({
     firstName: 'gajendran',
     lastName: 'M',
     name: 'gajendran M',
-    phone: '9092811823',
+    phone: '12345678902',
     email: 'example@gmal.com',
     profession: 'Student',
     role: 'User',
@@ -53,7 +63,7 @@ export default function ProfileScreen({ navigation }) {
         firstName: 'gajendran',
         lastName: 'M',
         name: 'gajendran M',
-        phone: '1234567890',
+        phone: '12345678902',
         email: 'example@gmal.com',
         profession: 'Student',
         role: 'User',
@@ -63,7 +73,7 @@ export default function ProfileScreen({ navigation }) {
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          initialUser = { ...initialUser, ...parsed };
+          initialUser = { ...initialUser, ...parsed, profession: resolveProfessionName(parsed.profession || parsed.professionId) };
         } catch (err) {}
       }
 
@@ -80,7 +90,7 @@ export default function ProfileScreen({ navigation }) {
 
         const phoneVal = liveData.phoneNumber || liveData.phone || initialUser.phone;
         const emailVal = liveData.email || initialUser.email;
-        const profVal = liveData.profession || initialUser.profession;
+        const profVal = resolveProfessionName(liveData.profession || liveData.professionId || initialUser.profession);
         const roleVal = liveData.role || initialUser.role;
 
         const mergedUser = {
