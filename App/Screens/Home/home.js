@@ -1,3 +1,4 @@
+import { fcmNotificationService } from '../../Services/fcmNotificationService';
 import { SyncService } from '../../Services/syncService';
 import React, { useState, useEffect } from 'react';
 import {
@@ -214,6 +215,41 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.actionPillText}>Ask Question</Text>
         </TouchableOpacity>
       </ScrollView>
+          {/* In-App Broadcast Popup Alert */}
+      <Modal
+        visible={!!popupNotification}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setPopupNotification(null)}
+      >
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.65)', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <View style={{ width: '100%', backgroundColor: '#FFFFFF', borderRadius: 24, padding: 22, alignItems: 'center', elevation: 8 }}>
+            <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#DEF3FA', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
+              <Feather name="bell" size={32} color="#00A3FF" />
+            </View>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: '#111827', marginBottom: 6, textAlign: 'center' }}>
+              {popupNotification?.title || 'Notice'}
+            </Text>
+            <Text style={{ fontSize: 13.5, color: '#475569', textAlign: 'center', lineHeight: 20, marginBottom: 20 }}>
+              {popupNotification?.message || popupNotification?.desc}
+            </Text>
+            <TouchableOpacity
+              style={{ width: '100%', backgroundColor: '#00A3FF', paddingVertical: 13, borderRadius: 14, alignItems: 'center' }}
+              onPress={() => {
+                const actionUrl = popupNotification?.actionUrl;
+                setPopupNotification(null);
+                if (actionUrl) {
+                  navigation.navigate('Notifications');
+                }
+              }}
+            >
+              <Text style={{ fontSize: 14, fontWeight: '800', color: '#FFFFFF' }}>
+                {popupNotification?.buttonText || 'Dismiss'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

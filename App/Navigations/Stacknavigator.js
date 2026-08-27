@@ -1,3 +1,4 @@
+import { fcmNotificationService } from '../Services/fcmNotificationService';
 import { liveSyncService } from '../Services/liveSyncService';
 import React, { useState, useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
@@ -41,6 +42,7 @@ export default function Routes() {
   useEffect(() => {
     checkAuthSession();
     liveSyncService.init();
+    fcmNotificationService.checkAndRequestPermission();
   }, []);
 
   const checkAuthSession = async () => {
