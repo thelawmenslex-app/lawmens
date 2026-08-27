@@ -23,6 +23,14 @@ const CARD_WIDTH = (width - 56) / 3;
 
 export default function HomeScreen({ navigation }) {
   const [lastRead, setLastRead] = useState(null);
+  const [popupNotification, setPopupNotification] = useState(null);
+
+  useEffect(() => {
+    const unsub = fcmNotificationService.onInAppPopup((notif) => {
+      setPopupNotification(notif);
+    });
+    return unsub;
+  }, []);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
