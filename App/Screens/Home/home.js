@@ -32,19 +32,36 @@ export default function HomeScreen({ navigation }) {
     try {
       const list = await ApiService.notifications.get();
       if (Array.isArray(list) && list.length > 0) {
-        const popupItem = list.find(n => n.isPopup) || list[0];
-        const lastDismissed = await AsyncStorage.getItem('@dismissed_popup_' + popupItem.id);
-        if (popupItem && !lastDismissed) {
-          setPopupNotification({
-            id: popupItem.id,
-            title: popupItem.title,
-            message: popupItem.desc,
-            buttonText: 'Dismiss',
-            actionUrl: popupItem.actionUrl || ''
-          });
+        const popupItem = list.find(n => n.isPopup);
+        if (popupItem && popupItem.id) {
+          const isDismissed = await AsyncStorage.getItem('@dismissed_popup_' + String(popupItem.id));
+          const lastDismissedId = await AsyncStorage.getItem('@last_dismissed_popup_id');
+          if (!isDismissed && lastDismissedId !== String(popupItem.id)) {
+            setPopupNotification({
+              id: popupItem.id,
+              title: popupItem.title,
+              message: popupItem.desc,
+              buttonText: 'Dismiss',
+              actionUrl: popupItem.actionUrl || ''
+            });
+          }
         }
       }
     } catch (e) {}
+  };
+
+  const handleDismissPopup = async () => {
+    try {
+      if (popupNotification?.id) {
+        await AsyncStorage.setItem('@dismissed_popup_' + String(popupNotification.id), 'true');
+        await AsyncStorage.setItem('@last_dismissed_popup_id', String(popupNotification.id));
+      }
+    } catch (e) {}
+    const actionUrl = popupNotification?.actionUrl;
+    setPopupNotification(null);
+    if (actionUrl) {
+      navigation.navigate('Notifications');
+    }
   };
 
   const loadLastRead = async () => {
@@ -271,14 +288,7 @@ export default function HomeScreen({ navigation }) {
             </Text>
             <TouchableOpacity
               style={{ width: '100%', backgroundColor: '#00A3FF', paddingVertical: 13, borderRadius: 14, alignItems: 'center' }}
-              onPress={() => {
-                const actionUrl = popupNotification?.actionUrl;
-                setPopupNotification(null);
-                if (actionUrl) {
-                  navigation.navigate('Notifications');
-                }
-              }}
-            >
+              onPress={handleDismissPopup}>
               <Text style={{ fontSize: 14, fontWeight: '800', color: '#FFFFFF' }}>
                 {popupNotification?.buttonText || 'Dismiss'}
               </Text>

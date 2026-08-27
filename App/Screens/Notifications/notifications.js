@@ -20,7 +20,7 @@ export default function NotificationsScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
 
-    const [activePopup, setActivePopup] = useState(null);
+    
 
   useEffect(() => {
     loadNotifications();
@@ -62,8 +62,7 @@ export default function NotificationsScreen({ navigation }) {
         const latest = list[0];
         const lastSeenPopup = await AsyncStorage.getItem('@last_seen_popup_id');
         if (latest && latest.isPopup && latest.id !== lastSeenPopup) {
-          setActivePopup(latest);
-          await AsyncStorage.setItem('@last_seen_popup_id', latest.id);
+          
         }
       }
     } catch (e) {
