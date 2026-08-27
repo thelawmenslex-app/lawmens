@@ -8,6 +8,7 @@ import {
   TextInput,
   StatusBar,
   Modal,
+  ScrollView,
   ActivityIndicator
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
@@ -26,7 +27,7 @@ function sanitizeLegalText(str) {
     .trim();
 }
 
-// 100% Precision Word-Level LCS (Longest Common Subsequence) Diff Engine
+// 100% Precision Word-Level LCS Diff Engine
 function computePrecisionLCSDiff(newText, oldText) {
   if (!newText && !oldText) return { left: [], right: [] };
   
@@ -88,7 +89,6 @@ function computePrecisionLCSDiff(newText, oldText) {
     }
   }
 
-  // Merge contiguous tokens
   const mergeSegments = (tokens, isLeft) => {
     const segments = [];
     let current = null;
@@ -111,7 +111,7 @@ function computePrecisionLCSDiff(newText, oldText) {
 
   const formatSegment = (seg, isLeft) => {
     if (seg.type === 'common') {
-      return { text: seg.text };
+      return { text: seg.text, color: '#334155' };
     }
     if (isLeft) {
       return {
@@ -136,209 +136,146 @@ function computePrecisionLCSDiff(newText, oldText) {
   };
 }
 
+const QUICK_VOICE_PROMPTS = [
+  'Section 103 BNS',
+  'Murder section',
+  'Bail provision',
+  'Section 302 IPC',
+  'Section 420 Cheating',
+  'Theft Section 303',
+  'Section 437 CrPC',
+  'Evidence Act Section 36'
+];
+
 export default function SearchScreen({ navigation }) {
   const [query, setQuery] = useState('');
   const [expandedId, setExpandedId] = useState(null);
+  
+  // Filter States
+  const [selectedLawFilter, setSelectedLawFilter] = useState('ALL'); // 'ALL' | 'BNS' | 'BNSS' | 'BSA' | 'IPC' | 'CrPC' | 'IEA'
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [changeTypeFilter, setChangeTypeFilter] = useState('ALL'); // 'ALL' | 'CHANGED' | 'NEW' | 'REPEALED'
+
+  // Voice Search States
   const [voiceModalVisible, setVoiceModalVisible] = useState(false);
   const [voiceListening, setVoiceListening] = useState(false);
+  const [voiceSpokenText, setVoiceSpokenText] = useState('');
 
-  // Dynamic filter with 100% precision LCS diff
+  // Filtered Search Results
   const filteredResults = useMemo(() => {
     const q = query.trim().toLowerCase();
-
-    // Default suggestions when search is empty (matching reference PDF)
-    if (!q) {
-      return [
-        {
-          id: 'def_1',
-          lawCode: 'BSA',
-          secNum: '36',
-          equivLawCode: 'IEA',
-          equivSecNum: '42',
-          status: 'Change',
-          title: 'Relevancy and effect of judgments, orders or decrees, other than those mentioned in section 35.',
-          leftSegments: [
-            { text: 'Judgments, orders or decrees other than those mentioned in section ' },
-            { text: '35', color: '#00A3FF', bold: true },
-            { text: ' are relevant if they relate to matters of a public nature relevant to the enquiry; but such judgments, orders or decrees are not conclusive proof of that which they ' },
-            { text: 'state.Illustration.', color: '#00A3FF', bold: true },
-            { text: ' A sues B for trespass on his land. B alleges the existence of a public right of way over the land, which A denies. The existence of a decree in favour of the defendant, in a suit by A against C for a trespass on the same land, in which C alleged the existence of the same right of way, is relevant, but it is not conclusive proof that the right of way exists' }
-          ],
-          rightSegments: [
-            { text: 'Judgments, orders or decrees other than those mentioned in section ' },
-            { text: '41', color: '#EF4444', bold: true },
-            { text: ' are relevant if they relate to matters of a public nature relevant to the enquiry; but such judgments, orders or decrees are not conclusive proof of that which they ' },
-            { text: 'state. Illustration', color: '#EF4444', bold: true },
-            { text: ' A sues B for trespass on his land. B alleges the existence of a public right of way over the land, which A denies. The existence of a decree in favour of the defendant, in a suit by A against C for a trespass on the same land, in which C alleged the existence of the same right of way, is relevant, but it is not conclusive proof that the right of way exists' }
-          ]
-        },
-        {
-          id: 'def_2',
-          lawCode: 'BSA',
-          secNum: '42',
-          equivLawCode: 'IEA',
-          equivSecNum: '48',
-          status: 'Change',
-          title: 'Opinion as to existence of general custom or right, when relevant.',
-          leftSegments: [
-            { text: 'When the Court has to form an opinion as to the existence of any ' },
-            { text: 'general custom or right', color: '#00A3FF', bold: true },
-            { text: ', the opinions, as to the existence of such custom or right, of persons who would be likely to know of its existence if it existed, are relevant.' }
-          ],
-          rightSegments: [
-            { text: 'When the Court has to form an opinion as to the existence of any ' },
-            { text: 'general custom or right', color: '#EF4444', bold: true },
-            { text: ', the opinions, as to the existence of such custom or right, of persons who would be likely to know of its existence if it existed, are relevant.' }
-          ]
-        },
-        {
-          id: 'def_3',
-          lawCode: 'BSA',
-          secNum: '142',
-          equivLawCode: 'IEA',
-          equivSecNum: '137',
-          status: 'Change',
-          title: 'Examination of witnesses',
-          leftSegments: [
-            { text: '(1)', color: '#10B981', bold: true },
-            { text: ' The examination of ' },
-            { text: 'a', color: '#10B981', bold: true },
-            { text: ' witness by the party who calls him shall be called his examination-in-chief.\n' },
-            { text: '(2)', color: '#00A3FF', bold: true },
-            { text: ' The examination of a witness by the adverse party shall be called his cross-examination.\n' },
-            { text: '(3) ', color: '#00A3FF', bold: true },
-            { text: 'The', color: '#00A3FF', bold: true, bg: '#E0F2FE' },
-            { text: ' examination of a witness, subsequent to the ' },
-            { text: 'cross-examination,', color: '#00A3FF', bold: true, bg: '#E0F2FE' },
-            { text: ' by the party who called him, shall be called his re-examination.' }
-          ],
-          rightSegments: [
-            { text: 'The examination of witness by the party who calls him shall be called his examination-in-chief.\n' },
-            { text: 'Cross-examination. --', color: '#EF4444', bold: true, bg: '#FEE2E2' },
-            { text: ' The examination of a witness by the adverse party shall be called his cross-examination.\n' },
-            { text: 'Re-examination. --The', color: '#EF4444', bold: true, bg: '#FEE2E2' },
-            { text: ' examination of a witness, subsequent to the ' },
-            { text: 'cross-examination', color: '#EF4444', bold: true, bg: '#FEE2E2' },
-            { text: ' by the party who called him, shall be called his re-examination.' }
-          ]
-        },
-        {
-          id: 'def_4',
-          lawCode: 'BSA',
-          secNum: '146(2)/(3)',
-          equivLawCode: 'IEA',
-          equivSecNum: '141',
-          status: 'Change',
-          title: 'Leading questions.',
-          leftSegments: [
-            { text: 'Any question suggesting the answer which the person putting it wishes or expects to receive, is called a leading question.' }
-          ],
-          rightSegments: [
-            { text: 'Any question suggesting the answer which the person putting it wishes or expects to receive, is called a leading question.' }
-          ]
-        }
-      ];
-    }
-
     const matches = [];
 
     // 1. Search BNS <-> IPC (574 sections)
-    (mappingData.ipcToBns || []).forEach((item, idx) => {
-      const oldSecStr = String(item.oldSec || '').toLowerCase();
-      const newSecStr = String(item.newSec || '').toLowerCase();
-      const titleStr = String(item.title || '').toLowerCase();
+    if (selectedLawFilter === 'ALL' || selectedLawFilter === 'BNS' || selectedLawFilter === 'IPC') {
+      (mappingData.ipcToBns || []).forEach((item, idx) => {
+        const oldSecStr = String(item.oldSec || '').toLowerCase();
+        const newSecStr = String(item.newSec || '').toLowerCase();
+        const titleStr = String(item.title || '').toLowerCase();
 
-      if (
-        oldSecStr === q ||
-        newSecStr === q ||
-        oldSecStr.startsWith(q) ||
-        newSecStr.startsWith(q) ||
-        titleStr.includes(q)
-      ) {
-        const diff = computePrecisionLCSDiff(item.newContent, item.oldContent);
-        matches.push({
-          id: `ipc_bns_${idx}`,
-          lawCode: 'BNS',
-          secNum: item.newSec,
-          equivLawCode: 'IPC',
-          equivSecNum: item.oldSec,
-          status: 'Change',
-          title: item.title || 'Statutory Section',
-          leftSegments: diff.left,
-          rightSegments: diff.right
-        });
-      }
-    });
+        if (
+          !q ||
+          oldSecStr === q ||
+          newSecStr === q ||
+          oldSecStr.startsWith(q) ||
+          newSecStr.startsWith(q) ||
+          titleStr.includes(q)
+        ) {
+          const diff = computePrecisionLCSDiff(item.newContent, item.oldContent);
+          matches.push({
+            id: `ipc_bns_${idx}`,
+            lawCode: 'BNS',
+            secNum: item.newSec,
+            equivLawCode: 'IPC',
+            equivSecNum: item.oldSec,
+            status: item.oldSec ? 'Change' : 'New',
+            title: item.title || 'Statutory Section',
+            leftSegments: diff.left,
+            rightSegments: diff.right
+          });
+        }
+      });
+    }
 
-    // 2. Search BNSS <-> CrPC (570 sections)
-    (mappingData.crpcToBnss || []).forEach((item, idx) => {
-      const oldSecStr = String(item.oldSec || '').toLowerCase();
-      const newSecStr = String(item.newSec || '').toLowerCase();
-      const titleStr = String(item.title || '').toLowerCase();
+    // 2. Search BNSS <-> CrPC (531 sections)
+    if (selectedLawFilter === 'ALL' || selectedLawFilter === 'BNSS' || selectedLawFilter === 'CrPC') {
+      (mappingData.crpcToBnss || []).forEach((item, idx) => {
+        const oldSecStr = String(item.oldSec || '').toLowerCase();
+        const newSecStr = String(item.newSec || '').toLowerCase();
+        const titleStr = String(item.title || '').toLowerCase();
 
-      if (
-        oldSecStr === q ||
-        newSecStr === q ||
-        oldSecStr.startsWith(q) ||
-        newSecStr.startsWith(q) ||
-        titleStr.includes(q)
-      ) {
-        const diff = computePrecisionLCSDiff(item.newContent, item.oldContent);
-        matches.push({
-          id: `crpc_bnss_${idx}`,
-          lawCode: 'BNSS',
-          secNum: item.newSec,
-          equivLawCode: 'CrPC',
-          equivSecNum: item.oldSec,
-          status: 'Change',
-          title: item.title || 'Statutory Section',
-          leftSegments: diff.left,
-          rightSegments: diff.right
-        });
-      }
-    });
+        if (
+          !q ||
+          oldSecStr === q ||
+          newSecStr === q ||
+          oldSecStr.startsWith(q) ||
+          newSecStr.startsWith(q) ||
+          titleStr.includes(q)
+        ) {
+          const diff = computePrecisionLCSDiff(item.newContent, item.oldContent);
+          matches.push({
+            id: `crpc_bnss_${idx}`,
+            lawCode: 'BNSS',
+            secNum: item.newSec,
+            equivLawCode: 'CrPC',
+            equivSecNum: item.oldSec,
+            status: item.oldSec ? 'Change' : 'New',
+            title: item.title || 'Statutory Section',
+            leftSegments: diff.left,
+            rightSegments: diff.right
+          });
+        }
+      });
+    }
 
     // 3. Search BSA <-> IEA (197 sections)
-    (mappingData.ieaToBsa || []).forEach((item, idx) => {
-      const oldSecStr = String(item.oldSec || '').toLowerCase();
-      const newSecStr = String(item.newSec || '').toLowerCase();
-      const titleStr = String(item.title || '').toLowerCase();
+    if (selectedLawFilter === 'ALL' || selectedLawFilter === 'BSA' || selectedLawFilter === 'IEA') {
+      (mappingData.ieaToBsa || []).forEach((item, idx) => {
+        const oldSecStr = String(item.oldSec || '').toLowerCase();
+        const newSecStr = String(item.newSec || '').toLowerCase();
+        const titleStr = String(item.title || '').toLowerCase();
 
-      if (
-        oldSecStr === q ||
-        newSecStr === q ||
-        oldSecStr.startsWith(q) ||
-        newSecStr.startsWith(q) ||
-        titleStr.includes(q)
-      ) {
-        const diff = computePrecisionLCSDiff(item.newContent, item.oldContent);
-        matches.push({
-          id: `iea_bsa_${idx}`,
-          lawCode: 'BSA',
-          secNum: item.newSec,
-          equivLawCode: 'IEA',
-          equivSecNum: item.oldSec,
-          status: 'Change',
-          title: item.title || 'Statutory Section',
-          leftSegments: diff.left,
-          rightSegments: diff.right
-        });
-      }
-    });
+        if (
+          !q ||
+          oldSecStr === q ||
+          newSecStr === q ||
+          oldSecStr.startsWith(q) ||
+          newSecStr.startsWith(q) ||
+          titleStr.includes(q)
+        ) {
+          const diff = computePrecisionLCSDiff(item.newContent, item.oldContent);
+          matches.push({
+            id: `iea_bsa_${idx}`,
+            lawCode: 'BSA',
+            secNum: item.newSec,
+            equivLawCode: 'IEA',
+            equivSecNum: item.oldSec,
+            status: item.oldSec ? 'Change' : 'New',
+            title: item.title || 'Statutory Section',
+            leftSegments: diff.left,
+            rightSegments: diff.right
+          });
+        }
+      });
+    }
 
-    return matches.slice(0, 30);
-  }, [query]);
+    return matches.slice(0, 35);
+  }, [query, selectedLawFilter, changeTypeFilter]);
 
+  // Handle Voice Search Interaction
   const triggerVoiceSearch = () => {
+    setVoiceSpokenText('');
     setVoiceModalVisible(true);
     setVoiceListening(true);
+  };
+
+  const handleSelectVoicePrompt = (text) => {
+    setVoiceSpokenText(text);
+    setVoiceListening(false);
     setTimeout(() => {
-      setVoiceListening(false);
-      setQuery('210');
-      setTimeout(() => {
-        setVoiceModalVisible(false);
-      }, 500);
-    }, 1500);
+      setQuery(text);
+      setVoiceModalVisible(false);
+    }, 400);
   };
 
   const renderSegments = (segments) => {
@@ -365,26 +302,130 @@ export default function SearchScreen({ navigation }) {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#181A20" />
 
-      {/* Voice Progress Modal */}
+      {/* Voice Assistant Modal */}
       <Modal
         visible={voiceModalVisible}
         transparent={true}
         animationType="fade"
+        onRequestClose={() => setVoiceModalVisible(false)}
       >
         <View style={styles.voiceModalOverlay}>
           <View style={styles.voiceModalCard}>
+            <TouchableOpacity
+              style={styles.modalCloseBtn}
+              onPress={() => setVoiceModalVisible(false)}
+            >
+              <Feather name="x" size={20} color="#64748B" />
+            </TouchableOpacity>
+
             <View style={styles.voicePulseCircle}>
-              <Feather name="mic" size={36} color="#00A3FF" />
+              <Feather name="mic" size={38} color="#00A3FF" />
             </View>
             <Text style={styles.voiceModalTitle}>
-              {voiceListening ? 'Listening...' : 'Searching...'}
+              {voiceListening ? 'Listening for Legal Query...' : 'Recognized Speech'}
             </Text>
             <Text style={styles.voiceModalSubtitle}>
-              Speak section number or law (English, Hindi, Tamil...)
+              {voiceSpokenText ? `"${voiceSpokenText}"` : 'Speak section number, act, or legal topic'}
             </Text>
+
             {voiceListening && (
-              <ActivityIndicator color="#00A3FF" size="small" style={{ marginTop: 10 }} />
+              <ActivityIndicator color="#00A3FF" size="small" style={{ marginVertical: 12 }} />
             )}
+
+            <Text style={styles.quickVoiceHeading}>Or tap common voice commands:</Text>
+            <View style={styles.voicePromptWrap}>
+              {QUICK_VOICE_PROMPTS.map((prompt, idx) => (
+                <TouchableOpacity
+                  key={idx}
+                  style={styles.voicePromptChip}
+                  activeOpacity={0.8}
+                  onPress={() => handleSelectVoicePrompt(prompt)}
+                >
+                  <Feather name="volume-2" size={13} color="#00A3FF" style={{ marginRight: 5 }} />
+                  <Text style={styles.voicePromptText}>{prompt}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Filter Modal */}
+      <Modal
+        visible={filterModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setFilterModalVisible(false)}
+      >
+        <View style={styles.filterModalOverlay}>
+          <View style={styles.filterModalCard}>
+            <View style={styles.filterModalHeader}>
+              <Text style={styles.filterModalTitle}>Search Filters</Text>
+              <TouchableOpacity onPress={() => setFilterModalVisible(false)}>
+                <Feather name="x" size={22} color="#111827" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false} style={{ maxHeight: 380 }}>
+              <Text style={styles.filterSectionTitle}>Filter by Statutory Code</Text>
+              <View style={styles.filterPillGrid}>
+                {['ALL', 'BNS', 'BNSS', 'BSA', 'IPC', 'CrPC', 'IEA'].map((code) => {
+                  const isSelected = selectedLawFilter === code;
+                  return (
+                    <TouchableOpacity
+                      key={code}
+                      style={[styles.filterGridPill, isSelected && styles.filterGridPillActive]}
+                      onPress={() => setSelectedLawFilter(code)}
+                    >
+                      <Text style={[styles.filterGridPillText, isSelected && styles.filterGridPillTextActive]}>
+                        {code === 'ALL' ? 'All Acts' : code}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              <Text style={[styles.filterSectionTitle, { marginTop: 18 }]}>Provision Type</Text>
+              <View style={styles.filterPillGrid}>
+                {[
+                  { label: 'All Provisions', val: 'ALL' },
+                  { label: 'Modified Sections', val: 'CHANGED' },
+                  { label: 'New Sections', val: 'NEW' }
+                ].map((item) => {
+                  const isSelected = changeTypeFilter === item.val;
+                  return (
+                    <TouchableOpacity
+                      key={item.val}
+                      style={[styles.filterGridPill, isSelected && styles.filterGridPillActive]}
+                      onPress={() => setChangeTypeFilter(item.val)}
+                    >
+                      <Text style={[styles.filterGridPillText, isSelected && styles.filterGridPillTextActive]}>
+                        {item.label}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </ScrollView>
+
+            <View style={styles.filterActionRow}>
+              <TouchableOpacity
+                style={styles.filterResetBtn}
+                onPress={() => {
+                  setSelectedLawFilter('ALL');
+                  setChangeTypeFilter('ALL');
+                  setFilterModalVisible(false);
+                }}
+              >
+                <Text style={styles.filterResetText}>Reset</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.filterApplyBtn}
+                onPress={() => setFilterModalVisible(false)}
+              >
+                <Text style={styles.filterApplyText}>Apply Filters</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -401,11 +442,12 @@ export default function SearchScreen({ navigation }) {
           </TouchableOpacity>
           <Text style={styles.brandTitle}>THE-LAWMEN'S</Text>
           <TouchableOpacity
-            style={styles.filterBtnCircle}
-            onPress={() => alert('Search Filters: BNS, BNSS, BSA, IPC, CrPC, IEA')}
+            style={[styles.filterBtnCircle, selectedLawFilter !== 'ALL' && styles.filterBtnCircleActive]}
+            onPress={() => setFilterModalVisible(true)}
             activeOpacity={0.8}
           >
             <Feather name="filter" size={18} color="#111827" />
+            {selectedLawFilter !== 'ALL' && <View style={styles.filterActiveDot} />}
           </TouchableOpacity>
         </View>
 
@@ -428,10 +470,32 @@ export default function SearchScreen({ navigation }) {
               <Feather name="mic" size={18} color="#00A3FF" />
             </TouchableOpacity>
           </View>
-          <TouchableOpacity style={styles.globeBtn} onPress={() => alert('Search language: English')}>
-            <Feather name="globe" size={20} color="#FFFFFF" />
+          <TouchableOpacity style={styles.globeBtn} onPress={() => setFilterModalVisible(true)}>
+            <Feather name="sliders" size={19} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
+
+        {/* Quick Filter Horizontal Scroll */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.quickFilterScroll}
+        >
+          {['ALL', 'BNS', 'BNSS', 'BSA', 'IPC', 'CrPC', 'IEA'].map((code) => {
+            const isSelected = selectedLawFilter === code;
+            return (
+              <TouchableOpacity
+                key={code}
+                style={[styles.quickFilterPill, isSelected && styles.quickFilterPillActive]}
+                onPress={() => setSelectedLawFilter(code)}
+              >
+                <Text style={[styles.quickFilterPillText, isSelected && styles.quickFilterPillTextActive]}>
+                  {code === 'ALL' ? 'All Acts' : code}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
       </View>
 
       {/* Search Results List */}
@@ -440,6 +504,15 @@ export default function SearchScreen({ navigation }) {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Feather name="search" size={44} color="#94A3B8" />
+            <Text style={styles.emptyTitle}>No matching sections found</Text>
+            <Text style={styles.emptySub}>
+              Try searching with another section number, keywords, or reset the act filter.
+            </Text>
+          </View>
+        }
         renderItem={({ item }) => {
           const isExpanded = expandedId === item.id;
 
@@ -455,43 +528,43 @@ export default function SearchScreen({ navigation }) {
                   <Text style={styles.badgeText}>{item.lawCode}</Text>
                   <Text style={styles.badgeSec}>Sec {item.secNum}</Text>
                 </View>
-                <Text style={styles.cardTitle} numberOfLines={2}>
+                <Text style={styles.cardTitle} numberOfLines={isExpanded ? 0 : 2}>
                   {item.title}
                 </Text>
                 <Feather
                   name={isExpanded ? 'chevron-up' : 'chevron-down'}
-                  size={18}
-                  color="#94A3B8"
+                  size={20}
+                  color="#64748B"
                   style={{ marginLeft: 8 }}
                 />
               </TouchableOpacity>
 
-              {/* Expanded Diff View with 100% Precision Word LCS Highlighting */}
+              {/* Collapsible Content */}
               {isExpanded && (
                 <View style={styles.expandedContent}>
-                  {/* Indicator row */}
+                  {/* Indicators Legend Row */}
                   <View style={styles.indicatorRow}>
                     <View style={styles.indicatorItem}>
                       <View style={[styles.indicatorDot, { backgroundColor: '#10B981' }]} />
-                      <Text style={styles.indicatorText}>New</Text>
+                      <Text style={styles.indicatorText}>New Provisions</Text>
                     </View>
                     <View style={styles.indicatorItem}>
                       <View style={[styles.indicatorDot, { backgroundColor: '#00A3FF' }]} />
-                      <Text style={styles.indicatorText}>Change</Text>
+                      <Text style={styles.indicatorText}>Changes / Modified</Text>
                     </View>
                     <View style={styles.indicatorItem}>
                       <View style={[styles.indicatorDot, { backgroundColor: '#EF4444' }]} />
-                      <Text style={styles.indicatorText}>Delete</Text>
+                      <Text style={styles.indicatorText}>Repealed / Omitted</Text>
                     </View>
                   </View>
 
-                  {/* Dual Column Headings */}
+                  {/* Dual Column Headers */}
                   <View style={styles.colHeaderRow}>
-                    <Text style={styles.colTitleLeft}>{item.lawCode} Sec {item.secNum} ({item.status})</Text>
-                    <Text style={styles.colTitleRight}>{item.equivLawCode} Sec {item.equivSecNum}</Text>
+                    <Text style={styles.colTitleLeft}>{item.lawCode} (New Law)</Text>
+                    <Text style={styles.colTitleRight}>{item.equivLawCode} (Old Law)</Text>
                   </View>
 
-                  {/* Dual Column Body */}
+                  {/* Dual Column Diff Body */}
                   <View style={styles.dualTextRow}>
                     <View style={styles.colBodyLeft}>
                       {renderSegments(item.leftSegments)}
@@ -530,34 +603,156 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#EDF7FC' },
   voiceModalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(0,0,0,0.65)',
     alignItems: 'center',
     justifyContent: 'center',
+    padding: 20,
   },
   voiceModalCard: {
-    width: '80%',
+    width: '100%',
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 24,
+    borderRadius: 24,
+    padding: 22,
     alignItems: 'center',
-    elevation: 5,
+    elevation: 8,
+    position: 'relative',
+  },
+  modalCloseBtn: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    padding: 4,
   },
   voicePulseCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
     backgroundColor: '#DEF3FA',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 14,
+    borderWidth: 2,
+    borderColor: '#BAE6FD',
   },
-  voiceModalTitle: { fontSize: 18, fontWeight: '800', color: '#111827', marginBottom: 6 },
-  voiceModalSubtitle: { fontSize: 13, color: '#64748B', textAlign: 'center' },
+  voiceModalTitle: { fontSize: 17, fontWeight: '800', color: '#111827', marginBottom: 4 },
+  voiceModalSubtitle: { fontSize: 13, color: '#64748B', textAlign: 'center', marginBottom: 8 },
+  quickVoiceHeading: { fontSize: 12, fontWeight: '700', color: '#94A3B8', marginTop: 10, marginBottom: 8, alignSelf: 'flex-start' },
+  voicePromptWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    justifyContent: 'flex-start',
+    width: '100%',
+  },
+  voicePromptChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F1F8FD',
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderWidth: 1,
+    borderColor: '#D8ECF7',
+  },
+  voicePromptText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#00A3FF',
+  },
+  filterModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  filterModalCard: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    padding: 22,
+    paddingBottom: 34,
+  },
+  filterModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+    borderBottomWidth: 1,
+    borderColor: '#F1F5F9',
+    paddingBottom: 12,
+  },
+  filterModalTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#111827',
+  },
+  filterSectionTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#475569',
+    marginBottom: 10,
+  },
+  filterPillGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  filterGridPill: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: '#F1F5F9',
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+  },
+  filterGridPillActive: {
+    backgroundColor: '#DEF3FA',
+    borderColor: '#00A3FF',
+  },
+  filterGridPillText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#475569',
+  },
+  filterGridPillTextActive: {
+    color: '#00A3FF',
+    fontWeight: '800',
+  },
+  filterActionRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 22,
+  },
+  filterResetBtn: {
+    flex: 1,
+    paddingVertical: 13,
+    borderRadius: 14,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filterResetText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#64748B',
+  },
+  filterApplyBtn: {
+    flex: 2,
+    paddingVertical: 13,
+    borderRadius: 14,
+    backgroundColor: '#00A3FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  filterApplyText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
   darkHeader: {
     backgroundColor: '#181A20',
     paddingTop: 45,
-    paddingHorizontal: 20,
-    paddingBottom: 22,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
   },
@@ -565,7 +760,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 14,
   },
   backBtnCircle: {
     width: 36,
@@ -575,7 +770,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  brandTitle: { fontSize: 22, fontWeight: '900', color: '#00A3FF' },
+  brandTitle: { fontSize: 20, fontWeight: '900', color: '#00A3FF', letterSpacing: 1.1 },
   filterBtnCircle: {
     width: 36,
     height: 36,
@@ -583,6 +778,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#00A3FF',
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
+  },
+  filterBtnCircleActive: {
+    backgroundColor: '#38BDF8',
+  },
+  filterActiveDot: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#EF4444',
+    borderWidth: 1.5,
+    borderColor: '#FFFFFF',
   },
   searchRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
   searchBox: {
@@ -594,16 +804,42 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 14,
   },
-  searchInput: { flex: 1, fontSize: 15, color: '#FFFFFF', fontWeight: '600' },
+  searchInput: { flex: 1, fontSize: 14.5, color: '#FFFFFF', fontWeight: '600' },
   clearBtn: { padding: 4, marginRight: 6 },
   micBtn: { padding: 4 },
   globeBtn: {
     width: 48,
     height: 48,
-    borderRadius: 24,
+    borderRadius: 14,
     backgroundColor: '#00A3FF',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  quickFilterScroll: {
+    paddingTop: 12,
+    paddingBottom: 2,
+    gap: 8,
+  },
+  quickFilterPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: '#252830',
+    borderWidth: 1,
+    borderColor: '#374151',
+  },
+  quickFilterPillActive: {
+    backgroundColor: '#00A3FF',
+    borderColor: '#38BDF8',
+  },
+  quickFilterPillText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#94A3B8',
+  },
+  quickFilterPillTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '800',
   },
   listContent: { padding: 16, gap: 12 },
   resultCard: {
@@ -613,9 +849,9 @@ const styles = StyleSheet.create({
     borderColor: '#D8ECF7',
     overflow: 'hidden',
   },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', padding: 16 },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', padding: 14 },
   bsaBadge: {
-    width: 62,
+    width: 66,
     backgroundColor: '#DEF3FA',
     borderRadius: 8,
     paddingVertical: 6,
@@ -641,7 +877,7 @@ const styles = StyleSheet.create({
   },
   indicatorItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   indicatorDot: { width: 8, height: 8, borderRadius: 4 },
-  indicatorText: { fontSize: 12, fontWeight: '700', color: '#475569' },
+  indicatorText: { fontSize: 11.5, fontWeight: '700', color: '#475569' },
   colHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
   colTitleLeft: { fontSize: 13, fontWeight: '800', color: '#00A3FF', flex: 1 },
   colTitleRight: { fontSize: 13, fontWeight: '800', color: '#111827', flex: 1 },
@@ -657,4 +893,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   compareBtnText: { fontSize: 13, fontWeight: '800', color: '#FFFFFF' },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 20,
+  },
+  emptyTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#1E293B',
+    marginTop: 14,
+  },
+  emptySub: {
+    fontSize: 13,
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 6,
+  },
 });
