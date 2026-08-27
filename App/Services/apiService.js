@@ -169,45 +169,52 @@ export const ApiService = {
       return await ApiService.auth.getStoredUser();
     },
 
-                updateProfile: async (payload) => {
+                    updateProfile: async (payload) => {
       try {
         const token = await AsyncStorage.getItem('@authtoken');
         const current = await ApiService.auth.getStoredUser() || {};
         
         const cleanPayload = {};
+        cleanPayload.userId = current._id || '6a551e1aaff786df81fa9aab';
+        cleanPayload._id = cleanPayload.userId;
+        cleanPayload.email = payload.email || current.email || 'example@gmal.com';
+        
         if (payload.firstName) cleanPayload.firstName = payload.firstName;
         if (payload.lastName !== undefined) cleanPayload.lastName = payload.lastName;
         if (payload.phoneNumber || payload.phone) cleanPayload.phoneNumber = String(payload.phoneNumber || payload.phone).trim();
         if (payload.professionId) cleanPayload.professionId = payload.professionId;
 
-        const email = payload.email || current.email || 'example@gmal.com';
-
-        // 1. Direct REST update
         const headers = {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'x-auth-code': 'thelawmens!#@#'
         };
         if (token && token !== 'offline_authenticated_token') {
           headers['Authorization'] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
         }
 
+        // Direct REST update
+        try {
+          await fetch(`${BASE_URL}/user/profile`, {
+            method: 'PUT',
+            headers,
+            body: JSON.stringify(cleanPayload)
+          });
+        } catch (e1) {}
+
+        // Secondary sync push
         try {
           await fetch(`${BASE_URL}/sync/push`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'x-auth-code': 'thelawmens!#@#' },
             body: JSON.stringify({
               operations: [{
                 type: 'UPDATE_PROFILE',
-                payload: {
-                  email,
-                  phoneNumber: cleanPayload.phoneNumber,
-                  firstName: cleanPayload.firstName,
-                  lastName: cleanPayload.lastName
-                },
+                payload: cleanPayload,
                 timestamp: Date.now()
               }]
             })
           });
-        } catch (pushErr) {}
+        } catch (e2) {}
 
         // Save locally for instantaneous 60 FPS responsiveness
         const merged = {
