@@ -40,7 +40,7 @@ class LiveSyncService {
     if (this.pollInterval) clearInterval(this.pollInterval);
     this.pollInterval = setInterval(() => {
       this.performIncrementalSync();
-    }, 15000); // 15s live sync heartbeat
+    }, 60000); // 15s live sync heartbeat
   };
 
   subscribe = (callback) => {
@@ -77,7 +77,10 @@ class LiveSyncService {
       }
 
       const syncUrl = `${BASE_URL}/sync/pull?lastSyncTime=${encodeURIComponent(this.lastSyncTimestamp || '1970-01-01T00:00:00.000Z')}`;
-      const res = await fetch(syncUrl, { headers });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      const res = await fetch(syncUrl, { headers, signal: controller.signal });
+      clearTimeout(timeoutId);
       const data = await res.json();
 
       if (data.status && data.data) {

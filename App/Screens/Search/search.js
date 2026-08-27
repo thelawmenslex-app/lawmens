@@ -161,14 +161,16 @@ export default function SearchScreen({ navigation }) {
   const [voiceListening, setVoiceListening] = useState(false);
   const [voiceSpokenText, setVoiceSpokenText] = useState('');
 
-  // Filtered Search Results
+    // Instant 60 FPS Filter (Lazy LCS Diffing)
   const filteredResults = useMemo(() => {
     const q = query.trim().toLowerCase();
     const matches = [];
 
-    // 1. Search BNS <-> IPC (574 sections)
+    // 1. Search BNS <-> IPC
     if (selectedLawFilter === 'ALL' || selectedLawFilter === 'BNS' || selectedLawFilter === 'IPC') {
-      (mappingData.ipcToBns || []).forEach((item, idx) => {
+      const list = mappingData.ipcToBns || [];
+      for (let idx = 0; idx < list.length; idx++) {
+        const item = list[idx];
         const oldSecStr = String(item.oldSec || '').toLowerCase();
         const newSecStr = String(item.newSec || '').toLowerCase();
         const titleStr = String(item.title || '').toLowerCase();
@@ -181,7 +183,6 @@ export default function SearchScreen({ navigation }) {
           newSecStr.startsWith(q) ||
           titleStr.includes(q)
         ) {
-          const diff = computePrecisionLCSDiff(item.newContent, item.oldContent);
           matches.push({
             id: `ipc_bns_${idx}`,
             lawCode: 'BNS',
@@ -190,16 +191,19 @@ export default function SearchScreen({ navigation }) {
             equivSecNum: item.oldSec,
             status: item.oldSec ? 'Change' : 'New',
             title: item.title || 'Statutory Section',
-            leftSegments: diff.left,
-            rightSegments: diff.right
+            newContent: item.newContent,
+            oldContent: item.oldContent
           });
+          if (matches.length >= 40) break;
         }
-      });
+      }
     }
 
-    // 2. Search BNSS <-> CrPC (531 sections)
-    if (selectedLawFilter === 'ALL' || selectedLawFilter === 'BNSS' || selectedLawFilter === 'CrPC') {
-      (mappingData.crpcToBnss || []).forEach((item, idx) => {
+    // 2. Search BNSS <-> CrPC
+    if ((selectedLawFilter === 'ALL' || selectedLawFilter === 'BNSS' || selectedLawFilter === 'CrPC') && matches.length < 40) {
+      const list = mappingData.crpcToBnss || [];
+      for (let idx = 0; idx < list.length; idx++) {
+        const item = list[idx];
         const oldSecStr = String(item.oldSec || '').toLowerCase();
         const newSecStr = String(item.newSec || '').toLowerCase();
         const titleStr = String(item.title || '').toLowerCase();
@@ -212,7 +216,6 @@ export default function SearchScreen({ navigation }) {
           newSecStr.startsWith(q) ||
           titleStr.includes(q)
         ) {
-          const diff = computePrecisionLCSDiff(item.newContent, item.oldContent);
           matches.push({
             id: `crpc_bnss_${idx}`,
             lawCode: 'BNSS',
@@ -221,16 +224,19 @@ export default function SearchScreen({ navigation }) {
             equivSecNum: item.oldSec,
             status: item.oldSec ? 'Change' : 'New',
             title: item.title || 'Statutory Section',
-            leftSegments: diff.left,
-            rightSegments: diff.right
+            newContent: item.newContent,
+            oldContent: item.oldContent
           });
+          if (matches.length >= 40) break;
         }
-      });
+      }
     }
 
-    // 3. Search BSA <-> IEA (197 sections)
-    if (selectedLawFilter === 'ALL' || selectedLawFilter === 'BSA' || selectedLawFilter === 'IEA') {
-      (mappingData.ieaToBsa || []).forEach((item, idx) => {
+    // 3. Search BSA <-> IEA
+    if ((selectedLawFilter === 'ALL' || selectedLawFilter === 'BSA' || selectedLawFilter === 'IEA') && matches.length < 40) {
+      const list = mappingData.ieaToBsa || [];
+      for (let idx = 0; idx < list.length; idx++) {
+        const item = list[idx];
         const oldSecStr = String(item.oldSec || '').toLowerCase();
         const newSecStr = String(item.newSec || '').toLowerCase();
         const titleStr = String(item.title || '').toLowerCase();
@@ -243,7 +249,6 @@ export default function SearchScreen({ navigation }) {
           newSecStr.startsWith(q) ||
           titleStr.includes(q)
         ) {
-          const diff = computePrecisionLCSDiff(item.newContent, item.oldContent);
           matches.push({
             id: `iea_bsa_${idx}`,
             lawCode: 'BSA',
@@ -252,14 +257,15 @@ export default function SearchScreen({ navigation }) {
             equivSecNum: item.oldSec,
             status: item.oldSec ? 'Change' : 'New',
             title: item.title || 'Statutory Section',
-            leftSegments: diff.left,
-            rightSegments: diff.right
+            newContent: item.newContent,
+            oldContent: item.oldContent
           });
+          if (matches.length >= 40) break;
         }
-      });
+      }
     }
 
-    return matches.slice(0, 35);
+    return matches;
   }, [query, selectedLawFilter, changeTypeFilter]);
 
   // Handle Voice Search Interaction
@@ -513,8 +519,11 @@ export default function SearchScreen({ navigation }) {
             </Text>
           </View>
         }
-        renderItem={({ item }) => {
+                renderItem={({ item }) => {
           const isExpanded = expandedId === item.id;
+          const diff = isExpanded
+            ? (item.leftSegments ? { left: item.leftSegments, right: item.rightSegments } : computePrecisionLCSDiff(item.newContent, item.oldContent))
+            : null;
 
           return (
             <View style={styles.resultCard}>
@@ -540,7 +549,7 @@ export default function SearchScreen({ navigation }) {
               </TouchableOpacity>
 
               {/* Collapsible Content */}
-              {isExpanded && (
+              {isExpanded && diff && (
                 <View style={styles.expandedContent}>
                   {/* Indicators Legend Row */}
                   <View style={styles.indicatorRow}>
@@ -567,10 +576,10 @@ export default function SearchScreen({ navigation }) {
                   {/* Dual Column Diff Body */}
                   <View style={styles.dualTextRow}>
                     <View style={styles.colBodyLeft}>
-                      {renderSegments(item.leftSegments)}
+                      {renderSegments(diff.left)}
                     </View>
                     <View style={styles.colBodyRight}>
-                      {renderSegments(item.rightSegments)}
+                      {renderSegments(diff.right)}
                     </View>
                   </View>
 

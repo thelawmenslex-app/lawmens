@@ -1,3 +1,15 @@
+const fetchWithTimeout = async (url, options = {}, timeoutMs = 3500) => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetchWithTimeout(url, { ...options, signal: controller.signal });
+    clearTimeout(id);
+    return res;
+  } catch (e) {
+    clearTimeout(id);
+    throw e;
+  }
+};
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { backendroutes, BASE_URL } from '../Actions/constant';
 import { DataService } from './dataService';
@@ -22,7 +34,7 @@ export const ApiService = {
     login: async (emailOrPhone, password) => {
       try {
         const deviceId = await ApiService.auth.getDeviceId();
-        const res = await fetch(backendroutes.login, {
+        const res = await fetchWithTimeout(backendroutes.login, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -84,7 +96,7 @@ export const ApiService = {
     register: async (userData) => {
       try {
         const deviceId = await ApiService.auth.getDeviceId();
-        const res = await fetch(backendroutes.register, {
+        const res = await fetchWithTimeout(backendroutes.register, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ...userData, deviceId })
@@ -105,7 +117,7 @@ export const ApiService = {
           'Cache-Control': 'no-cache',
           'Authorization': token.startsWith('Bearer ') ? token : `Bearer ${token}`
         };
-        const res = await fetch(backendroutes.getprofile, { headers });
+        const res = await fetchWithTimeout(backendroutes.getprofile, { headers });
         const data = await res.json();
         if (data.status && (data.data || data.profile || data.user)) {
           const raw = data.data || data.profile || data.user;
@@ -169,7 +181,7 @@ export const ApiService = {
         if (payload.phoneNumber || payload.phone) cleanPayload.phoneNumber = String(payload.phoneNumber || payload.phone).trim();
         if (payload.professionId) cleanPayload.professionId = payload.professionId;
 
-        let res = await fetch(backendroutes.getprofile, {
+        let res = await fetchWithTimeout(backendroutes.getprofile, {
           method: 'PUT',
           headers,
           body: JSON.stringify(cleanPayload)
@@ -230,7 +242,7 @@ export const ApiService = {
   laws: {
     getCategories: async () => {
       try {
-        const res = await fetch(backendroutes.category);
+        const res = await fetchWithTimeout(backendroutes.category);
         const data = await res.json();
         if (data.status && data.data) return data.data;
       } catch (e) {}
@@ -259,7 +271,7 @@ export const ApiService = {
         }
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 8000);
-        const res = await fetch(backendroutes.minorActList, {
+        const res = await fetchWithTimeout(backendroutes.minorActList, {
           headers,
           signal: controller.signal
         });
@@ -286,7 +298,7 @@ export const ApiService = {
 
     getSchedules: async () => {
       try {
-        const res = await fetch(backendroutes.getSecondSchedule);
+        const res = await fetchWithTimeout(backendroutes.getSecondSchedule);
         const data = await res.json();
         if (data.status && data.data) return data.data;
       } catch (e) {}
@@ -345,7 +357,7 @@ export const ApiService = {
       try {
         const headers = { 'Content-Type': 'application/json' };
         if (token) headers['Authorization'] = `Bearer ${token}`;
-        const res = await fetch(backendroutes.querySubmit, {
+        const res = await fetchWithTimeout(backendroutes.querySubmit, {
           method: 'POST',
           headers,
           body: JSON.stringify({ query: queryText })
@@ -366,7 +378,7 @@ export const ApiService = {
         if (token) {
           headers['Authorization'] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
         }
-        const res = await fetch(backendroutes.notifications, { headers });
+        const res = await fetchWithTimeout(backendroutes.notifications, { headers });
         const data = await res.json();
         if (data.status && Array.isArray(data.data) && data.data.length > 0) {
           const list = data.data.map(item => {
@@ -424,7 +436,7 @@ export const ApiService = {
   subscription: {
     getPlans: async () => {
       try {
-        const res = await fetch(backendroutes.subscriptionPlans);
+        const res = await fetchWithTimeout(backendroutes.subscriptionPlans);
         const data = await res.json();
         if (data.status && data.data) return data.data;
       } catch (e) {}
