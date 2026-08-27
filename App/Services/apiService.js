@@ -409,13 +409,14 @@ export const ApiService = {
       try {
         const token = await AsyncStorage.getItem('@authtoken');
         const headers = { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' };
-        if (token) {
+        if (token && token !== 'offline_authenticated_token') {
           headers['Authorization'] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
         }
         const res = await fetchWithTimeout(backendroutes.notifications, { headers });
         const data = await res.json();
-        if (data.status && Array.isArray(data.data) && data.data.length > 0) {
-          const list = data.data.map(item => {
+        const notifArray = Array.isArray(data.data?.notifications) ? data.data.notifications : (Array.isArray(data.data) ? data.data : []);
+        if (data.status && notifArray.length > 0) {
+          const list = notifArray.map(item => {
             let dateStr = 'Recent';
             if (item.createdAt || item.sentAt || item.scheduledAt) {
               const d = new Date(item.createdAt || item.sentAt || item.scheduledAt);
@@ -427,7 +428,8 @@ export const ApiService = {
               desc: item.message || item.desc || '',
               time: dateStr,
               read: false,
-              isPopup: !!item.isPopup
+              isPopup: !!item.isPopup,
+              actionUrl: item.actionUrl || item.link || ''
             };
           });
           await AsyncStorage.setItem('@cached_notifications', JSON.stringify(list));
@@ -440,29 +442,7 @@ export const ApiService = {
         const cached = await AsyncStorage.getItem('@cached_notifications');
         if (cached) return JSON.parse(cached);
       } catch (e) {}
-      return [
-        {
-          id: '6a6dce6bea2117358e08b652',
-          title: 'test1',
-          desc: 'hello',
-          time: '8/1/2026',
-          read: false
-        },
-        {
-          id: '6a6dce48ea2117358e08b648',
-          title: 'hello',
-          desc: 'hello',
-          time: '8/1/2026',
-          read: false
-        },
-        {
-          id: '6a5a2ca1e59ce3fa8447bc59',
-          title: 'hello',
-          desc: 'sample',
-          time: '7/17/2026',
-          read: false
-        }
-      ];
+      return [];
     }
   },
 
