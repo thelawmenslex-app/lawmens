@@ -43,6 +43,10 @@ class LiveSyncService {
     }, 60000); // 15s live sync heartbeat
   };
 
+  addListener = (callback) => {
+    return this.subscribe(callback);
+  };
+
   subscribe = (callback) => {
     this.listeners.add(callback);
     return () => this.listeners.delete(callback);

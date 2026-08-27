@@ -47,21 +47,28 @@ export default function ProfileScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
 
-    useEffect(() => {
+      useEffect(() => {
     loadUser();
     const unsubscribe = navigation.addListener('focus', () => {
       loadUser();
     });
 
-    const removeListener = liveSyncService.addListener((event) => {
-      if (event?.type === 'CONTENT_CHANGED' && event?.data?.entity === 'user') {
-        loadUser();
+    let removeListener = null;
+    try {
+      if (liveSyncService && typeof liveSyncService.subscribe === 'function') {
+        removeListener = liveSyncService.subscribe((event) => {
+          if (event?.type === 'CONTENT_CHANGED' && event?.data?.entity === 'user') {
+            loadUser();
+          }
+        });
       }
-    });
+    } catch (e) {}
 
     return () => {
       unsubscribe();
-      if (typeof removeListener === 'function') removeListener();
+      if (typeof removeListener === 'function') {
+        try { removeListener(); } catch (e) {}
+      }
     };
   }, [navigation]);
 
