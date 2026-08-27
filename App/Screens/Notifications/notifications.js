@@ -1,3 +1,6 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { liveSyncService } from '../../Services/liveSyncService';
+import { Modal } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -17,24 +20,56 @@ export default function NotificationsScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
 
+    const [activePopup, setActivePopup] = useState(null);
+
   useEffect(() => {
     loadNotifications();
     const unsubscribe = navigation.addListener('focus', () => {
       loadNotifications();
     });
-    return unsubscribe;
+
+    // Auto-polling for real-time live notification broadcast sync
+    const interval = setInterval(() => {
+      loadNotifications(true);
+    }, 5000);
+
+    let removeSync = null;
+    try {
+      if (liveSyncService && typeof liveSyncService.subscribe === 'function') {
+        removeSync = liveSyncService.subscribe((event) => {
+          if (event?.type === 'CONTENT_CHANGED' && event?.data?.entity === 'notification') {
+            loadNotifications();
+          }
+        });
+      }
+    } catch (e) {}
+
+    return () => {
+      unsubscribe();
+      clearInterval(interval);
+      if (typeof removeSync === 'function') removeSync();
+    };
   }, [navigation]);
 
-  const loadNotifications = async () => {
+  const loadNotifications = async (silent = false) => {
     try {
+      if (!silent) setLoading(true);
       const list = await ApiService.notifications.get();
-      if (list && list.length > 0) {
+      if (Array.isArray(list) && list.length > 0) {
         setNotifications(list);
+        
+        // Check for latest in-app popup
+        const latest = list[0];
+        const lastSeenPopup = await AsyncStorage.getItem('@last_seen_popup_id');
+        if (latest && latest.isPopup && latest.id !== lastSeenPopup) {
+          setActivePopup(latest);
+          await AsyncStorage.setItem('@last_seen_popup_id', latest.id);
+        }
       }
     } catch (e) {
       console.warn('Notifications error:', e);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
       setRefreshing(false);
     }
   };
@@ -113,6 +148,33 @@ export default function NotificationsScreen({ navigation }) {
             </View>
           }
         />
+      )}
+    
+      {/* In-App Broadcast Popup Modal */}
+      {activePopup && (
+        <Modal
+          visible={!!activePopup}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setActivePopup(null)}
+        >
+          <View style={popupStyles.overlay}>
+            <View style={popupStyles.modalCard}>
+              <View style={popupStyles.bellCircle}>
+                <Feather name="bell" size={28} color="#00A3FF" />
+              </View>
+              <Text style={popupStyles.popupTitle}>{activePopup.title}</Text>
+              <Text style={popupStyles.popupDesc}>{activePopup.desc}</Text>
+              <TouchableOpacity
+                style={popupStyles.popupBtn}
+                activeOpacity={0.85}
+                onPress={() => setActivePopup(null)}
+              >
+                <Text style={popupStyles.popupBtnText}>Dismiss</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
       )}
     </View>
   );
@@ -238,5 +300,63 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 6,
     paddingHorizontal: 30,
+  },
+});
+
+const popupStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalCard: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.25,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  bellCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#E0F2FE',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  popupTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#0F172A',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  popupDesc: {
+    fontSize: 14,
+    color: '#475569',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 20,
+  },
+  popupBtn: {
+    backgroundColor: '#00A3FF',
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+    width: '100%',
+    alignItems: 'center',
+  },
+  popupBtnText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+    fontSize: 15,
   },
 });
