@@ -60,15 +60,27 @@ class FcmNotificationService {
   // 2. Generate and Register Active Device Token with Backend
   registerDeviceToken = async () => {
     try {
-      let token = await AsyncStorage.getItem(this.deviceTokenKey);
+      let token = null;
+      try {
+        const { NativeModules } = require('react-native');
+        if (NativeModules.FirebaseTokenModule && typeof NativeModules.FirebaseTokenModule.getFcmToken === 'function') {
+          token = await NativeModules.FirebaseTokenModule.getFcmToken();
+        }
+      } catch (err) {
+        console.log('[FCM Service] Native token fetch note:', err?.message);
+      }
+
+      if (!token) {
+        token = await AsyncStorage.getItem(this.deviceTokenKey);
+      }
       if (!token) {
         token = `fcm_device_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        await AsyncStorage.setItem(this.deviceTokenKey, token);
       }
+      await AsyncStorage.setItem(this.deviceTokenKey, token);
 
       const authToken = await AsyncStorage.getItem('@authtoken');
       const headers = { 'Content-Type': 'application/json' };
-      if (authToken) {
+      if (authToken && authToken !== 'offline_authenticated_token') {
         headers['Authorization'] = authToken.startsWith('Bearer ') ? authToken : `Bearer ${authToken}`;
       }
 
@@ -80,7 +92,7 @@ class FcmNotificationService {
           platform: 'android'
         })
       });
-      console.log('[FCM Service] Device push token registered successfully with backend.');
+      console.log('[FCM Service] Active device token registered with backend:', token.slice(0, 20) + '...');
     } catch (e) {
       console.warn('[FCM Service] Token registration skipped:', e.message);
     }
