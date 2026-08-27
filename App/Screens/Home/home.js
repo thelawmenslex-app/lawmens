@@ -1,3 +1,4 @@
+import { ApiService } from '../../Services/apiService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fcmNotificationService } from '../../Services/fcmNotificationService';
 import { SyncService } from '../../Services/syncService';
@@ -25,11 +26,16 @@ export default function HomeScreen({ navigation }) {
   const [lastRead, setLastRead] = useState(null);
   const [popupNotification, setPopupNotification] = useState(null);
 
-  useEffect(() => {
+    useEffect(() => {
+    checkLivePopups();
     const unsub = fcmNotificationService.onInAppPopup((notif) => {
       setPopupNotification(notif);
     });
-    return unsub;
+    const interval = setInterval(checkLivePopups, 5000);
+    return () => {
+      if (typeof unsub === 'function') unsub();
+      clearInterval(interval);
+    };
   }, []);
 
   useEffect(() => {
