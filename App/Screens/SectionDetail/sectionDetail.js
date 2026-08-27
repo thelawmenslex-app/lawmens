@@ -64,15 +64,29 @@ function parseAdminPortalClauses(text) {
 }
 
 export default function SectionDetailScreen({ route, navigation }) {
-    const {
+  const {
     actTitle = 'Bharatiya Nagarik Suraksha Sanhita , 2023',
     actCode = 'BNSS',
     chapterName = 'CHAPTER II - CONSTITUTION OF CRIMINAL COURTS AND OFFICES',
     sectionData = {}
   } = route?.params || {};
 
+  const [liveOverrideContent, setLiveOverrideContent] = useState(null);
+  const [isBookmarked, setIsBookmarked] = useState(false);
+
   const secNumber = String(sectionData?.name || sectionData?.section || '1').trim();
   const secTitle = sectionData?.keyword || `Section ${secNumber}`;
+
+  useEffect(() => {
+    // Check initial bookmark status
+    (async () => {
+      try {
+        const list = await ApiService.bookmarks.getAll();
+        const exists = list.some(b => b.secName === secNumber && b.actTitle === actTitle);
+        setIsBookmarked(exists);
+      } catch (e) {}
+    })();
+  }, [secNumber, actTitle]);
 
   useEffect(() => {
     // Record Last Read and History
