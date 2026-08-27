@@ -25,26 +25,27 @@ const CARD_WIDTH = (width - 56) / 3;
 export default function HomeScreen({ navigation }) {
   const [lastRead, setLastRead] = useState(null);
   const [popupNotification, setPopupNotification] = useState(null);
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  const [synced, setSynced] = useState(true);
 
-    useEffect(() => {
-    checkLivePopups();
-    const unsub = fcmNotificationService.onInAppPopup((notif) => {
-      setPopupNotification(notif);
-    });
-    const interval = setInterval(checkLivePopups, 5000);
-    return () => {
-      if (typeof unsub === 'function') unsub();
-      clearInterval(interval);
-    };
-  }, []);
-
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', () => {
-      loadLastRead();
-    });
-    loadLastRead();
-    return unsubscribe;
-  }, [navigation]);
+  const checkLivePopups = async () => {
+    try {
+      const list = await ApiService.notifications.get();
+      if (Array.isArray(list) && list.length > 0) {
+        const popupItem = list.find(n => n.isPopup) || list[0];
+        const lastDismissed = await AsyncStorage.getItem('@dismissed_popup_' + popupItem.id);
+        if (popupItem && !lastDismissed) {
+          setPopupNotification({
+            id: popupItem.id,
+            title: popupItem.title,
+            message: popupItem.desc,
+            buttonText: 'Dismiss',
+            actionUrl: popupItem.actionUrl || ''
+          });
+        }
+      }
+    } catch (e) {}
+  };
 
   const loadLastRead = async () => {
     try {
@@ -53,7 +54,27 @@ export default function HomeScreen({ navigation }) {
     } catch (e) {}
   };
 
-  const [synced, setSynced] = useState(true);
+  useEffect(() => {
+    checkLivePopups();
+    loadLastRead();
+
+    const unsub = fcmNotificationService.onInAppPopup((notif) => {
+      setPopupNotification(notif);
+    });
+
+    const unsubscribeFocus = navigation.addListener('focus', () => {
+      loadLastRead();
+      checkLivePopups();
+    });
+
+    const interval = setInterval(checkLivePopups, 5000);
+
+    return () => {
+      if (typeof unsub === 'function') unsub();
+      if (typeof unsubscribeFocus === 'function') unsubscribeFocus();
+      clearInterval(interval);
+    };
+  }, [navigation]);
 
   useEffect(() => {
     SyncService.pullLatestChanges();
@@ -65,7 +86,6 @@ export default function HomeScreen({ navigation }) {
     setSynced(true);
     Alert.alert('Synced', 'Synchronized with Admin Portal.');
   };
-  const [drawerVisible, setDrawerVisible] = useState(false);
 
   const criminalLaws = [
     { id: 'bns', code: 'BNS', title: 'Bharatiya\nNyaya Sanhita...', fullName: 'Bharatiya Nyaya Sanhita , 2023' },
