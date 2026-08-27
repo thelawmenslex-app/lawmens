@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { fcmNotificationService } from '../../Services/fcmNotificationService';
 import { SyncService } from '../../Services/syncService';
 import React, { useState, useEffect } from 'react';
@@ -9,7 +10,8 @@ import {
   TouchableOpacity,
   Dimensions,
   StatusBar,
-  Alert
+  Alert,
+  Modal
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Feather from 'react-native-vector-icons/Feather';
