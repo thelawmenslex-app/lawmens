@@ -1,3 +1,4 @@
+import { liveSyncService } from '../../Services/liveSyncService';
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -46,12 +47,22 @@ export default function ProfileScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
+    useEffect(() => {
     loadUser();
     const unsubscribe = navigation.addListener('focus', () => {
       loadUser();
     });
-    return unsubscribe;
+
+    const removeListener = liveSyncService.addListener((event) => {
+      if (event?.type === 'CONTENT_CHANGED' && event?.data?.entity === 'user') {
+        loadUser();
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      if (typeof removeListener === 'function') removeListener();
+    };
   }, [navigation]);
 
   const loadUser = async () => {
