@@ -1,6 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { liveSyncService } from '../../Services/liveSyncService';
-import { Modal } from 'react-native';
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -14,13 +11,12 @@ import {
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import { ApiService } from '../../Services/apiService';
+import { liveSyncService } from '../../Services/liveSyncService';
 
 export default function NotificationsScreen({ navigation }) {
   const [notifications, setNotifications] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
-
-    
 
   useEffect(() => {
     loadNotifications();
@@ -55,15 +51,8 @@ export default function NotificationsScreen({ navigation }) {
     try {
       if (!silent) setLoading(true);
       const list = await ApiService.notifications.get();
-      if (Array.isArray(list) && list.length > 0) {
+      if (Array.isArray(list)) {
         setNotifications(list);
-        
-        // Check for latest in-app popup
-        const latest = list[0];
-        const lastSeenPopup = await AsyncStorage.getItem('@last_seen_popup_id');
-        if (latest && latest.isPopup && latest.id !== lastSeenPopup) {
-          
-        }
       }
     } catch (e) {
       console.warn('Notifications error:', e);
@@ -148,33 +137,6 @@ export default function NotificationsScreen({ navigation }) {
           }
         />
       )}
-    
-      {/* In-App Broadcast Popup Modal */}
-      {activePopup && (
-        <Modal
-          visible={!!activePopup}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={() => setActivePopup(null)}
-        >
-          <View style={popupStyles.overlay}>
-            <View style={popupStyles.modalCard}>
-              <View style={popupStyles.bellCircle}>
-                <Feather name="bell" size={28} color="#00A3FF" />
-              </View>
-              <Text style={popupStyles.popupTitle}>{activePopup.title}</Text>
-              <Text style={popupStyles.popupDesc}>{activePopup.desc}</Text>
-              <TouchableOpacity
-                style={popupStyles.popupBtn}
-                activeOpacity={0.85}
-                onPress={() => setActivePopup(null)}
-              >
-                <Text style={popupStyles.popupBtnText}>Dismiss</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </Modal>
-      )}
     </View>
   );
 }
@@ -218,38 +180,43 @@ const styles = StyleSheet.create({
     color: '#00A3FF',
     marginTop: 2,
   },
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   listContent: {
     padding: 16,
-    paddingBottom: 32,
-    gap: 12,
+    paddingBottom: 40,
   },
   card: {
-    backgroundColor: '#F5F9FD',
-    borderRadius: 18,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
     padding: 16,
-    borderWidth: 1.5,
-    borderColor: '#FFFFFF',
-    shadowColor: '#A8BED6',
-    shadowOffset: { width: 3, height: 4 },
-    shadowOpacity: 0.45,
-    shadowRadius: 6,
-    elevation: 3,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   unreadCard: {
     borderLeftWidth: 4,
     borderLeftColor: '#00A3FF',
   },
   readCard: {
-    opacity: 0.9,
+    opacity: 0.85,
   },
   cardHeader: {
     flexDirection: 'row',
     alignItems: 'flex-start',
   },
   iconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#DEF3FA',
     alignItems: 'center',
     justifyContent: 'center',
@@ -261,101 +228,38 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   cardTitle: {
-    fontSize: 14.5,
-    fontWeight: '800',
-    color: '#111827',
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1E293B',
     flex: 1,
     marginRight: 8,
   },
   cardTime: {
-    fontSize: 11,
-    color: '#64748B',
-    fontWeight: '600',
+    fontSize: 12,
+    color: '#94A3B8',
+    fontWeight: '500',
   },
   cardDesc: {
-    fontSize: 12.5,
-    color: '#475569',
+    fontSize: 13,
+    color: '#64748B',
     lineHeight: 18,
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   emptyWrap: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 60,
+    paddingTop: 80,
   },
   emptyTitle: {
-    fontSize: 16,
-    fontWeight: '800',
+    fontSize: 18,
+    fontWeight: '700',
     color: '#1E293B',
     marginTop: 16,
   },
   emptySub: {
-    fontSize: 13,
-    color: '#64748B',
-    textAlign: 'center',
-    marginTop: 6,
-    paddingHorizontal: 30,
-  },
-});
-
-const popupStyles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.65)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  modalCard: {
-    width: '100%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
-    elevation: 10,
-  },
-  bellCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#E0F2FE',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  popupTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#0F172A',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  popupDesc: {
     fontSize: 14,
-    color: '#475569',
+    color: '#64748B',
+    marginTop: 6,
     textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 20,
-  },
-  popupBtn: {
-    backgroundColor: '#00A3FF',
-    paddingVertical: 12,
     paddingHorizontal: 32,
-    borderRadius: 12,
-    width: '100%',
-    alignItems: 'center',
-  },
-  popupBtnText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 15,
   },
 });
