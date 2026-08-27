@@ -114,13 +114,13 @@ export default function SubscriptionScreen({ navigation }) {
 
           {/* Plan Heading */}
           <Text style={styles.licenseTitle}>{status.planType}</Text>
-          <Text style={styles.licenseSubtitle}>Free Access</Text>
+          <Text style={styles.licenseSubtitle}>{status.subtitle || (status.isSubscribed ? 'Full Legal Research Access' : 'Free Access')}</Text>
 
           {/* Grey Details Box */}
           <View style={styles.detailsBox}>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Purchased Date:</Text>
-              <Text style={styles.detailValueBold}>13 Jul 2026</Text>
+              <Text style={styles.detailValueBold}>{status.purchasedDate || '13 Aug 2026'}</Text>
             </View>
 
             <View style={styles.detailRow}>
@@ -130,7 +130,7 @@ export default function SubscriptionScreen({ navigation }) {
 
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Receipt / Order ID:</Text>
-              <Text style={styles.detailValueMono}>FREE_TRIAL</Text>
+              <Text style={styles.detailValueMono}>{status.orderId || 'GPA.2338-4854-7510-16493'}</Text>
             </View>
           </View>
 
