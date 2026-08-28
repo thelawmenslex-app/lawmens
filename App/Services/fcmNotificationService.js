@@ -111,6 +111,31 @@ class FcmNotificationService {
       } catch (err) {}
     });
   };
+
+  // 4. Post System Notification Tray Banner via Native Bridge
+  postSystemNotificationBanner = async (notification) => {
+    try {
+      if (!notification || !notification.title) return;
+      const notifId = notification.id || notification._id;
+      if (notifId) {
+        const alreadyPosted = await AsyncStorage.getItem('@posted_tray_banner_' + String(notifId));
+        if (alreadyPosted) return;
+        await AsyncStorage.setItem('@posted_tray_banner_' + String(notifId), 'true');
+      }
+
+      const { NativeModules } = require('react-native');
+      if (NativeModules.FirebaseTokenModule && typeof NativeModules.FirebaseTokenModule.displaySystemNotification === 'function') {
+        NativeModules.FirebaseTokenModule.displaySystemNotification(
+          notification.title,
+          notification.desc || notification.message || '',
+          notification.actionUrl || ''
+        );
+        console.log('[FCM Service] System notification tray banner posted successfully for:', notification.title);
+      }
+    } catch (e) {
+      console.warn('[FCM Service] Error posting tray banner:', e);
+    }
+  };
 }
 
 export const fcmNotificationService = new FcmNotificationService();

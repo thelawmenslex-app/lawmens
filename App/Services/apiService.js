@@ -450,7 +450,16 @@ export const ApiService = {
               actionUrl: item.actionUrl || item.link || ''
             };
           });
-          await AsyncStorage.setItem('@cached_notifications', JSON.stringify(list));
+                    await AsyncStorage.setItem('@cached_notifications', JSON.stringify(list));
+          
+          // Automatically trigger Android status bar notification banner for latest broadcast
+          try {
+            const { fcmNotificationService } = require('./fcmNotificationService');
+            if (list.length > 0) {
+              fcmNotificationService.postSystemNotificationBanner(list[0]);
+            }
+          } catch (e) {}
+          
           return list;
         }
       } catch (e) {
