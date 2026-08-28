@@ -1,6 +1,37 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { BASE_URL } from '../Actions/constant';
 
 export const SubscriptionService = {
+  // Fetch live active subscription plans configured in Admin Portal
+  getAvailablePlans: async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/subscription/plans`, {
+        headers: { 'Content-Type': 'application/json' }
+      });
+      const data = await res.json();
+      if (data && data.status && Array.isArray(data.data) && data.data.length > 0) {
+        await AsyncStorage.setItem('@cached_subscription_plans', JSON.stringify(data.data));
+        return data.data;
+      }
+    } catch (e) {
+      console.log('Error fetching live subscription plans:', e.message);
+    }
+    try {
+      const cached = await AsyncStorage.getItem('@cached_subscription_plans');
+      if (cached) return JSON.parse(cached);
+    } catch (e) {}
+
+    return [
+      {
+        _id: 'startup',
+        name: 'Start up',
+        price: 1500,
+        validity: 30,
+        description: 'Gain comprehensive access to our legal database of newly enacted three criminal laws including the latest updates and exclusive content.'
+      }
+    ];
+  },
+
   // Get authoritative subscription status from MongoDB / local cache
   getStatus: async () => {
     try {
@@ -28,7 +59,7 @@ export const SubscriptionService = {
           isTrialActive: false,
           isSubscribed: true,
           daysLeft: daysLeft > 0 ? daysLeft : 351,
-          planType: 'Annual Master',
+          planType: 'Start up',
           subtitle: 'Full Legal Research Access',
           purchasedDate: purchaseDateStr,
           validTill: expiryDateStr,
@@ -64,7 +95,7 @@ export const SubscriptionService = {
         isTrialActive: false,
         isSubscribed: true,
         daysLeft: 351,
-        planType: 'Annual Master',
+        planType: 'Start up',
         subtitle: 'Full Legal Research Access',
         purchasedDate: '13 Aug 2026',
         validTill: '13 Aug 2027',

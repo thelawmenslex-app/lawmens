@@ -12,11 +12,11 @@ import {
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import { SubscriptionService } from '../../Services/subscriptionService';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { liveSyncService } from '../../Services/liveSyncService';
 
 export default function SubscriptionScreen({ navigation }) {
   const [showPlansModal, setShowPlansModal] = useState(false);
+  const [plans, setPlans] = useState([]);
   const [status, setStatus] = useState({
     hasAccess: true,
     isTrialActive: true,
@@ -26,14 +26,56 @@ export default function SubscriptionScreen({ navigation }) {
     validTill: '3 Days Left'
   });
   const [purchasing, setPurchasing] = useState(false);
+  const [loadingPlans, setLoadingPlans] = useState(true);
 
   useEffect(() => {
     loadStatus();
-  }, []);
+    loadPlans();
+
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadStatus();
+      loadPlans();
+    });
+
+    // Dynamic polling & live sync from Admin Portal
+    const interval = setInterval(() => {
+      loadPlans();
+    }, 8000);
+
+    let removeSync = null;
+    try {
+      if (liveSyncService && typeof liveSyncService.subscribe === 'function') {
+        removeSync = liveSyncService.subscribe((event) => {
+          if (event?.type === 'CONTENT_CHANGED' && event?.data?.entity === 'subscription') {
+            loadPlans();
+          }
+        });
+      }
+    } catch (e) {}
+
+    return () => {
+      unsubscribe();
+      clearInterval(interval);
+      if (typeof removeSync === 'function') removeSync();
+    };
+  }, [navigation]);
 
   const loadStatus = async () => {
     const s = await SubscriptionService.getStatus();
     setStatus(s);
+  };
+
+  const loadPlans = async () => {
+    try {
+      const p = await SubscriptionService.getAvailablePlans();
+      if (Array.isArray(p) && p.length > 0) {
+        setPlans(p);
+      }
+    } catch (e) {
+      console.warn('Error loading plans:', e);
+    } finally {
+      setLoadingPlans(false);
+    }
   };
 
   const handleGooglePlayPurchase = async (plan) => {
@@ -46,33 +88,6 @@ export default function SubscriptionScreen({ navigation }) {
       Alert.alert('Subscription Activated', `Thank you for subscribing to ${plan.name}! Your Google Play purchase was successful.`);
     }, 1200);
   };
-
-  const plans = [
-    {
-      id: 'startup',
-      name: 'Start up',
-      price: 1500,
-      validity: 30,
-      features: [
-        'Full Access to all 125+ Bare Acts',
-        'BNS vs IPC Comparative Table',
-        'BNSS vs CrPC & BSA vs IEA Comparison',
-        'Offline Reading & Unlimited Search'
-      ]
-    },
-    {
-      id: 'annual',
-      name: 'Annual Master',
-      price: 4999,
-      validity: 365,
-      features: [
-        'Everything in Start up',
-        'All Schedules & Legal Forms',
-        'Single-Device Priority Cloud Backup',
-        '24/7 Priority Support'
-      ]
-    }
-  ];
 
   return (
     <View style={styles.container}>
@@ -101,132 +116,124 @@ export default function SubscriptionScreen({ navigation }) {
         contentContainerStyle={styles.bodyContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Top Active License Card (Image 2) */}
-        <View style={styles.licenseCard}>
-          {/* Top Status Row */}
-          <View style={styles.statusRow}>
-            <View style={styles.activePill}>
+        <View style={styles.statusCard}>
+          <View style={styles.cardHeaderRow}>
+            <View style={styles.activeBadge}>
               <View style={styles.greenDot} />
-              <Text style={styles.activePillText}>ACTIVE PREMIUM PASS</Text>
+              <Text style={styles.activeBadgeText}>
+                {status.isSubscribed ? 'ACTIVE PREMIUM PASS' : (status.isTrialActive ? 'ACTIVE TRIAL PASS' : 'PASS EXPIRED')}
+              </Text>
             </View>
             <Text style={styles.daysLeftText}>{status.daysLeft} Days Left</Text>
           </View>
 
-          {/* Plan Heading */}
-          <Text style={styles.licenseTitle}>{status.planType}</Text>
-          <Text style={styles.licenseSubtitle}>{status.subtitle || (status.isSubscribed ? 'Full Legal Research Access' : 'Free Access')}</Text>
+          <Text style={styles.planTitle}>{status.planType}</Text>
+          <Text style={styles.planSubtitle}>{status.subtitle || 'Full Legal Research Access'}</Text>
 
-          {/* Grey Details Box */}
-          <View style={styles.detailsBox}>
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Purchased Date:</Text>
-              <Text style={styles.detailValueBold}>{status.purchasedDate || '13 Aug 2026'}</Text>
-            </View>
-
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Valid Till (Expiry):</Text>
-              <Text style={styles.detailValueGreen}>{status.validTill}</Text>
-            </View>
-
-            <View style={styles.detailRow}>
-              <Text style={styles.detailLabel}>Receipt / Order ID:</Text>
-              <Text style={styles.detailValueMono}>{status.orderId || 'GPA.2338-4854-7510-16493'}</Text>
-            </View>
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Purchased Date:</Text>
+            <Text style={styles.infoValue}>{status.purchasedDate || '13 Aug 2026'}</Text>
           </View>
 
-          {/* Upgrade / Extend Plan Action Button */}
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Valid Till (Expiry):</Text>
+            <Text style={[styles.infoValue, { color: '#10B981' }]}>{status.validTill || '14 Aug 2027'}</Text>
+          </View>
+
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Receipt / Order ID:</Text>
+            <Text style={styles.infoValue}>{status.orderId || 'GPA.2338-4854-7510-16493'}</Text>
+          </View>
+
           <TouchableOpacity
-            style={styles.upgradeButton}
+            style={styles.upgradeBtn}
             activeOpacity={0.85}
             onPress={() => setShowPlansModal(true)}
           >
-            <Text style={styles.upgradeButtonText}>Upgrade / Extend Plan</Text>
+            <Text style={styles.upgradeBtnText}>
+              {status.isSubscribed ? 'Change or Renew Plan' : 'Choose Your Plan'}
+            </Text>
           </TouchableOpacity>
         </View>
 
-        {/* Bottom Included Features Card (Image 2) */}
-        <View style={styles.featuresCard}>
-          <Text style={styles.featuresHeading}>
-            Subscription Features Included:
-          </Text>
-
-          <View style={styles.featureItem}>
-            <Feather name="check" size={18} color="#10B981" style={styles.checkIcon} />
-            <Text style={styles.featureItemText}>
-              Access to all 125+ Bare Acts & Schedules
-            </Text>
+        {/* Benefits Section */}
+        <View style={styles.benefitsCard}>
+          <Text style={styles.benefitsTitle}>Included with Your Plan</Text>
+          
+          <View style={styles.benefitItem}>
+            <Feather name="check-circle" size={18} color="#10B981" />
+            <Text style={styles.benefitText}>Unlimited Access to Bharatiya Nyaya Sanhita (BNS)</Text>
           </View>
-
-          <View style={styles.featureItem}>
-            <Feather name="check" size={18} color="#10B981" style={styles.checkIcon} />
-            <Text style={styles.featureItemText}>
-              Side-by-Side BNS vs IPC & BNSS vs CrPC Comparison
-            </Text>
+          <View style={styles.benefitItem}>
+            <Feather name="check-circle" size={18} color="#10B981" />
+            <Text style={styles.benefitText}>BNSS & BSA Side-by-Side Comparison Matrices</Text>
           </View>
-
-          <View style={styles.featureItem}>
-            <Feather name="check" size={18} color="#10B981" style={styles.checkIcon} />
-            <Text style={styles.featureItemText}>
-              Full Offline Downloads & Reading
-            </Text>
+          <View style={styles.benefitItem}>
+            <Feather name="check-circle" size={18} color="#10B981" />
+            <Text style={styles.benefitText}>125+ Central & State Minor Acts and Schedules</Text>
           </View>
-
-          <View style={styles.featureItem}>
-            <Feather name="check" size={18} color="#10B981" style={styles.checkIcon} />
-            <Text style={styles.featureItemText}>
-              Unlimited Bookmarks & Instant Search
-            </Text>
-          </View>
-
-          <View style={styles.featureItem}>
-            <Feather name="check" size={18} color="#10B981" style={styles.checkIcon} />
-            <Text style={styles.featureItemText}>
-              Ad-Free Premium Experience
-            </Text>
+          <View style={styles.benefitItem}>
+            <Feather name="check-circle" size={18} color="#10B981" />
+            <Text style={styles.benefitText}>Offline Data Storage & Legal Bookmarks</Text>
           </View>
         </View>
       </ScrollView>
 
-      {/* Upgrade / Plan Selection Modal */}
+      {/* 4. CHOOSE YOUR PLAN MODAL (Dynamically Synced with Admin Portal) */}
       <Modal
         visible={showPlansModal}
-        animationType="slide"
         transparent={true}
+        animationType="slide"
         onRequestClose={() => setShowPlansModal(false)}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalSheet}>
             <View style={styles.modalHeaderRow}>
-              <Text style={styles.modalTitle}>Choose Your Plan</Text>
+              <View>
+                <Text style={styles.modalTitle}>Choose Your Plan</Text>
+                <Text style={styles.modalSubtitle}>
+                  Unlock unlimited access to the entire Bharatiya & Colonial criminal law database.
+                </Text>
+              </View>
               <TouchableOpacity
                 style={styles.closeBtn}
                 onPress={() => setShowPlansModal(false)}
               >
-                <Feather name="x" size={20} color="#111827" />
+                <Feather name="x" size={20} color="#1E293B" />
               </TouchableOpacity>
             </View>
-            <Text style={styles.modalSubtitle}>
-              Unlock unlimited access to the entire Bharatiya & Colonial criminal law database.
-            </Text>
 
-            {plans.map((plan) => (
-              <View key={plan.id} style={styles.modalPlanCard}>
-                <Text style={styles.modalPlanName}>{plan.name}</Text>
-                <Text style={styles.modalPlanValidity}>Validity: {plan.validity} Days</Text>
-                <Text style={styles.modalPlanPrice}>₹ {plan.price}</Text>
-
-                <TouchableOpacity
-                  style={styles.modalPlanBtn}
-                  activeOpacity={0.85}
-                  onPress={() => {
-                    setShowPlansModal(false);
-                    navigation.navigate('Payment', { plan });
-                  }}
-                >
-                  <Text style={styles.modalPlanBtnText}>Select {plan.name} ➔</Text>
-                </TouchableOpacity>
+            {loadingPlans && plans.length === 0 ? (
+              <View style={{ paddingVertical: 40, alignItems: 'center' }}>
+                <ActivityIndicator size="large" color="#25AAE2" />
               </View>
-            ))}
+            ) : (
+              <ScrollView
+                style={{ maxHeight: 420 }}
+                showsVerticalScrollIndicator={false}
+              >
+                {plans.map((plan) => (
+                  <View key={plan._id || plan.id} style={styles.planCard}>
+                    <Text style={styles.planCardName}>{plan.name}</Text>
+                    <Text style={styles.planCardValidity}>Validity: {plan.validity || 30} Days</Text>
+                    <Text style={styles.planCardPrice}>₹ {plan.price}</Text>
+
+                    <TouchableOpacity
+                      style={styles.selectPlanBtn}
+                      activeOpacity={0.85}
+                      disabled={purchasing}
+                      onPress={() => handleGooglePlayPurchase(plan)}
+                    >
+                      {purchasing ? (
+                        <ActivityIndicator color="#FFFFFF" size="small" />
+                      ) : (
+                        <Text style={styles.selectPlanBtnText}>Select {plan.name} →</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </ScrollView>
+            )}
           </View>
         </View>
       </Modal>
@@ -237,7 +244,7 @@ export default function SubscriptionScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#EDF7FC',
+    backgroundColor: '#E6EEF8',
   },
   darkHeader: {
     backgroundColor: '#181A20',
@@ -275,220 +282,190 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '800',
     color: '#111827',
-    textAlign: 'center',
   },
   bodyScroll: {
     flex: 1,
   },
   bodyContent: {
     padding: 16,
-    paddingBottom: 32,
-    gap: 16,
+    paddingBottom: 40,
   },
-  licenseCard: {
+  statusCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 20,
-    borderWidth: 1.5,
+    borderWidth: 2,
     borderColor: '#10B981',
-    shadowColor: '#10B981',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
     elevation: 3,
   },
-  statusRow: {
+  cardHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 14,
+    marginBottom: 12,
   },
-  activePill: {
+  activeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#DCFCE7',
     paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
   greenDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#16A34A',
+    backgroundColor: '#10B981',
     marginRight: 6,
   },
-  activePillText: {
+  activeBadgeText: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#166534',
-    letterSpacing: 0.3,
+    color: '#15803D',
+    letterSpacing: 0.5,
   },
   daysLeftText: {
     fontSize: 13,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#25AAE2',
   },
-  licenseTitle: {
-    fontSize: 20,
+  planTitle: {
+    fontSize: 22,
     fontWeight: '900',
-    color: '#111827',
+    color: '#1E293B',
     marginBottom: 2,
   },
-  licenseSubtitle: {
-    fontSize: 15,
-    fontWeight: '800',
+  planSubtitle: {
+    fontSize: 14,
+    fontWeight: '700',
     color: '#25AAE2',
     marginBottom: 16,
   },
-  detailsBox: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 12,
-    padding: 14,
-    gap: 10,
-    marginBottom: 18,
-  },
-  detailRow: {
+  infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
   },
-  detailLabel: {
+  infoLabel: {
     fontSize: 13,
-    color: '#64748B',
     fontWeight: '600',
-  },
-  detailValueBold: {
-    fontSize: 13.5,
-    fontWeight: '800',
-    color: '#111827',
-  },
-  detailValueGreen: {
-    fontSize: 13.5,
-    fontWeight: '800',
-    color: '#10B981',
-  },
-  detailValueMono: {
-    fontSize: 12.5,
-    fontWeight: '700',
     color: '#64748B',
-    fontFamily: 'monospace',
   },
-  upgradeButton: {
+  infoValue: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#1E293B',
+  },
+  upgradeBtn: {
     backgroundColor: '#25AAE2',
     borderRadius: 12,
-    height: 48,
+    paddingVertical: 14,
     alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#25AAE2',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
+    marginTop: 18,
   },
-  upgradeButtonText: {
-    fontSize: 14.5,
+  upgradeBtnText: {
+    fontSize: 15,
     fontWeight: '800',
     color: '#FFFFFF',
   },
-  featuresCard: {
+  benefitsCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
     padding: 20,
-    borderWidth: 1.5,
-    borderColor: '#D8ECF7',
-    shadowColor: '#25AAE2',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-    gap: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
-  featuresHeading: {
-    fontSize: 15,
-    fontWeight: '900',
-    color: '#111827',
-    marginBottom: 4,
+  benefitsTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#1E293B',
+    marginBottom: 14,
   },
-  featureItem: {
+  benefitItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginBottom: 12,
   },
-  checkIcon: {
-    marginRight: 10,
-  },
-  featureItemText: {
-    fontSize: 13.5,
-    fontWeight: '600',
-    color: '#334155',
+  benefitText: {
+    fontSize: 13,
+    color: '#475569',
+    fontWeight: '500',
+    marginLeft: 10,
     flex: 1,
-    lineHeight: 18,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   modalSheet: {
-    backgroundColor: '#EDF7FC',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    backgroundColor: '#F0F9FF',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     padding: 20,
     paddingBottom: 36,
-    maxHeight: '80%',
   },
   modalHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
+    alignItems: 'flex-start',
+    marginBottom: 16,
   },
   modalTitle: {
     fontSize: 20,
     fontWeight: '900',
-    color: '#111827',
-  },
-  closeBtn: {
-    padding: 4,
+    color: '#0F172A',
   },
   modalSubtitle: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#64748B',
-    marginBottom: 16,
+    marginTop: 4,
+    lineHeight: 16,
+    paddingRight: 16,
   },
-  modalPlanCard: {
+  closeBtn: {
+    padding: 6,
+  },
+  planCard: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 12,
-    borderWidth: 1.5,
-    borderColor: '#D0E7F5',
+    borderRadius: 18,
+    padding: 18,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
-  modalPlanName: {
+  planCardName: {
     fontSize: 16,
     fontWeight: '900',
-    color: '#111827',
+    color: '#0F172A',
   },
-  modalPlanValidity: {
+  planCardValidity: {
     fontSize: 12,
     color: '#64748B',
     marginTop: 2,
     marginBottom: 8,
   },
-  modalPlanPrice: {
-    fontSize: 22,
+  planCardPrice: {
+    fontSize: 24,
     fontWeight: '900',
     color: '#25AAE2',
     marginBottom: 12,
   },
-  modalPlanBtn: {
+  selectPlanBtn: {
     backgroundColor: '#25AAE2',
-    borderRadius: 10,
-    height: 42,
+    borderRadius: 12,
+    paddingVertical: 12,
     alignItems: 'center',
-    justifyContent: 'center',
   },
-  modalPlanBtnText: {
+  selectPlanBtnText: {
     fontSize: 14,
     fontWeight: '800',
     color: '#FFFFFF',
