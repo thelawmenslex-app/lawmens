@@ -112,7 +112,7 @@ const syncPush = async (req, res) => {
             });
           }
           results.push({ id, status: 'SUCCESS' });
-                } else if ((type === 'PROFILE_UPDATE' || type === 'UPDATE_PROFILE')) {
+        } else if (type === 'PROFILE_UPDATE' || type === 'UPDATE_PROFILE') {
           const updateFields = {};
           if (payload.firstName) updateFields.firstName = payload.firstName;
           if (payload.lastName !== undefined) updateFields.lastName = payload.lastName;
@@ -123,30 +123,7 @@ const syncPush = async (req, res) => {
           if (userId) {
             await User.findByIdAndUpdate(userId, updateFields);
           } else if (payload.email) {
-            await User.findOneAndUpdate({ email: new RegExp('^' + payload.email.trim() + '
-        } else {
-          results.push({ id, status: 'IGNORED', message: 'Unknown operation or missing auth' });
-        }
-      } catch (err) {
-        results.push({ id, status: 'ERROR', error: err.message });
-      }
-    }
-
-    return sendResponse(res, true, 200, 'Sync push processed successfully.', {
-      processedCount: results.length,
-      serverVersion: Date.now(),
-      results
-    });
-  } catch (error) {
-    return errorHandler(error, res);
-  }
-};
-
-module.exports = {
-  syncPull,
-  syncPush
-};
-, 'i') }, updateFields);
+            await User.findOneAndUpdate({ email: new RegExp('^' + payload.email.trim() + '$', 'i') }, updateFields);
           }
 
           try {
