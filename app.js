@@ -7,6 +7,8 @@ const dns = require('dns');
 dns.setServers(['8.8.8.8', '1.1.1.1']);
 
 const express = require('express');
+const http = require('http');
+const { initSocketServer } = require('./services/socketService');
 const cors = require('cors');
 require('dotenv').config();
 const APP_STATE = process.env.NODE_ENV;
@@ -66,7 +68,9 @@ app.get("/", (req, res) => {
 doConnect(process.env.DBURL);
 
 const PORT = process.env.PORT || 8000;
-app.listen(PORT, () => {
+const server = http.createServer(app);
+initSocketServer(server);
+server.listen(PORT, () => {
     console.log(`THE-LAWMENS Backend Running on port ${PORT}`);
     subscriptionCron();
 });

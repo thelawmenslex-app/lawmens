@@ -17,7 +17,27 @@ router.put("/bookmark", auth, checkPremiumAccess, addBookMarks);
 router.get("/bookMark", auth, checkPremiumAccess, getBookMark);
 router.post("/google", googleLogin);
 router.get("/privacypolicy",getPrivacyPolicy);
-router.get("/notifications", auth, getNotifications);
+router.post("/notifications/:id/read", auth, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.userId;
+        const User = require('../models/user');
+        await User.findByIdAndUpdate(userId, { $addToSet: { readNotifications: id } });
+        const { sendResponse } = require('../../utils/common_functions');
+        return sendResponse(res, true, 200, 'Notification marked as read.');
+    } catch (err) {
+        const { errorHandler } = require('../../utils/common_functions');
+        return errorHandler(err, res);
+    }
+});
+
+router.get("/notifications", (req, res, next) => {
+    if (req.headers.authorization) {
+        return auth(req, res, next);
+    }
+    req.profile = { _id: null, isPremium: false };
+    next();
+}, getNotifications);
 router.post("/query", auth, submitQuery);
 router.get("/query/my", auth, getUserQueries);
 router.post("/fcm-token", auth, updateFcmToken);

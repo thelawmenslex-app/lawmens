@@ -1,17 +1,16 @@
 const router = require('express').Router();
+const { syncPull, syncPush } = require('./sync.controller');
 const { auth } = require('../../../middleware/auth.middleware');
-const syncController = require('./sync.controller');
 
-const { checkPremiumAccess } = require('../../../middleware/trial.middleware');
+// Optional auth for syncPull (public content works without auth, user notes/history sync with auth)
+router.get('/pull', (req, res, next) => {
+  if (req.headers.authorization) {
+    return auth(req, res, next);
+  }
+  next();
+}, syncPull);
 
-// Restrict sync endpoints to authenticated users and premium accounts
-router.use(auth);
-router.use(checkPremiumAccess);
-
-// Pull sync
-router.get('/pull', syncController.pullSync);
-
-// Push sync
-router.post('/push', syncController.pushSync);
+// Required auth for syncPush (user operations queue)
+router.post('/push', auth, syncPush);
 
 module.exports = router;

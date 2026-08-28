@@ -1,3 +1,4 @@
+const { broadcastContentChange, broadcastUserUpdate } = require('../../../services/socketService');
 const User = require('../../models/user');
 const AuditLog = require('../../models/auditLog');
 const Category = require('../../models/category');
@@ -284,7 +285,9 @@ const updateUserProfile = async (req, res) => {
             ipAddress: req.ip
         });
 
-        return sendResponse(res, true, 200, 'User profile updated successfully.', user);
+        broadcastUserUpdate(userId, 'user.updated', user);
+broadcastContentChange('user', userId, 'updated');
+return sendResponse(res, true, 200, 'User profile updated successfully.', user);
     } catch (error) {
         return errorHandler(error, res);
     }
