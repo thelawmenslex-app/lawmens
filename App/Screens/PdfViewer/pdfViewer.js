@@ -420,7 +420,7 @@ export default function PdfViewerScreen({ route, navigation }) {
           />
         ) : (
           <View style={styles.loaderContainer}>
-            <ActivityIndicator size="large" color="#00A3FF" />
+            <ActivityIndicator size="large" color="#25AAE2" />
             <Text style={styles.loadingText}>
               {fetchError ? `Failed to load PDF: ${fetchError}` : 'Downloading Exact PDF from Backend...'}
             </Text>
@@ -449,7 +449,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
@@ -508,14 +508,14 @@ const styles = StyleSheet.create({
   pageInput: {
     backgroundColor: '#181A20',
     borderWidth: 1,
-    borderColor: '#00A3FF',
+    borderColor: '#25AAE2',
     borderRadius: 4,
     paddingHorizontal: 6,
     paddingVertical: 2,
     minWidth: 36,
     fontSize: 13,
     fontWeight: '700',
-    color: '#00A3FF',
+    color: '#25AAE2',
     textAlign: 'center',
   },
   ofText: {

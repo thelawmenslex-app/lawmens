@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -246,7 +246,7 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#00A3FF',
+    color: '#25AAE2',
     letterSpacing: 1.2,
   },
   scroll: {
@@ -297,13 +297,13 @@ const styles = StyleSheet.create({
     padding: 6,
   },
   actionBtn: {
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     borderRadius: 14,
     height: 52,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 8,
-    shadowColor: '#00A3FF',
+    shadowColor: '#25AAE2',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
@@ -330,6 +330,6 @@ const styles = StyleSheet.create({
   promptLinkText: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#00A3FF',
+    color: '#25AAE2',
   },
 });

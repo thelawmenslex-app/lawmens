@@ -116,7 +116,7 @@ function computePrecisionLCSDiff(newText, oldText) {
     if (isLeft) {
       return {
         text: seg.text,
-        color: '#00A3FF',
+        color: '#25AAE2',
         bold: true,
         bg: '#E0F2FE'
       };
@@ -325,7 +325,7 @@ export default function SearchScreen({ navigation }) {
             </TouchableOpacity>
 
             <View style={styles.voicePulseCircle}>
-              <Feather name="mic" size={38} color="#00A3FF" />
+              <Feather name="mic" size={38} color="#25AAE2" />
             </View>
             <Text style={styles.voiceModalTitle}>
               {voiceListening ? 'Listening for Legal Query...' : 'Recognized Speech'}
@@ -335,7 +335,7 @@ export default function SearchScreen({ navigation }) {
             </Text>
 
             {voiceListening && (
-              <ActivityIndicator color="#00A3FF" size="small" style={{ marginVertical: 12 }} />
+              <ActivityIndicator color="#25AAE2" size="small" style={{ marginVertical: 12 }} />
             )}
 
             <Text style={styles.quickVoiceHeading}>Or tap common voice commands:</Text>
@@ -347,7 +347,7 @@ export default function SearchScreen({ navigation }) {
                   activeOpacity={0.8}
                   onPress={() => handleSelectVoicePrompt(prompt)}
                 >
-                  <Feather name="volume-2" size={13} color="#00A3FF" style={{ marginRight: 5 }} />
+                  <Feather name="volume-2" size={13} color="#25AAE2" style={{ marginRight: 5 }} />
                   <Text style={styles.voicePromptText}>{prompt}</Text>
                 </TouchableOpacity>
               ))}
@@ -473,7 +473,7 @@ export default function SearchScreen({ navigation }) {
               </TouchableOpacity>
             )}
             <TouchableOpacity style={styles.micBtn} onPress={triggerVoiceSearch}>
-              <Feather name="mic" size={18} color="#00A3FF" />
+              <Feather name="mic" size={18} color="#25AAE2" />
             </TouchableOpacity>
           </View>
           <TouchableOpacity style={styles.globeBtn} onPress={() => setFilterModalVisible(true)}>
@@ -558,7 +558,7 @@ export default function SearchScreen({ navigation }) {
                       <Text style={styles.indicatorText}>New Provisions</Text>
                     </View>
                     <View style={styles.indicatorItem}>
-                      <View style={[styles.indicatorDot, { backgroundColor: '#00A3FF' }]} />
+                      <View style={[styles.indicatorDot, { backgroundColor: '#25AAE2' }]} />
                       <Text style={styles.indicatorText}>Changes / Modified</Text>
                     </View>
                     <View style={styles.indicatorItem}>
@@ -666,7 +666,7 @@ const styles = StyleSheet.create({
   voicePromptText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#00A3FF',
+    color: '#25AAE2',
   },
   filterModalOverlay: {
     flex: 1,
@@ -715,7 +715,7 @@ const styles = StyleSheet.create({
   },
   filterGridPillActive: {
     backgroundColor: '#DEF3FA',
-    borderColor: '#00A3FF',
+    borderColor: '#25AAE2',
   },
   filterGridPillText: {
     fontSize: 13,
@@ -723,7 +723,7 @@ const styles = StyleSheet.create({
     color: '#475569',
   },
   filterGridPillTextActive: {
-    color: '#00A3FF',
+    color: '#25AAE2',
     fontWeight: '800',
   },
   filterActionRow: {
@@ -748,7 +748,7 @@ const styles = StyleSheet.create({
     flex: 2,
     paddingVertical: 13,
     borderRadius: 14,
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -775,16 +775,16 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  brandTitle: { fontSize: 20, fontWeight: '900', color: '#00A3FF', letterSpacing: 1.1 },
+  brandTitle: { fontSize: 20, fontWeight: '900', color: '#25AAE2', letterSpacing: 1.1 },
   filterBtnCircle: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -820,7 +820,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 14,
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -838,7 +838,7 @@ const styles = StyleSheet.create({
     borderColor: '#374151',
   },
   quickFilterPillActive: {
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     borderColor: '#38BDF8',
   },
   quickFilterPillText: {
@@ -868,7 +868,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 12,
   },
-  badgeText: { fontSize: 11, fontWeight: '900', color: '#00A3FF' },
+  badgeText: { fontSize: 11, fontWeight: '900', color: '#25AAE2' },
   badgeSec: { fontSize: 12, fontWeight: '800', color: '#111827', marginTop: 2 },
   cardTitle: { flex: 1, fontSize: 13, fontWeight: '700', color: '#111827', lineHeight: 18 },
   expandedContent: {
@@ -888,14 +888,14 @@ const styles = StyleSheet.create({
   indicatorDot: { width: 8, height: 8, borderRadius: 4 },
   indicatorText: { fontSize: 11.5, fontWeight: '700', color: '#475569' },
   colHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  colTitleLeft: { fontSize: 13, fontWeight: '800', color: '#00A3FF', flex: 1 },
+  colTitleLeft: { fontSize: 13, fontWeight: '800', color: '#25AAE2', flex: 1 },
   colTitleRight: { fontSize: 13, fontWeight: '800', color: '#111827', flex: 1 },
   dualTextRow: { flexDirection: 'row', gap: 12, marginBottom: 16 },
   colBodyLeft: { flex: 1 },
   colBodyRight: { flex: 1 },
   segmentText: { fontSize: 12, lineHeight: 18, color: '#334155' },
   compareBtn: {
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     borderRadius: 10,
     paddingVertical: 12,
     alignItems: 'center',

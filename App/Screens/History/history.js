@@ -156,7 +156,7 @@ export default function HistoryScreen({ navigation }) {
               </View>
               <View style={styles.reopenTag}>
                 <Text style={styles.reopenText}>Reopen Section</Text>
-                <Feather name="chevron-right" size={14} color="#00A3FF" />
+                <Feather name="chevron-right" size={14} color="#25AAE2" />
               </View>
             </View>
           </TouchableOpacity>
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
@@ -257,7 +257,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 11,
     fontWeight: '900',
-    color: '#00A3FF',
+    color: '#25AAE2',
   },
   actTitle: {
     flex: 1,
@@ -298,7 +298,7 @@ const styles = StyleSheet.create({
   reopenText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#00A3FF',
+    color: '#25AAE2',
     marginRight: 2,
   },
   emptyStateContainer: {

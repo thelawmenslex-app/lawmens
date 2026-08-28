@@ -82,7 +82,7 @@ export default function SideDrawerModal({ visible, onClose, navigation }) {
               style={styles.menuItem}
               onPress={() => navigateTo('Subscription')}
             >
-              <Feather name="tv" size={20} color="#00A3FF" style={styles.menuItemIcon} />
+              <Feather name="tv" size={20} color="#25AAE2" style={styles.menuItemIcon} />
               <Text style={styles.menuItemText}>My Subscription</Text>
               <Feather name="arrow-right" size={18} color="#94A3B8" />
             </TouchableOpacity>
@@ -91,7 +91,7 @@ export default function SideDrawerModal({ visible, onClose, navigation }) {
               style={styles.menuItem}
               onPress={() => navigateTo('History')}
             >
-              <Feather name="clock" size={20} color="#00A3FF" style={styles.menuItemIcon} />
+              <Feather name="clock" size={20} color="#25AAE2" style={styles.menuItemIcon} />
               <Text style={styles.menuItemText}>Reading History</Text>
               <Feather name="arrow-right" size={18} color="#94A3B8" />
             </TouchableOpacity>
@@ -100,7 +100,7 @@ export default function SideDrawerModal({ visible, onClose, navigation }) {
               style={styles.menuItem}
               onPress={() => navigateTo('MinorActs')}
             >
-              <Feather name="book" size={20} color="#00A3FF" style={styles.menuItemIcon} />
+              <Feather name="book" size={20} color="#25AAE2" style={styles.menuItemIcon} />
               <Text style={styles.menuItemText}>Criminal Minor Acts</Text>
               <Feather name="arrow-right" size={18} color="#94A3B8" />
             </TouchableOpacity>
@@ -109,7 +109,7 @@ export default function SideDrawerModal({ visible, onClose, navigation }) {
               style={styles.menuItem}
               onPress={() => navigateTo('Schedules')}
             >
-              <Feather name="calendar" size={20} color="#00A3FF" style={styles.menuItemIcon} />
+              <Feather name="calendar" size={20} color="#25AAE2" style={styles.menuItemIcon} />
               <Text style={styles.menuItemText}>First & Second Schedules</Text>
               <Feather name="arrow-right" size={18} color="#94A3B8" />
             </TouchableOpacity>
@@ -118,7 +118,7 @@ export default function SideDrawerModal({ visible, onClose, navigation }) {
               style={styles.menuItem}
               onPress={() => navigateTo('Contact')}
             >
-              <Feather name="mail" size={20} color="#00A3FF" style={styles.menuItemIcon} />
+              <Feather name="mail" size={20} color="#25AAE2" style={styles.menuItemIcon} />
               <Text style={styles.menuItemText}>Contact Us & Inquiries</Text>
               <Feather name="arrow-right" size={18} color="#94A3B8" />
             </TouchableOpacity>
@@ -127,7 +127,7 @@ export default function SideDrawerModal({ visible, onClose, navigation }) {
               style={styles.menuItem}
               onPress={() => navigateTo('About')}
             >
-              <Feather name="help-circle" size={20} color="#00A3FF" style={styles.menuItemIcon} />
+              <Feather name="help-circle" size={20} color="#25AAE2" style={styles.menuItemIcon} />
               <Text style={styles.menuItemText}>About THE-LAWMEN'S</Text>
               <Feather name="arrow-right" size={18} color="#94A3B8" />
             </TouchableOpacity>
@@ -136,7 +136,7 @@ export default function SideDrawerModal({ visible, onClose, navigation }) {
               style={styles.menuItem}
               onPress={() => navigateTo('Disclaimer')}
             >
-              <Feather name="alert-triangle" size={20} color="#00A3FF" style={styles.menuItemIcon} />
+              <Feather name="alert-triangle" size={20} color="#25AAE2" style={styles.menuItemIcon} />
               <Text style={styles.menuItemText}>Disclaimer</Text>
               <Feather name="arrow-right" size={18} color="#94A3B8" />
             </TouchableOpacity>
@@ -145,7 +145,7 @@ export default function SideDrawerModal({ visible, onClose, navigation }) {
               style={styles.menuItem}
               onPress={() => navigateTo('PrivacyPolicy')}
             >
-              <Feather name="shield" size={20} color="#00A3FF" style={styles.menuItemIcon} />
+              <Feather name="shield" size={20} color="#25AAE2" style={styles.menuItemIcon} />
               <Text style={styles.menuItemText}>Privacy Policy</Text>
               <Feather name="arrow-right" size={18} color="#94A3B8" />
             </TouchableOpacity>
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
   menuItemText: { flex: 1, fontSize: 15, fontWeight: '600', color: '#FFFFFF' },
   logoutBtn: {
     height: 50,
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     borderRadius: 12,
     flexDirection: 'row',
     alignItems: 'center',

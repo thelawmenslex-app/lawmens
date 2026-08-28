@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#00A3FF',
+    color: '#25AAE2',
     letterSpacing: 1.2,
     textTransform: 'uppercase',
   },
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
     borderColor: '#D8ECF7',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#00A3FF',
+    shadowColor: '#25AAE2',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 10,
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
   loginBtn: {
     width: '100%',
     height: 52,
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',

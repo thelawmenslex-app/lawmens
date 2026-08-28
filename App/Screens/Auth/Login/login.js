@@ -236,7 +236,7 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#00A3FF',
+    color: '#25AAE2',
     letterSpacing: 1.2,
     textTransform: 'uppercase',
   },
@@ -260,11 +260,11 @@ const styles = StyleSheet.create({
   textInput: { flex: 1, fontSize: 14, color: '#111827' },
   eyeBtn: { padding: 4 },
   forgotBtn: { alignSelf: 'flex-end', marginBottom: 20 },
-  forgotText: { fontSize: 13, fontWeight: '700', color: '#00A3FF' },
+  forgotText: { fontSize: 13, fontWeight: '700', color: '#25AAE2' },
   loginBtn: {
     width: '100%',
     height: 52,
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
@@ -295,5 +295,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   promptNormalText: { fontSize: 13, color: '#64748B', fontWeight: '600' },
-  promptLinkText: { fontSize: 13, fontWeight: '800', color: '#00A3FF' },
+  promptLinkText: { fontSize: 13, fontWeight: '800', color: '#25AAE2' },
 });

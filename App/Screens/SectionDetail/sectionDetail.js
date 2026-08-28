@@ -281,7 +281,7 @@ export default function SectionDetailScreen({ route, navigation }) {
             onPress={handleCopy}
             activeOpacity={0.7}
           >
-            <Feather name="copy" size={20} color="#00A3FF" />
+            <Feather name="copy" size={20} color="#25AAE2" />
             <Text style={styles.actionBtnText}>Copy</Text>
           </TouchableOpacity>
 
@@ -294,7 +294,7 @@ export default function SectionDetailScreen({ route, navigation }) {
             <Feather
               name="bookmark"
               size={20}
-              color="#00A3FF"
+              color="#25AAE2"
             />
             <Text style={styles.actionBtnText}>Bookmark</Text>
           </TouchableOpacity>
@@ -305,7 +305,7 @@ export default function SectionDetailScreen({ route, navigation }) {
             onPress={handleShare}
             activeOpacity={0.7}
           >
-            <Feather name="share-2" size={20} color="#00A3FF" />
+            <Feather name="share-2" size={20} color="#25AAE2" />
             <Text style={styles.actionBtnText}>Share</Text>
           </TouchableOpacity>
         </View>
@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -339,11 +339,11 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#00A3FF',
+    color: '#25AAE2',
     letterSpacing: 1.2,
   },
   cyanSubheader: {
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     paddingVertical: 14,
     paddingHorizontal: 20,
     alignItems: 'center',
@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
   secBadgeText: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#00A3FF',
+    color: '#25AAE2',
   },
   statuteTitle: {
     fontSize: 16,
@@ -457,7 +457,7 @@ const styles = StyleSheet.create({
   actionBtnText: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#00A3FF',
+    color: '#25AAE2',
     marginTop: 2,
   },
 });

@@ -131,8 +131,8 @@ export default function MinorActsScreen({ navigation }) {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#00A3FF']}
-            tintColor="#00A3FF"
+            colors={['#25AAE2']}
+            tintColor="#25AAE2"
           />
         }
         renderItem={({ item, index }) => {
@@ -152,7 +152,7 @@ export default function MinorActsScreen({ navigation }) {
               </View>
 
               <View style={styles.iconBox}>
-                <Feather name={hasPdf ? "file-text" : "book"} size={18} color="#00A3FF" />
+                <Feather name={hasPdf ? "file-text" : "book"} size={18} color="#25AAE2" />
               </View>
 
               <View style={{ flex: 1, paddingRight: 8 }}>
@@ -176,7 +176,7 @@ export default function MinorActsScreen({ navigation }) {
         ListEmptyComponent={
           <View style={styles.emptyStateContainer}>
             {loading ? (
-              <ActivityIndicator size="large" color="#00A3FF" />
+              <ActivityIndicator size="large" color="#25AAE2" />
             ) : (
               <>
                 <Feather name="file-text" size={54} color="#94A3B8" />
@@ -213,7 +213,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontSize: 20,
     fontWeight: '900',
-    color: '#00A3FF',
+    color: '#25AAE2',
     letterSpacing: 1.2,
   },
   subHeaderTitle: {
@@ -292,7 +292,7 @@ const styles = StyleSheet.create({
   orderBadgeText: {
     fontSize: 11,
     fontWeight: '900',
-    color: '#00A3FF',
+    color: '#25AAE2',
   },
   iconBox: {
     width: 40,

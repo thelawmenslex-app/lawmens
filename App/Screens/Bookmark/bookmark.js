@@ -142,7 +142,7 @@ export default function BookmarkScreen({ navigation }) {
               })}
             >
               <Text style={styles.openBtnText}>Open Legal Reference</Text>
-              <Feather name="arrow-right" size={14} color="#00A3FF" />
+              <Feather name="arrow-right" size={14} color="#25AAE2" />
             </TouchableOpacity>
           </View>
         )}
@@ -181,7 +181,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 10,
@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 11,
     fontWeight: '900',
-    color: '#00A3FF',
+    color: '#25AAE2',
   },
   actTitle: {
     flex: 1,
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
   openBtnText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#00A3FF',
+    color: '#25AAE2',
   },
   emptyStateContainer: {
     alignItems: 'center',

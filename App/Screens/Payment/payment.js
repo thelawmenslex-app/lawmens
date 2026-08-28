@@ -114,15 +114,15 @@ export default function PaymentScreen({ route, navigation }) {
         <View style={styles.featuresCard}>
           <Text style={styles.sectionHeading}>Included with your membership:</Text>
           <View style={styles.featureRow}>
-            <Feather name="check-circle" size={16} color="#00A3FF" style={{ marginRight: 8 }} />
+            <Feather name="check-circle" size={16} color="#25AAE2" style={{ marginRight: 8 }} />
             <Text style={styles.featureText}>Full IPC ↔ BNS & CrPC ↔ BNSS Comparison Engine</Text>
           </View>
           <View style={styles.featureRow}>
-            <Feather name="check-circle" size={16} color="#00A3FF" style={{ marginRight: 8 }} />
+            <Feather name="check-circle" size={16} color="#25AAE2" style={{ marginRight: 8 }} />
             <Text style={styles.featureText}>Access all 150+ Criminal Minor Acts</Text>
           </View>
           <View style={styles.featureRow}>
-            <Feather name="check-circle" size={16} color="#00A3FF" style={{ marginRight: 8 }} />
+            <Feather name="check-circle" size={16} color="#25AAE2" style={{ marginRight: 8 }} />
             <Text style={styles.featureText}>Complete Offline Database & PDF Export</Text>
           </View>
         </View>
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#00A3FF',
+    color: '#25AAE2',
     letterSpacing: 1.2,
   },
   headerSubtitle: {
@@ -255,8 +255,8 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 20,
     borderWidth: 1.5,
-    borderColor: '#00A3FF',
-    shadowColor: '#00A3FF',
+    borderColor: '#25AAE2',
+    shadowColor: '#25AAE2',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
@@ -295,12 +295,12 @@ const styles = StyleSheet.create({
   priceCurrency: {
     fontSize: 20,
     fontWeight: '900',
-    color: '#00A3FF',
+    color: '#25AAE2',
   },
   priceAmount: {
     fontSize: 32,
     fontWeight: '900',
-    color: '#00A3FF',
+    color: '#25AAE2',
   },
   strikePrice: {
     fontSize: 18,
@@ -356,7 +356,7 @@ const styles = StyleSheet.create({
     borderColor: '#D0E7F5',
   },
   methodCardActive: {
-    borderColor: '#00A3FF',
+    borderColor: '#25AAE2',
     backgroundColor: '#F0F9FF',
   },
   radioCircle: {
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#00A3FF',
+    borderColor: '#25AAE2',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
   },
   methodInfo: {
     flex: 1,
@@ -422,11 +422,11 @@ const styles = StyleSheet.create({
     color: '#111827',
   },
   payBtn: {
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     paddingHorizontal: 24,
     paddingVertical: 14,
     borderRadius: 14,
-    shadowColor: '#00A3FF',
+    shadowColor: '#25AAE2',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 6,

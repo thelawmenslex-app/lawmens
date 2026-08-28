@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -259,11 +259,11 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#00A3FF',
+    color: '#25AAE2',
     letterSpacing: 1.2,
   },
   cyanSubheader: {
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     paddingVertical: 14,
     paddingHorizontal: 20,
     alignItems: 'center',
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
   daysLeftText: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#00A3FF',
+    color: '#25AAE2',
   },
   licenseTitle: {
     fontSize: 20,
@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
   licenseSubtitle: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#00A3FF',
+    color: '#25AAE2',
     marginBottom: 16,
   },
   detailsBox: {
@@ -375,12 +375,12 @@ const styles = StyleSheet.create({
     fontFamily: 'monospace',
   },
   upgradeButton: {
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     borderRadius: 12,
     height: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#00A3FF',
+    shadowColor: '#25AAE2',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
     padding: 20,
     borderWidth: 1.5,
     borderColor: '#D8ECF7',
-    shadowColor: '#00A3FF',
+    shadowColor: '#25AAE2',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -478,11 +478,11 @@ const styles = StyleSheet.create({
   modalPlanPrice: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#00A3FF',
+    color: '#25AAE2',
     marginBottom: 12,
   },
   modalPlanBtn: {
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     borderRadius: 10,
     height: 42,
     alignItems: 'center',

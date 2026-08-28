@@ -45,7 +45,7 @@ export default function Disclaimer(props) {
                         {content}
                     </Text>
 
-                    <Text style={{ fontFamily: Fonts.Bold, fontSize: RFValue(14), color: "#00A3FF", marginTop: 20 }}>
+                    <Text style={{ fontFamily: Fonts.Bold, fontSize: RFValue(14), color: "#25AAE2", marginTop: 20 }}>
                         Contact / Compliance Email
                     </Text>
                     <Text style={{ fontFamily: Fonts.Medium, fontSize: RFValue(13), color: "#475569", marginTop: 4 }}>

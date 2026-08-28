@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -309,11 +309,11 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontSize: 20,
     fontWeight: '900',
-    color: '#00A3FF',
+    color: '#25AAE2',
     letterSpacing: 1.2,
   },
   cyanSubheader: {
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     paddingVertical: 14,
     paddingHorizontal: 16,
     borderBottomLeftRadius: 18,
@@ -347,7 +347,7 @@ const styles = StyleSheet.create({
   },
   statusPill: {
     borderWidth: 1.5,
-    borderColor: '#00A3FF',
+    borderColor: '#25AAE2',
     backgroundColor: '#DEF3FA',
     paddingHorizontal: 10,
     paddingVertical: 3,
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
   statusPillText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#00A3FF',
+    color: '#25AAE2',
   },
   diffBlocksText: {
     fontSize: 13,
@@ -474,6 +474,6 @@ const styles = StyleSheet.create({
   actionBtnText: {
     fontSize: 11.5,
     fontWeight: '800',
-    color: '#00A3FF',
+    color: '#25AAE2',
   },
 });

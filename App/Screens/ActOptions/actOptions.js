@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -146,7 +146,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '900',
-    color: '#00A3FF',
+    color: '#25AAE2',
   },
   headerSubtitle: {
     fontSize: 14,
@@ -168,7 +168,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1.5,
     borderColor: '#D8ECF7',
-    shadowColor: '#00A3FF',
+    shadowColor: '#25AAE2',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.04,
     shadowRadius: 6,
@@ -185,7 +185,7 @@ const styles = StyleSheet.create({
   },
   optionIcon: {
     fontSize: 20,
-    color: '#00A3FF',
+    color: '#25AAE2',
   },
   optionTitle: {
     flex: 1,

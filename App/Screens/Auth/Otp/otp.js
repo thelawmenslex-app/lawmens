@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
   brandTitle: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#00A3FF',
+    color: '#25AAE2',
     letterSpacing: 1.2,
   },
   content: {
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   emailHighlight: {
-    color: '#00A3FF',
+    color: '#25AAE2',
     fontWeight: '700',
   },
   otpRow: {
@@ -234,17 +234,17 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   otpBoxFilled: {
-    borderColor: '#00A3FF',
+    borderColor: '#25AAE2',
     backgroundColor: '#F0F9FF',
   },
   verifyBtn: {
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     borderRadius: 14,
     height: 52,
     width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#00A3FF',
+    shadowColor: '#25AAE2',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.25,
     shadowRadius: 8,
@@ -266,12 +266,12 @@ const styles = StyleSheet.create({
   },
   timerCount: {
     fontWeight: '800',
-    color: '#00A3FF',
+    color: '#25AAE2',
   },
   resendLink: {
     fontSize: 15,
     fontWeight: '800',
-    color: '#00A3FF',
+    color: '#25AAE2',
     textDecorationLine: 'underline',
   },
 });

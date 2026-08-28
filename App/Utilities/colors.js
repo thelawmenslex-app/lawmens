@@ -1,9 +1,9 @@
 export const colors = {
-  primary: '#00A3FF',
+  primary: '#25AAE2',
   secondary: '#D8ECF7',
   primaryDark: '#181A20',
   secondaryDark: '#252830',
-  accentBlue: '#00A3FF',
+  accentBlue: '#25AAE2',
   bgLight: '#EDF7FC',
   cardBg: '#FFFFFF',
   cardBorder: '#D8ECF7',

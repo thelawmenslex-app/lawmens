@@ -76,7 +76,7 @@ export default function NotificationsScreen({ navigation }) {
     <View style={[styles.card, item.read ? styles.readCard : styles.unreadCard]}>
       <View style={styles.cardHeader}>
         <View style={styles.iconCircle}>
-          <Feather name="bell" size={18} color="#00A3FF" />
+          <Feather name="bell" size={18} color="#25AAE2" />
         </View>
         <View style={{ flex: 1, marginLeft: 12 }}>
           <View style={styles.titleRow}>
@@ -100,7 +100,7 @@ export default function NotificationsScreen({ navigation }) {
           onPress={() => navigation.goBack()}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
-          <Feather name="arrow-left" size={20} color="#00A3FF" />
+          <Feather name="arrow-left" size={20} color="#25AAE2" />
         </TouchableOpacity>
         <View style={styles.headerTitleWrap}>
           <Text style={styles.headerBrand}>THE-LAWMEN'S</Text>
@@ -111,7 +111,7 @@ export default function NotificationsScreen({ navigation }) {
 
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color="#00A3FF" />
+          <ActivityIndicator size="large" color="#25AAE2" />
         </View>
       ) : (
         <FlatList
@@ -124,8 +124,8 @@ export default function NotificationsScreen({ navigation }) {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={['#00A3FF']}
-              tintColor="#00A3FF"
+              colors={['#25AAE2']}
+              tintColor="#25AAE2"
             />
           }
           ListEmptyComponent={
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(0, 163, 255, 0.15)',
+    backgroundColor: 'rgba(37, 170, 226, 0.15)',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -171,13 +171,13 @@ const styles = StyleSheet.create({
   headerBrand: {
     fontSize: 16,
     fontWeight: '900',
-    color: '#00A3FF',
+    color: '#25AAE2',
     letterSpacing: 1.2,
   },
   headerSubtitle: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#00A3FF',
+    color: '#25AAE2',
     marginTop: 2,
   },
   center: {
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
   },
   unreadCard: {
     borderLeftWidth: 4,
-    borderLeftColor: '#00A3FF',
+    borderLeftColor: '#25AAE2',
   },
   readCard: {
     opacity: 0.85,

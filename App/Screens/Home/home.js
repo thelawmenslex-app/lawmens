@@ -162,7 +162,7 @@ export default function HomeScreen({ navigation }) {
           <Icon name="search-outline" size={20} color="#7C8698" style={{ marginRight: 8 }} />
           <Text style={styles.searchPlaceholder}>Search sections, laws...</Text>
           <View style={styles.micButton}>
-            <Icon name="mic" size={18} color="#00A3FF" />
+            <Icon name="mic" size={18} color="#25AAE2" />
           </View>
         </TouchableOpacity>
       </View>
@@ -176,7 +176,7 @@ export default function HomeScreen({ navigation }) {
         {/* Sync Status Banner */}
         <View style={styles.syncBanner}>
           <View style={styles.syncLeft}>
-            <Feather name="cloud" size={16} color="#00A3FF" style={{ marginRight: 6 }} />
+            <Feather name="cloud" size={16} color="#25AAE2" style={{ marginRight: 6 }} />
             <Text style={styles.syncText}>
               {synced ? 'Synced just now' : 'Not synced yet'}
             </Text>
@@ -212,7 +212,7 @@ export default function HomeScreen({ navigation }) {
         >
           <View style={styles.continueTopRow}>
             <Text style={styles.continueBadge}>CONTINUE READING</Text>
-            <Feather name="book-open" size={18} color="#00A3FF" />
+            <Feather name="book-open" size={18} color="#25AAE2" />
           </View>
           <Text style={styles.continueSubtitle} numberOfLines={1}>
             {lastRead ? lastRead.actTitle : 'Bharatiya Nyaya Sanhita , 2023'}
@@ -282,7 +282,7 @@ export default function HomeScreen({ navigation }) {
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.65)', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <View style={{ width: '100%', backgroundColor: '#FFFFFF', borderRadius: 24, padding: 22, alignItems: 'center', elevation: 8 }}>
             <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: '#DEF3FA', alignItems: 'center', justifyContent: 'center', marginBottom: 14 }}>
-              <Feather name="bell" size={32} color="#00A3FF" />
+              <Feather name="bell" size={32} color="#25AAE2" />
             </View>
             <Text style={{ fontSize: 18, fontWeight: '800', color: '#111827', marginBottom: 6, textAlign: 'center' }}>
               {popupNotification?.title || 'Notice'}
@@ -291,7 +291,7 @@ export default function HomeScreen({ navigation }) {
               {popupNotification?.message || popupNotification?.desc}
             </Text>
             <TouchableOpacity
-              style={{ width: '100%', backgroundColor: '#00A3FF', paddingVertical: 13, borderRadius: 14, alignItems: 'center' }}
+              style={{ width: '100%', backgroundColor: '#25AAE2', paddingVertical: 13, borderRadius: 14, alignItems: 'center' }}
               onPress={handleDismissPopup}>
               <Text style={{ fontSize: 14, fontWeight: '800', color: '#FFFFFF' }}>
                 {popupNotification?.buttonText || 'Dismiss'}
@@ -324,14 +324,14 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     justifyContent: 'center',
     alignItems: 'center',
   },
   appTitle: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#00A3FF',
+    color: '#25AAE2',
     letterSpacing: 1.2,
     textTransform: 'uppercase',
   },
@@ -389,7 +389,7 @@ const styles = StyleSheet.create({
   continueBadge: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#00A3FF',
+    color: '#25AAE2',
     letterSpacing: 0.8,
   },
   continueActSubtitle: { fontSize: 13, color: '#5C6B73', marginBottom: 4 },
@@ -443,13 +443,13 @@ const styles = StyleSheet.create({
     top: 4,
     bottom: 4,
     width: 2.5,
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     borderRadius: 1,
   },
   bookCodeText: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#00A3FF',
+    color: '#25AAE2',
     marginBottom: 4,
   },
   bookDividerLine: {
@@ -468,7 +468,7 @@ const styles = StyleSheet.create({
   actionPillBtn: {
     width: '100%',
     height: 52,
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     borderRadius: 14,
     flexDirection: 'row',
     alignItems: 'center',

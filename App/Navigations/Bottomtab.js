@@ -48,7 +48,7 @@ function NeumorphicTabBar({ state, descriptors, navigation }) {
               <Feather
                 name={iconName}
                 size={22}
-                color={isFocused ? '#00A3FF' : '#7C8BA0'}
+                color={isFocused ? '#25AAE2' : '#7C8BA0'}
               />
             </TouchableOpacity>
           );
@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#DEF0FC',
     borderWidth: 1.5,
     borderColor: '#BAE6FD',
-    shadowColor: '#00A3FF',
+    shadowColor: '#25AAE2',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 6,

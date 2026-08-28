@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 14,
@@ -275,7 +275,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#00A3FF',
+    color: '#25AAE2',
     letterSpacing: 1.2,
   },
   headerSubtitle: {
@@ -330,7 +330,7 @@ const styles = StyleSheet.create({
   leftSecText: {
     fontSize: 16,
     fontWeight: '900',
-    color: '#00A3FF',
+    color: '#25AAE2',
     marginBottom: 4,
   },
   leftDescText: {
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
   arrowIcon: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#00A3FF',
+    color: '#25AAE2',
     marginHorizontal: 12,
   },
   rightCol: {

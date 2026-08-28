@@ -6,7 +6,7 @@ export default function LoaderModal({ visible = false, text = 'Authenticating...
     <Modal transparent={true} animationType="fade" visible={visible}>
       <View style={styles.modalOverlay}>
         <View style={styles.loaderCard}>
-          <ActivityIndicator size="large" color="#00A3FF" style={{ marginBottom: 12 }} />
+          <ActivityIndicator size="large" color="#25AAE2" style={{ marginBottom: 12 }} />
           <Text style={styles.loaderText}>{text}</Text>
         </View>
       </View>

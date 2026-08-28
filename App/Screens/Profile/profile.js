@@ -217,8 +217,8 @@ export default function ProfileScreen({ navigation }) {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#00A3FF']}
-            tintColor="#00A3FF"
+            colors={['#25AAE2']}
+            tintColor="#25AAE2"
           />
         }
       >
@@ -341,7 +341,7 @@ export default function ProfileScreen({ navigation }) {
           onPress={() => navigation.navigate('Subscription')}
         >
           <View style={styles.menuIconBox}>
-            <Feather name="credit-card" size={20} color="#00A3FF" />
+            <Feather name="credit-card" size={20} color="#25AAE2" />
           </View>
           <View style={{ flex: 1 }}>
             <Text style={styles.menuTitle}>My Subscription</Text>
@@ -381,7 +381,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '900',
-    color: '#00A3FF',
+    color: '#25AAE2',
     letterSpacing: 1.2,
   },
   scroll: {
@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 40,
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
   userProfession: {
     fontSize: 13.5,
     fontWeight: '700',
-    color: '#00A3FF',
+    color: '#25AAE2',
     marginTop: 2,
   },
   badgeRow: {
@@ -442,7 +442,7 @@ const styles = StyleSheet.create({
   roleText: {
     fontSize: 11,
     fontWeight: '800',
-    color: '#00A3FF',
+    color: '#25AAE2',
   },
   premiumBadge: {
     backgroundColor: '#DCFCE7',
@@ -541,7 +541,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   editBtn: {
-    backgroundColor: '#00A3FF',
+    backgroundColor: '#25AAE2',
     borderRadius: 12,
     height: 48,
     alignItems: 'center',
