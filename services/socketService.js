@@ -1,16 +1,30 @@
-const { Server } = require('socket.io');
+let Server = null;
+try {
+  Server = require('socket.io').Server || require('socket.io');
+} catch (e) {
+  console.warn('[Socket.IO] socket.io module not loaded yet, running with fallback mode.');
+}
 const jwt = require('jsonwebtoken');
 
 let io = null;
 
 const initSocketServer = (httpServer) => {
-  io = new Server(httpServer, {
-    cors: {
-      origin: '*',
-      methods: ['GET', 'POST', 'PUT', 'DELETE']
-    },
-    transports: ['websocket', 'polling']
-  });
+  if (!Server) {
+    console.warn('[Socket.IO] Server unavailable, skipping socket initialization.');
+    return null;
+  }
+  try {
+    io = new Server(httpServer, {
+      cors: {
+        origin: '*',
+        methods: ['GET', 'POST', 'PUT', 'DELETE']
+      },
+      transports: ['websocket', 'polling']
+    });
+  } catch (initErr) {
+    console.warn('[Socket.IO] Initialization error:', initErr.message);
+    return null;
+  }
 
   io.use((socket, next) => {
     const token = socket.handshake.auth?.token || socket.handshake.headers?.authorization;
