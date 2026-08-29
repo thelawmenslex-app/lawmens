@@ -222,7 +222,10 @@ export default function SubscriptionScreen({ navigation }) {
                       style={styles.selectPlanBtn}
                       activeOpacity={0.85}
                       disabled={purchasing}
-                      onPress={() => handleGooglePlayPurchase(plan)}
+                      onPress={() => {
+                        setShowPlansModal(false);
+                        navigation.navigate('Payment', { plan });
+                      }}
                     >
                       {purchasing ? (
                         <ActivityIndicator color="#FFFFFF" size="small" />
