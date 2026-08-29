@@ -2,16 +2,28 @@ const router = require('express').Router();
 const { auth } = require('../../../middleware/auth.middleware');
 const paymentController = require('./payment.controller');
 
-// Restrict all payment endpoints to authenticated users
-router.use(auth);
+// Optional auth for order creation and verification (supports guest & registered checkouts)
+const optionalAuth = (req, res, next) => {
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+        return auth(req, res, (err) => {
+            // Proceed even if token is expired/invalid so guest checkout doesn't fail
+            next();
+        });
+    }
+    next();
+};
 
-// Create order
-router.post('/create-order', paymentController.createOrder);
+// 1. Create Razorpay Order
+router.post('/create-order', optionalAuth, paymentController.createOrder);
 
-// Verify signature
-router.post('/verify-payment', paymentController.verifyPayment);
+// 2. Verify Razorpay Payment signature
+router.post('/verify-payment', optionalAuth, paymentController.verifyPayment);
 
-// Mobile In-App Purchase Verification
-router.post('/verify-mobile-purchase', paymentController.verifyMobilePurchase);
+// 3. Webhook listener for async events
+router.post('/webhook', paymentController.handleWebhook);
+
+// 4. Mobile In-App Purchase Verification (authenticated)
+router.post('/verify-mobile-purchase', auth, paymentController.verifyMobilePurchase);
 
 module.exports = router;
