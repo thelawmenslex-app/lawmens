@@ -22,7 +22,7 @@ export default function PaymentScreen({ route, navigation }) {
   const [loading, setLoading] = useState(false);
   const [showRazorpayModal, setShowRazorpayModal] = useState(false);
   const [razorpayOrder, setRazorpayOrder] = useState(null);
-  const [userProfile, setUserProfile] = useState({ name: 'User', email: 'user@example.com', phone: '9999999999' });
+  const [userProfile, setUserProfile] = useState({ name: 'User', email: 'user@example.com', phone: '9876543210' });
 
   useEffect(() => {
     (async () => {
@@ -33,7 +33,7 @@ export default function PaymentScreen({ route, navigation }) {
           setUserProfile({
             name: (u.firstName ? u.firstName + ' ' + (u.lastName || '') : 'User').trim(),
             email: u.email || 'user@example.com',
-            phone: u.phone || '9999999999'
+            phone: u.phone || '9876543210'
           });
         }
       } catch (e) {}
@@ -57,7 +57,8 @@ export default function PaymentScreen({ route, navigation }) {
         body: JSON.stringify({
           amount: plan.price || 1500,
           planId: plan._id || plan.id || 'startup',
-          planName: plan.name || 'Start up'
+          planName: plan.name || 'Start up',
+          email: userProfile.email
         })
       });
 
@@ -65,7 +66,7 @@ export default function PaymentScreen({ route, navigation }) {
       const order = data.data || {};
 
       setRazorpayOrder({
-        id: order.id || ('order_' + Date.now()),
+        id: order.id || '',
         amount: order.amount || ((plan.price || 1500) * 100),
         currency: order.currency || 'INR',
         key: RAZORPAY_KEY_ID || 'rzp_test_TVb8DvbczBMMAK'
@@ -75,10 +76,10 @@ export default function PaymentScreen({ route, navigation }) {
       setShowRazorpayModal(true);
     } catch (e) {
       setLoading(false);
-      console.warn('Order creation note:', e.message);
+      console.warn('Order creation error:', e.message);
 
       setRazorpayOrder({
-        id: 'order_' + Date.now(),
+        id: '',
         amount: (plan.price || 1500) * 100,
         currency: 'INR',
         key: RAZORPAY_KEY_ID || 'rzp_test_TVb8DvbczBMMAK'
@@ -128,7 +129,7 @@ export default function PaymentScreen({ route, navigation }) {
           'Thank you! Your ' + plan.name + ' pass is now active for ' + (plan.validity || 30) + ' days.',
           [
             {
-              text: 'Open App',
+              text: 'Access Legal Portal',
               onPress: () => navigation.navigate('MainTabs')
             }
           ]
@@ -149,37 +150,43 @@ export default function PaymentScreen({ route, navigation }) {
     const validity = plan.validity || 30;
     const name = userProfile.name || 'User';
     const email = userProfile.email || 'user@example.com';
-    const phone = userProfile.phone || '9999999999';
+    const phone = userProfile.phone || '9876543210';
 
     return '<!DOCTYPE html>' +
       '<html><head>' +
       '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />' +
       '<script src="https://checkout.razorpay.com/v1/checkout.js"></script>' +
       '<style>' +
-      'body { background-color: #0F172A; color: #FFFFFF; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }' +
-      '.loader { border: 4px solid rgba(255, 255, 255, 0.1); border-top: 4px solid #25AAE2; border-radius: 50%; width: 44px; height: 44px; animation: spin 1s linear infinite; margin-bottom: 16px; }' +
+      '* { box-sizing: border-box; }' +
+      'body { background-color: #0F172A; color: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; padding: 20px; text-align: center; }' +
+      '.card { background: #1E293B; border-radius: 16px; padding: 24px; max-width: 380px; width: 100%; border: 1px solid #334155; }' +
+      '.loader { border: 4px solid rgba(255, 255, 255, 0.1); border-top: 4px solid #25AAE2; border-radius: 50%; width: 44px; height: 44px; animation: spin 1s linear infinite; margin: 0 auto 16px; }' +
       '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }' +
-      'h3 { margin: 0; color: #25AAE2; font-weight: 700; }' +
-      'p { color: #94A3B8; font-size: 14px; margin-top: 8px; }' +
+      'h3 { margin: 0; color: #25AAE2; font-size: 18px; font-weight: 800; }' +
+      'p { color: #94A3B8; font-size: 13px; margin: 10px 0 16px; }' +
+      '.btn { background: #25AAE2; color: #fff; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; width: 100%; }' +
       '</style></head><body>' +
+      '<div class="card">' +
       '<div class="loader"></div>' +
-      '<h3>THE-LAWMEN\'S Secure Payment</h3>' +
+      '<h3>THE-LAWMEN\'S</h3>' +
       '<p>Opening Razorpay Checkout Gateway...</p>' +
+      '<button class="btn" onclick="openCheckout()">Tap if checkout doesn\'t open</button>' +
+      '</div>' +
       '<script>' +
       'var options = {' +
       '  key: "' + key + '",' +
       '  amount: ' + amount + ',' +
       '  currency: "INR",' +
       '  name: "THE-LAWMEN\'S",' +
-      '  description: "' + planName + ' (' + validity + ' Days Access)",' +
-      '  image: "https://thelawmens.com/logo.png",' +
-      '  order_id: "' + orderId + '",' +
+      '  description: "' + planName + ' - ' + validity + ' Days Full Access",' +
+      (orderId ? '  order_id: "' + orderId + '",' : '') +
       '  prefill: {' +
       '    name: "' + name + '",' +
       '    email: "' + email + '",' +
       '    contact: "' + phone + '"' +
       '  },' +
       '  theme: { color: "#25AAE2" },' +
+      '  retry: { enabled: true, max_count: 3 },' +
       '  handler: function(response) {' +
       '    window.ReactNativeWebView.postMessage(JSON.stringify({ status: "SUCCESS", data: response }));' +
       '  },' +
@@ -191,11 +198,10 @@ export default function PaymentScreen({ route, navigation }) {
       '};' +
       'var rzp = new Razorpay(options);' +
       'rzp.on("payment.failed", function(response) {' +
-      '  window.ReactNativeWebView.postMessage(JSON.stringify({ status: "FAILED", data: response.error }));' +
+      '  console.log("Failed:", response.error);' +
       '});' +
-      'window.onload = function() {' +
-      '  setTimeout(function() { rzp.open(); }, 300);' +
-      '};' +
+      'function openCheckout() { try { rzp.open(); } catch(e) { console.log(e); } }' +
+      'window.onload = function() { setTimeout(openCheckout, 300); };' +
       '</script></body></html>';
   };
 
@@ -244,8 +250,8 @@ export default function PaymentScreen({ route, navigation }) {
             <Text style={styles.summaryValue}>₹ {plan.price}</Text>
           </View>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>GST / Taxes (18% Included)</Text>
-            <Text style={styles.summaryValue}>₹ 0.00</Text>
+            <Text style={styles.summaryLabel}>GST / Taxes</Text>
+            <Text style={styles.summaryValue}>Included</Text>
           </View>
           <View style={[styles.summaryRow, { marginTop: 8 }]}>
             <Text style={styles.totalLabel}>Total Payable</Text>
@@ -300,6 +306,10 @@ export default function PaymentScreen({ route, navigation }) {
             onMessage={handleWebViewMessage}
             javaScriptEnabled={true}
             domStorageEnabled={true}
+            originWhitelist={['*']}
+            mixedContentMode="always"
+            allowFileAccess={true}
+            allowUniversalAccessFromFileURLs={true}
             startInLoadingState={true}
             renderLoading={() => (
               <View style={styles.webLoading}>
