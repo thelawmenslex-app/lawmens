@@ -8,58 +8,14 @@ const { sendResponse, errorHandler } = require('../../../utils/common_functions'
 const { sendEmail } = require('../../../services/email.service');
 const Razorpay = require('razorpay');
 
-// Initialize Razorpay if keys are configured
-let rzp = null;
-if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
-    rzp = new Razorpay({
-        key_id: process.env.RAZORPAY_KEY_ID,
-        key_secret: process.env.RAZORPAY_KEY_SECRET
-    });
-}
+// Initialize Razorpay with configured keys
+const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || "rzp_test_TVb8DvbczBMMAK";
+const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET || "2jNqS94vF1STbsl5EY2ouH0G";
 
-// Initialize Razorpay order (Simulation / API structure)
-const createOrder = async (req, res) => {
-    try {
-        const { amount = 999 } = req.body; // Base price 999 INR
-        const gstRate = 0.18; // 18% GST in India
-        const gstAmount = amount * gstRate;
-        const totalAmount = amount + gstAmount;
-
-        if (rzp) {
-            const order = await rzp.orders.create({
-                amount: Math.round(totalAmount * 100), // in paisa
-                currency: "INR",
-                receipt: `receipt_${Date.now()}`
-            });
-            
-            const responseData = {
-                id: order.id,
-                amount: order.amount,
-                currency: order.currency,
-                baseAmount: amount,
-                gstAmount: gstAmount,
-                totalAmount: totalAmount,
-                key: process.env.RAZORPAY_KEY_ID
-            };
-            return sendResponse(res, true, 200, 'Razorpay order created successfully.', responseData);
-        }
-
-        // Simulated order ID for development
-        const simulatedOrder = {
-            id: `order_${crypto.randomBytes(8).toString('hex')}`,
-            amount: totalAmount * 100, // in paisa
-            currency: 'INR',
-            baseAmount: amount,
-            gstAmount: gstAmount,
-            totalAmount: totalAmount,
-            key: "rzp_test_simulated_key"
-        };
-
-        return sendResponse(res, true, 200, 'Order created successfully.', simulatedOrder);
-    } catch (error) {
-        return errorHandler(error, res);
-    }
-};
+const rzp = new Razorpay({
+    key_id: RAZORPAY_KEY_ID,
+    key_secret: RAZORPAY_KEY_SECRET
+});;
 
 // Generate PDF Invoice and save locally
 const generateInvoicePDF = (user, orderDetails, filePath) => {
