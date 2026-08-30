@@ -166,4 +166,9 @@ router.post('/queries/:id/reply', checkRole(['Admin', 'Super Admin', 'Support'])
 router.put('/self-profile', adminController.updateAdminSelfProfile);
 router.post('/create-admin', checkRole(['Super Admin']), adminController.createAdminUser);
 
+// WhatsApp Bulk & Direct Sender & Log routes
+router.post('/whatsapp/send-single', checkRole(['Admin', 'Super Admin']), adminController.sendWhatsAppSingleAdmin);
+router.post('/whatsapp/send-bulk', checkRole(['Admin', 'Super Admin']), adminController.sendWhatsAppBulkAdmin);
+router.get('/whatsapp/logs', checkRole(['Admin', 'Super Admin']), adminController.getWhatsAppLogsAdmin);
+
 module.exports = router;

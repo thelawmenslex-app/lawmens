@@ -1,3 +1,4 @@
+const { sendWhatsAppOTP } = require('../services/whatsapp.service');
 const { sendResponse, errorHandler, encryptPassword, generateToken, decryptPassword, generateOTP } = require('../../utils/common_functions');
 const userService = require("./user.services");
 const { createOtp, getOtp, updateStatus } = require("../otp/otp.services");
@@ -101,6 +102,13 @@ const otpFunctionality = async (req, res) => {
             } catch (emailErr) {
                 console.error("Email sending failed:", emailErr.message);
             }
+            if (data.phoneNumber) {
+                try {
+                    await sendWhatsAppOTP({ phone: data.phoneNumber, otp: otp, name: data.firstName || 'New User' });
+                } catch (waErr) {
+                    console.error("WhatsApp OTP dispatch failed:", waErr.message);
+                }
+            }
             return sendResponse(res, true, 200, 'Otp sent successfull.');
         }
         if (!checkUser && checkOtp && data.type && data.type === "verify") {
@@ -133,6 +141,14 @@ const forgotVerification = async (req, res) => {
                 } catch (emailErr) {
                     console.error("Email sending failed:", emailErr.message);
                     console.log(`[DEV ONLY] Forgot OTP for ${data.email} is: ${otp}`);
+                }
+                if (checkUser.phoneNumber) {
+                    try {
+                        const fullName = `${checkUser.firstName || ''} ${checkUser.lastName || ''}`.trim();
+                        await sendWhatsAppOTP({ phone: checkUser.phoneNumber, otp: otp, name: fullName || 'User' });
+                    } catch (waErr) {
+                        console.error("WhatsApp OTP dispatch failed:", waErr.message);
+                    }
                 }
                 return sendResponse(res, true, 200, 'Otp sent successfull.',);
             }
@@ -173,6 +189,15 @@ const profileVerification = async (req, res) => {
                 } catch (emailErr) {
                     console.error("Email sending failed:", emailErr.message);
                     console.log(`[DEV ONLY] Profile verification OTP for ${data.email} is: ${otp}`);
+                }
+                const activeUser = await userService.getUser({ _id: userId });
+                if (activeUser && activeUser.phoneNumber) {
+                    try {
+                        const fullName = `${activeUser.firstName || ''} ${activeUser.lastName || ''}`.trim();
+                        await sendWhatsAppOTP({ phone: activeUser.phoneNumber, otp: otp, name: fullName || 'User' });
+                    } catch (waErr) {
+                        console.error("WhatsApp OTP dispatch failed:", waErr.message);
+                    }
                 }
                 return sendResponse(res, true, 200, 'Otp sent successfull.',);
             }

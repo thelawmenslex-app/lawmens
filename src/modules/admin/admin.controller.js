@@ -2578,6 +2578,9 @@ const createAdminUser = async (req, res) => {
 };
 
 module.exports = {
+    sendWhatsAppSingleAdmin,
+    sendWhatsAppBulkAdmin,
+    getWhatsAppLogsAdmin,
     getAnalytics,
     getUsers,
     getUserProfile,
@@ -2645,4 +2648,77 @@ module.exports = {
     getAllSubscriptionPlans,
     updateSubscriptionPlan,
     createSubscriptionPlan
+};
+
+// WhatsApp Bulk Sender Admin Controller
+const { sendWhatsAppBulk, sendWhatsAppMessage } = require('../../services/whatsapp.service');
+const WhatsAppLog = require('../../models/whatsappLog');
+
+const sendWhatsAppSingleAdmin = async (req, res) => {
+    try {
+        const { phone, message, name = 'Valued User' } = req.body;
+        if (!phone || !message) {
+            return sendResponse(res, false, 400, 'Phone number and message content are required.');
+        }
+
+        const result = await sendWhatsAppMessage({
+            phone,
+            message,
+            messageType: 'direct',
+            name
+        });
+
+        return sendResponse(res, true, 200, 'WhatsApp direct message processed.', result);
+    } catch (error) {
+        return errorHandler(error, res);
+    }
+};
+
+const sendWhatsAppBulkAdmin = async (req, res) => {
+    try {
+        const { message, targetGroup = 'all', specificUserIds = [] } = req.body;
+        if (!message || !message.trim()) {
+            return sendResponse(res, false, 400, 'WhatsApp message content is required.');
+        }
+
+        const result = await sendWhatsAppBulk({ message, targetGroup, specificUserIds });
+        return sendResponse(res, true, 200, 'WhatsApp bulk broadcast executed successfully.', result);
+    } catch (error) {
+        return errorHandler(error, res);
+    }
+};
+
+const getWhatsAppLogsAdmin = async (req, res) => {
+    try {
+        const { page = 1, limit = 50, messageType, search } = req.query;
+        const query = {};
+        if (messageType) query.messageType = messageType;
+        if (search) {
+            query.$or = [
+                { recipientPhone: { $regex: search, $options: 'i' } },
+                { recipientName: { $regex: search, $options: 'i' } },
+                { message: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        const [logs, total] = await Promise.all([
+            WhatsAppLog.find(query).sort({ createdAt: -1 }).skip((page - 1) * limit).limit(Number(limit)).lean(),
+            WhatsAppLog.countDocuments(query)
+        ]);
+
+        const stats = {
+            totalMessages: await WhatsAppLog.countDocuments(),
+            totalOtpSent: await WhatsAppLog.countDocuments({ messageType: 'otp' }),
+            totalBroadcasts: await WhatsAppLog.countDocuments({ messageType: 'broadcast' }),
+            delivered: await WhatsAppLog.countDocuments({ status: { $in: ['sent', 'delivered'] } })
+        };
+
+        return sendResponse(res, true, 200, 'WhatsApp logs retrieved successfully.', {
+            logs,
+            total,
+            stats
+        });
+    } catch (error) {
+        return errorHandler(error, res);
+    }
 };
