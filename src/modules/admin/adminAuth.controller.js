@@ -2,7 +2,7 @@ const User = require('../../models/user');
 const AuditLog = require('../../models/auditLog');
 const { sendResponse, errorHandler, decryptPassword, encryptPassword, generateToken, generateOTP } = require('../../../utils/common_functions');
 const { sendEmail } = require('../../../services/email.service');
-const { sendWhatsAppOTP } = require('../../../services/whatsapp.service');
+const { sendWhatsAppOTP } = require('../../services/whatsapp.service');
 const pug = require('pug');
 
 // Admin Login
