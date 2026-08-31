@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,6 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { backendroutes } from '../../../Actions/constant';
 
 export default function SignupScreen({ navigation }) {
@@ -30,9 +29,13 @@ export default function SignupScreen({ navigation }) {
 
   const professionsList = ['Advocate', 'Judge', 'Judicial Officer', 'Police Officer', 'Law Student', 'Researcher', 'Consultant'];
 
-    const handleSignup = async () => {
+  const handleSignup = async () => {
     if (!firstName.trim()) {
       Alert.alert('Validation Error', 'Please enter your First Name');
+      return;
+    }
+    if (!phone.trim()) {
+      Alert.alert('Validation Error', 'Please enter your Phone Number');
       return;
     }
     if (!email.trim()) {
@@ -41,6 +44,14 @@ export default function SignupScreen({ navigation }) {
     }
     if (!password.trim()) {
       Alert.alert('Validation Error', 'Please enter a Password');
+      return;
+    }
+    if (password !== confirmPassword) {
+      Alert.alert('Validation Error', 'Passwords do not match');
+      return;
+    }
+    if (!termsAccepted) {
+      Alert.alert('Terms & Conditions', 'Please accept the terms and conditions to continue');
       return;
     }
 
@@ -55,41 +66,43 @@ export default function SignupScreen({ navigation }) {
     };
 
     try {
-      const response = await fetch(backendroutes.register, {
+      // Dispatch OTP to Email and WhatsApp mobile number
+      const response = await fetch(backendroutes.otp, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userPayload)
+        body: JSON.stringify({
+          email: email.trim(),
+          phoneNumber: phone.trim(),
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          type: 'send'
+        })
       });
-      const data = await response.json();
+
+      const data = await response.json().catch(() => ({}));
       setLoading(false);
 
-      const token = data.token || data.data?.token || `TOKEN_${Date.now()}`;
-      const userProfile = {
-        name: `${firstName.trim()} ${lastName.trim()}`.trim(),
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
+      if (data && data.status === false && data.message && (data.message.includes('already registered') || data.message.includes('already exists'))) {
+        Alert.alert('Registration Notice', data.message);
+        return;
+      }
+
+      // Navigate to OTP verification screen
+      navigation.navigate('Otp', {
         email: email.trim(),
         phone: phone.trim(),
-        profession: profession
-      };
-
-      await AsyncStorage.setItem('@authtoken', token);
-      await AsyncStorage.setItem('@userprofile', JSON.stringify(userProfile));
-
-      Alert.alert('Registration Successful', `Welcome, ${userProfile.name}!`, [
-        { text: 'Continue to Dashboard', onPress: () => navigation.navigate('MainTabs') }
-      ]);
+        userPayload: userPayload,
+        flow: 'signup'
+      });
     } catch (e) {
       setLoading(false);
-      const userProfile = {
-        name: `${firstName.trim()} ${lastName.trim()}`.trim(),
+      // Even if network fails, allow entering OTP screen
+      navigation.navigate('Otp', {
         email: email.trim(),
         phone: phone.trim(),
-        profession: profession
-      };
-      await AsyncStorage.setItem('@authtoken', `OFFLINE_${Date.now()}`);
-      await AsyncStorage.setItem('@userprofile', JSON.stringify(userProfile));
-      navigation.navigate('MainTabs');
+        userPayload: userPayload,
+        flow: 'signup'
+      });
     }
   };
 
@@ -135,11 +148,11 @@ export default function SignupScreen({ navigation }) {
         </View>
 
         {/* Phone Number */}
-        <Text style={styles.fieldLabel}>Phone Number</Text>
+        <Text style={styles.fieldLabel}>Phone Number (for WhatsApp OTP)</Text>
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.textInput}
-            placeholder="+91 9876543210"
+            placeholder="Enter 10-digit mobile number"
             placeholderTextColor="#94A3B8"
             value={phone}
             onChangeText={setPhone}
@@ -148,7 +161,7 @@ export default function SignupScreen({ navigation }) {
         </View>
 
         {/* Email */}
-        <Text style={styles.fieldLabel}>Email</Text>
+        <Text style={styles.fieldLabel}>Email Address (for Email OTP)</Text>
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.textInput}
@@ -181,7 +194,7 @@ export default function SignupScreen({ navigation }) {
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.textInput}
-            placeholder="must be 8 characters"
+            placeholder="must be at least 6 characters"
             placeholderTextColor="#94A3B8"
             value={password}
             onChangeText={setPassword}
@@ -244,7 +257,7 @@ export default function SignupScreen({ navigation }) {
           {loading ? (
             <ActivityIndicator color="#FFFFFF" size="small" />
           ) : (
-            <Text style={styles.signupBtnText}>Signup</Text>
+            <Text style={styles.signupBtnText}>Send Verification OTP →</Text>
           )}
         </TouchableOpacity>
       </ScrollView>

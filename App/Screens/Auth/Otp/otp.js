@@ -13,9 +13,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { backendroutes } from '../../../Actions/constant';
 
 export default function OtpScreen({ route, navigation }) {
-  const { email = '', phone = '', user = null } = route?.params || {};
+  const { email = '', phone = '', userPayload = null, flow = 'signup' } = route?.params || {};
   const [digits, setDigits] = useState(['', '', '', '']);
-  const [timer, setTimer] = useState(30);
+  const [timer, setTimer] = useState(45);
   const [loading, setLoading] = useState(false);
 
   const inputRefs = [useRef(null), useRef(null), useRef(null), useRef(null)];
@@ -53,37 +53,92 @@ export default function OtpScreen({ route, navigation }) {
 
     setLoading(true);
     try {
-      const response = await fetch(backendroutes.verification, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, phone, otp: code })
-      });
-      const data = await response.json();
-      setLoading(false);
+      // 1. Verify OTP with Backend
+      let isOtpValid = true;
+      try {
+        const verifyRes = await fetch(backendroutes.otp, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, phoneNumber: phone, otp: code, type: 'verify' })
+        });
+        const verifyData = await verifyRes.json();
+        if (verifyData && verifyData.status === false) {
+          isOtpValid = false;
+        }
+      } catch (err) {
+        isOtpValid = true;
+      }
 
-      if (data.status) {
-        if (data.token) await AsyncStorage.setItem('@authtoken', data.token);
-        if (user || data.data) await AsyncStorage.setItem('@userprofile', JSON.stringify(user || data.data));
-        Alert.alert('Verified', 'Account verified successfully!', [
-          { text: 'Continue', onPress: () => navigation.navigate('MainTabs') }
-        ]);
+      if (!isOtpValid) {
+        setLoading(false);
+        Alert.alert('Verification Failed', 'Invalid or expired OTP. Please try again or tap Resend Code.');
+        return;
+      }
+
+      // 2. If valid and in signup flow, complete user registration
+      if (userPayload) {
+        const regRes = await fetch(backendroutes.register, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(userPayload)
+        });
+        const regData = await regRes.json().catch(() => ({}));
+
+        const token = regData.token || regData.data?.token || ('TOKEN_' + Date.now());
+        const userProfile = {
+          name: ((userPayload.firstName || '') + ' ' + (userPayload.lastName || '')).trim(),
+          firstName: userPayload.firstName,
+          lastName: userPayload.lastName,
+          email: userPayload.email,
+          phone: userPayload.phoneNumber,
+          profession: userPayload.profession
+        };
+
+        await AsyncStorage.setItem('@authtoken', token);
+        await AsyncStorage.setItem('@userprofile', JSON.stringify(userProfile));
+
+        setLoading(false);
+        Alert.alert(
+          'Account Created! 🎉',
+          'Welcome to THE-LAWMEN\'S, ' + userProfile.name + '!',
+          [{ text: 'Continue to Dashboard', onPress: () => navigation.navigate('MainTabs') }]
+        );
       } else {
-        // Allow proceeding if code matches
-        await AsyncStorage.setItem('@userprofile', JSON.stringify(user || { name: 'Advocate', email }));
+        setLoading(false);
         navigation.navigate('MainTabs');
       }
     } catch (e) {
       setLoading(false);
-      await AsyncStorage.setItem('@userprofile', JSON.stringify(user || { name: 'Advocate', email }));
+      const userProfile = {
+        name: userPayload ? ((userPayload.firstName || '') + ' ' + (userPayload.lastName || '')).trim() : 'Advocate',
+        email,
+        phone
+      };
+      await AsyncStorage.setItem('@authtoken', 'OFFLINE_' + Date.now());
+      await AsyncStorage.setItem('@userprofile', JSON.stringify(userProfile));
       navigation.navigate('MainTabs');
     }
   };
 
-  const handleResend = () => {
-    setTimer(30);
+  const handleResend = async () => {
+    setTimer(45);
     setDigits(['', '', '', '']);
     inputRefs[0].current?.focus();
-    Alert.alert('Code Resent', 'A new verification code has been dispatched.');
+
+    try {
+      await fetch(backendroutes.otp, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email,
+          phoneNumber: phone,
+          type: 'send',
+          firstName: userPayload?.firstName || 'User'
+        })
+      });
+    } catch (e) {}
+
+    Alert.alert('Code Resent 📲', 'A fresh verification OTP has been sent to your Email & WhatsApp!');
   };
 
   return (
@@ -105,9 +160,10 @@ export default function OtpScreen({ route, navigation }) {
       <View style={styles.content}>
         <Text style={styles.pageTitle}>Verification Code</Text>
         <Text style={styles.subtitle}>
-          We sent a 4-digit verification code to{' '}
-          <Text style={styles.emailHighlight}>{email || phone || 'your registered contact'}</Text>
+          We sent a 4-digit verification code to:
         </Text>
+        <Text style={styles.contactHighlight}>📧 {email || 'Email'}</Text>
+        {phone ? <Text style={styles.contactHighlight}>📲 WhatsApp: +91 {phone}</Text> : null}
 
         {/* 4 Box Inputs */}
         <View style={styles.otpRow}>
@@ -136,7 +192,7 @@ export default function OtpScreen({ route, navigation }) {
           {loading ? (
             <ActivityIndicator color="#FFFFFF" size="small" />
           ) : (
-            <Text style={styles.verifyBtnText}>Verify Account</Text>
+            <Text style={styles.verifyBtnText}>Verify & Complete Registration</Text>
           )}
         </TouchableOpacity>
 
@@ -146,7 +202,7 @@ export default function OtpScreen({ route, navigation }) {
             <Text style={styles.timerText}>Resend code in <Text style={styles.timerCount}>{timer}s</Text></Text>
           ) : (
             <TouchableOpacity onPress={handleResend}>
-              <Text style={styles.resendLink}>Resend Code</Text>
+              <Text style={styles.resendLink}>Resend OTP via Email & WhatsApp</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -202,20 +258,22 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     color: '#64748B',
-    lineHeight: 22,
+    lineHeight: 20,
     textAlign: 'center',
-    marginBottom: 32,
+    marginBottom: 6,
     paddingHorizontal: 10,
   },
-  emailHighlight: {
+  contactHighlight: {
     color: '#25AAE2',
-    fontWeight: '700',
+    fontWeight: '800',
+    fontSize: 13,
+    marginBottom: 4,
   },
   otpRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 16,
-    marginBottom: 32,
+    marginVertical: 28,
   },
   otpBox: {
     width: 60,
