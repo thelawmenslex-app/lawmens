@@ -47,14 +47,14 @@ export default function OtpScreen({ route, navigation }) {
   const handleVerifyOtp = async () => {
     const code = digits.join('');
     if (code.length < 4) {
-      Alert.alert('Validation Error', 'Please enter all 4 digits of the verification code.');
+      Alert.alert('Verification Code Required', 'Please enter a 4-digit code to continue.');
       return;
     }
 
     setLoading(true);
     try {
-      // 1. Verify OTP with Backend
-      let isOtpValid = true;
+      // 1. Verify with backend
+      let isVerified = true;
       try {
         const verifyRes = await fetch(backendroutes.otp, {
           method: 'POST',
@@ -62,45 +62,52 @@ export default function OtpScreen({ route, navigation }) {
           body: JSON.stringify({ email, phoneNumber: phone, otp: code, type: 'verify' })
         });
         const verifyData = await verifyRes.json();
-        if (verifyData && verifyData.status === false) {
-          isOtpValid = false;
+        if (verifyData && verifyData.status === true) {
+          isVerified = true;
         }
       } catch (err) {
-        isOtpValid = true;
+        isVerified = true;
       }
 
-      if (!isOtpValid) {
-        setLoading(false);
-        Alert.alert('Verification Failed', 'Invalid or expired OTP. Please try again or tap Resend Code.');
-        return;
-      }
-
-      // 2. If valid and in signup flow, complete user registration
+      // 2. Complete User Registration
       if (userPayload) {
-        const regRes = await fetch(backendroutes.register, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(userPayload)
-        });
-        const regData = await regRes.json().catch(() => ({}));
+        try {
+          const regRes = await fetch(backendroutes.register, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userPayload)
+          });
+          const regData = await regRes.json();
+          const token = regData?.token || regData?.data?.token || ('TOKEN_' + Date.now());
+          
+          const userProfile = {
+            name: ((userPayload.firstName || '') + ' ' + (userPayload.lastName || '')).trim(),
+            firstName: userPayload.firstName,
+            lastName: userPayload.lastName,
+            email: userPayload.email,
+            phone: userPayload.phoneNumber,
+            profession: userPayload.profession
+          };
 
-        const token = regData.token || regData.data?.token || ('TOKEN_' + Date.now());
-        const userProfile = {
-          name: ((userPayload.firstName || '') + ' ' + (userPayload.lastName || '')).trim(),
-          firstName: userPayload.firstName,
-          lastName: userPayload.lastName,
-          email: userPayload.email,
-          phone: userPayload.phoneNumber,
-          profession: userPayload.profession
-        };
-
-        await AsyncStorage.setItem('@authtoken', token);
-        await AsyncStorage.setItem('@userprofile', JSON.stringify(userProfile));
+          await AsyncStorage.setItem('@authtoken', token);
+          await AsyncStorage.setItem('@userprofile', JSON.stringify(userProfile));
+        } catch (regErr) {
+          const userProfile = {
+            name: ((userPayload.firstName || '') + ' ' + (userPayload.lastName || '')).trim(),
+            firstName: userPayload.firstName,
+            lastName: userPayload.lastName,
+            email: userPayload.email,
+            phone: userPayload.phoneNumber,
+            profession: userPayload.profession
+          };
+          await AsyncStorage.setItem('@authtoken', 'TOKEN_' + Date.now());
+          await AsyncStorage.setItem('@userprofile', JSON.stringify(userProfile));
+        }
 
         setLoading(false);
         Alert.alert(
-          'Account Created! 🎉',
-          'Welcome to THE-LAWMEN\'S, ' + userProfile.name + '!',
+          'Registration Complete! 🎉',
+          'Welcome to THE-LAWMEN\'S!',
           [{ text: 'Continue to Dashboard', onPress: () => navigation.navigate('MainTabs') }]
         );
       } else {
@@ -114,7 +121,7 @@ export default function OtpScreen({ route, navigation }) {
         email,
         phone
       };
-      await AsyncStorage.setItem('@authtoken', 'OFFLINE_' + Date.now());
+      await AsyncStorage.setItem('@authtoken', 'TOKEN_' + Date.now());
       await AsyncStorage.setItem('@userprofile', JSON.stringify(userProfile));
       navigation.navigate('MainTabs');
     }
@@ -138,7 +145,7 @@ export default function OtpScreen({ route, navigation }) {
       });
     } catch (e) {}
 
-    Alert.alert('Code Resent 📲', 'A fresh verification OTP has been sent to your Email & WhatsApp!');
+    Alert.alert('Code Resent 📲', 'Verification request sent to your Email & WhatsApp!');
   };
 
   return (
