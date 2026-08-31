@@ -66,15 +66,13 @@ export default function SignupScreen({ navigation }) {
     };
 
     try {
-      // Dispatch OTP to Email and WhatsApp mobile number
+      // 1. Dispatch OTP to Email and WhatsApp Mobile Number
       const response = await fetch(backendroutes.otp, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: email.trim(),
           phoneNumber: phone.trim(),
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
           type: 'send'
         })
       });
@@ -82,12 +80,22 @@ export default function SignupScreen({ navigation }) {
       const data = await response.json().catch(() => ({}));
       setLoading(false);
 
-      if (data && data.status === false && data.message && (data.message.includes('already registered') || data.message.includes('already exists'))) {
-        Alert.alert('Registration Notice', data.message);
-        return;
+      if (data && data.status === false) {
+        const msg = data.message || 'Error occurred';
+        if (msg.includes('already registered') || msg.includes('already exists')) {
+          Alert.alert(
+            'Already Registered',
+            `${msg} Please log in to your account.`,
+            [
+              { text: 'Cancel', style: 'cancel' },
+              { text: 'Go to Login', onPress: () => navigation.navigate('Login') }
+            ]
+          );
+          return;
+        }
       }
 
-      // Navigate to OTP verification screen
+      // 2. Navigate to OTP screen
       navigation.navigate('Otp', {
         email: email.trim(),
         phone: phone.trim(),
@@ -96,7 +104,6 @@ export default function SignupScreen({ navigation }) {
       });
     } catch (e) {
       setLoading(false);
-      // Even if network fails, allow entering OTP screen
       navigation.navigate('Otp', {
         email: email.trim(),
         phone: phone.trim(),
