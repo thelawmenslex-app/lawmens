@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Feather from 'react-native-vector-icons/Feather';
+import { SubscriptionService } from '../Services/subscriptionService';
 
 import HomeScreen from '../Screens/Home/home';
 import SearchScreen from '../Screens/Search/search';
@@ -11,6 +12,20 @@ import ProfileScreen from '../Screens/Profile/profile';
 const Tab = createBottomTabNavigator();
 
 function NeumorphicTabBar({ state, descriptors, navigation }) {
+  const checkAccessAndNavigate = async (routeName) => {
+    try {
+      const status = await SubscriptionService.getStatus();
+      if (status && status.hasAccess === false) {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'TrialExpired' }]
+        });
+        return;
+      }
+    } catch (e) {}
+    navigation.navigate(routeName);
+  };
+
   return (
     <View style={styles.tabBarWrapper}>
       <View style={styles.tabBarContainer}>
@@ -25,7 +40,7 @@ function NeumorphicTabBar({ state, descriptors, navigation }) {
             });
 
             if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name);
+              checkAccessAndNavigate(route.name);
             }
           };
 
@@ -58,7 +73,21 @@ function NeumorphicTabBar({ state, descriptors, navigation }) {
   );
 }
 
-export default function BottomTabNavigator() {
+export default function BottomTabNavigator({ navigation }) {
+  useEffect(() => {
+    (async () => {
+      try {
+        const status = await SubscriptionService.getStatus();
+        if (status && status.hasAccess === false) {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'TrialExpired' }]
+          });
+        }
+      } catch (e) {}
+    })();
+  }, [navigation]);
+
   return (
     <Tab.Navigator
       tabBar={props => <NeumorphicTabBar {...props} />}
@@ -101,18 +130,17 @@ const styles = StyleSheet.create({
     height: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 18,
-    marginHorizontal: 4,
+    borderRadius: 16,
   },
   tabButtonActive: {
-    backgroundColor: '#DEF0FC',
+    backgroundColor: '#EBF8FE',
     borderWidth: 1.5,
-    borderColor: '#BAE6FD',
-    shadowColor: '#25AAE2',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 3,
+    borderColor: '#FFFFFF',
+    shadowColor: '#A8BED6',
+    shadowOffset: { width: 2, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 5,
+    elevation: 4,
   },
   tabButtonInactive: {
     backgroundColor: 'transparent',

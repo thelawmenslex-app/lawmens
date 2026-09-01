@@ -1,3 +1,4 @@
+import { SubscriptionService } from '../Services/subscriptionService';
 import { fcmNotificationService } from '../Services/fcmNotificationService';
 import { liveSyncService } from '../Services/liveSyncService';
 import React, { useState, useEffect } from 'react';
@@ -46,11 +47,16 @@ export default function Routes() {
     fcmNotificationService.checkAndRequestPermission();
   }, []);
 
-  const checkAuthSession = async () => {
+    const checkAuthSession = async () => {
     try {
       const token = await AsyncStorage.getItem('@authtoken');
       if (token) {
-        setInitialRoute('MainTabs');
+        const subStatus = await SubscriptionService.getStatus();
+        if (subStatus && subStatus.hasAccess === false) {
+          setInitialRoute('TrialExpired');
+        } else {
+          setInitialRoute('MainTabs');
+        }
       } else {
         setInitialRoute('Welcome');
       }
