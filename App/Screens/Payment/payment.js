@@ -121,7 +121,8 @@ export default function PaymentScreen({ route, navigation }) {
         } catch (vErr) {}
 
         // Activate locally
-        await SubscriptionService.activateSubscription(paymentData.razorpay_payment_id || ('PAY_' + Date.now()));
+        const effectivePayId = paymentData.razorpay_payment_id || ('pay_' + Date.now());
+        await SubscriptionService.activateSubscription(effectivePayId, plan.validity || 30);
         setLoading(false);
 
         Alert.alert(
@@ -130,7 +131,7 @@ export default function PaymentScreen({ route, navigation }) {
           [
             {
               text: 'Access Legal Portal',
-              onPress: () => navigation.navigate('MainTabs')
+              onPress: () => navigation.reset({ index: 0, routes: [{ name: 'MainTabs' }] })
             }
           ]
         );

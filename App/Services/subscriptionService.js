@@ -32,14 +32,34 @@ export const SubscriptionService = {
     ];
   },
 
-  // Authoritative status: strictly computes 3-day trial from registration
+  // Authoritative status verification
   getStatus: async () => {
     try {
-      const token = await AsyncStorage.getItem('@authtoken');
+      const isSubscribedFlag = await AsyncStorage.getItem('@is_subscribed');
       const userStr = await AsyncStorage.getItem('@userprofile');
       let user = userStr ? JSON.parse(userStr) : null;
+      const orderId = await AsyncStorage.getItem('@subscription_order_id');
 
-      // 1. Check with Backend if token is available
+      // 1. If user completed payment (isSubscribed === 'true' or user.isPremium === true), UNLOCK FULL APP!
+      if (isSubscribedFlag === 'true' || user?.isPremium === true) {
+        return {
+          hasAccess: true,
+          isTrial: false,
+          isTrialActive: false,
+          isSubscribed: true,
+          isPremium: true,
+          canAccessMinorActs: true,
+          daysLeft: 30,
+          planType: 'Start up',
+          subtitle: 'Full Legal Research Access (Active)',
+          purchasedDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+          validTill: '30 Days Left',
+          orderId: orderId || 'PAY_ACTIVE_PASS'
+        };
+      }
+
+      // 2. Check with Backend if token is available
+      const token = await AsyncStorage.getItem('@authtoken');
       if (token && token !== 'offline_authenticated_token') {
         try {
           const res = await fetch(`${BASE_URL}/subscription/status`, {
@@ -51,50 +71,48 @@ export const SubscriptionService = {
           const json = await res.json();
           if (json && json.status && json.data) {
             const serverData = json.data;
-            await AsyncStorage.setItem('@cached_subscription_status', JSON.stringify(serverData));
             
-            return {
-              hasAccess: serverData.hasAccess === true,
-              isTrial: serverData.isTrial === true,
-              isTrialActive: serverData.isTrial && !serverData.isExpired,
-              isSubscribed: serverData.isPremium === true,
-              isPremium: serverData.isPremium === true,
-              canAccessMinorActs: serverData.canAccessMinorActs === true,
-              daysLeft: serverData.daysRemaining || 0,
-              planType: serverData.planName || (serverData.isPremium ? 'Premium License' : '3-Day Free Trial'),
-              subtitle: serverData.isPremium ? 'Full Legal Research Access' : (serverData.hasAccess ? '3-Day Free Trial' : 'Trial Expired'),
-              purchasedDate: serverData.purchasedDate ? new Date(serverData.purchasedDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '13 Aug 2026',
-              validTill: `${serverData.daysRemaining || 0} Days Left`,
-              orderId: serverData.paymentId || 'FREE_TRIAL'
-            };
+            if (serverData.isPremium === true && serverData.hasAccess === true) {
+              await AsyncStorage.setItem('@is_subscribed', 'true');
+              return {
+                hasAccess: true,
+                isTrial: false,
+                isTrialActive: false,
+                isSubscribed: true,
+                isPremium: true,
+                canAccessMinorActs: true,
+                daysLeft: serverData.daysRemaining || 30,
+                planType: serverData.planName || 'Start up',
+                subtitle: 'Full Legal Research Access (Active)',
+                purchasedDate: serverData.purchasedDate ? new Date(serverData.purchasedDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '13 Aug 2026',
+                validTill: `${serverData.daysRemaining || 30} Days Left`,
+                orderId: serverData.paymentId || 'PAY_ACTIVE_PASS'
+              };
+            }
+            
+            if (serverData.hasAccess === false) {
+              return {
+                hasAccess: false,
+                isTrial: true,
+                isTrialActive: false,
+                isSubscribed: false,
+                isPremium: false,
+                canAccessMinorActs: false,
+                daysLeft: 0,
+                planType: 'Trial Expired',
+                subtitle: 'Trial Expired • App Locked',
+                purchasedDate: '13 Aug 2026',
+                validTill: '0 Days Left',
+                orderId: 'FREE_TRIAL'
+              };
+            }
           }
         } catch (apiErr) {
           console.warn('Live subscription status API note:', apiErr.message);
         }
       }
 
-      // 2. Strict Local Calculation from User Registration Timestamp
-      const isPremiumFlag = await AsyncStorage.getItem('@is_subscribed');
-      const isPremium = user?.isPremium === true || isPremiumFlag === 'true';
-
-      if (isPremium) {
-        return {
-          hasAccess: true,
-          isTrial: false,
-          isTrialActive: false,
-          isSubscribed: true,
-          isPremium: true,
-          canAccessMinorActs: true,
-          daysLeft: 30,
-          planType: 'Start up',
-          subtitle: 'Full Legal Research Access',
-          purchasedDate: '13 Aug 2026',
-          validTill: '30 Days Left',
-          orderId: 'GPA.2338-4854-7510-16493'
-        };
-      }
-
-      // Compute exact 3-day trial from registration date
+      // 3. Strict 3-day calculation from registration
       let trialStartMs = null;
       if (user?.createdAt) {
         trialStartMs = new Date(user.createdAt).getTime();
@@ -146,25 +164,39 @@ export const SubscriptionService = {
     }
   },
 
-  // Activate premium locally upon successful payment
-  activateSubscription: async (paymentId) => {
+  // Activate premium permanently upon payment verification
+  activateSubscription: async (paymentId, validityDays = 30) => {
     try {
-      const expirationDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      const expirationDate = new Date(Date.now() + validityDays * 24 * 60 * 60 * 1000).toISOString();
+      const effectivePaymentId = paymentId || ('pay_' + Date.now());
+
+      await AsyncStorage.setItem('@is_subscribed', 'true');
+      await AsyncStorage.setItem('@subscription_order_id', effectivePaymentId);
+
+      const userStr = await AsyncStorage.getItem('@userprofile');
+      let user = userStr ? JSON.parse(userStr) : {};
+      user.isPremium = true;
+      user.premiumPurchaseDate = new Date().toISOString();
+      user.trialEndDate = expirationDate;
+      user.premiumPaymentId = effectivePaymentId;
+      await AsyncStorage.setItem('@userprofile', JSON.stringify(user));
+
       const statusObj = {
         hasAccess: true,
         isPremium: true,
         isTrial: false,
         isExpired: false,
         canAccessMinorActs: true,
-        daysRemaining: 30,
+        daysRemaining: validityDays,
         planName: 'Start up',
-        paymentId: paymentId || ('PAY_' + Date.now()),
+        paymentId: effectivePaymentId,
         purchasedDate: new Date().toISOString(),
         expiryDate: expirationDate
       };
       await AsyncStorage.setItem('@cached_subscription_status', JSON.stringify(statusObj));
-      await AsyncStorage.setItem('@is_subscribed', 'true');
-      await AsyncStorage.setItem('@subscription_order_id', paymentId || ('PAY_' + Date.now()));
-    } catch (e) {}
+      console.log('SUBSCRIPTION ACTIVATED & APP UNLOCKED SUCCESSFULLY!');
+    } catch (e) {
+      console.warn('activateSubscription error:', e);
+    }
   }
 };
