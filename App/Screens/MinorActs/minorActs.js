@@ -1,3 +1,5 @@
+import { SubscriptionService } from '../../Services/subscriptionService';
+import { Alert } from 'react-native';
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
@@ -69,7 +71,22 @@ export default function MinorActsScreen({ navigation }) {
   }, [acts, search]);
 
   // DIRECT IN-APP PDF NAVIGATION (NO POPUP, NO CHROME)
-  const handleActPress = (item) => {
+  const handleActPress = async (item) => {
+    // Check if user is on Free Trial without Premium
+    try {
+      const subStatus = await SubscriptionService.getStatus();
+      if (subStatus && !subStatus.canAccessMinorActs && !subStatus.isPremium) {
+        Alert.alert(
+          '🔒 Premium Feature',
+          'Minor Acts are available exclusively for Premium Subscribers. Upgrade your plan to unlock all 125+ Minor Acts!',
+          [
+            { text: 'Later', style: 'cancel' },
+            { text: 'Upgrade to Premium', onPress: () => navigation.navigate('Payment', { plan: { name: 'Start up', price: 1500, validity: 30 } }) }
+          ]
+        );
+        return;
+      }
+    } catch (err) {}
     const actTitle = item.name || item.title || 'Minor Act';
     const rawPdf = item.pdfUrl || '';
 

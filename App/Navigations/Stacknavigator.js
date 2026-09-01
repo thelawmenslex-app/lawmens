@@ -23,6 +23,7 @@ import PdfViewerScreen from '../Screens/PdfViewer/pdfViewer';
 import SearchScreen from '../Screens/Search/search';
 import NotificationsScreen from '../Screens/Notifications/notifications';
 import SubscriptionScreen from '../Screens/Subscription/subscrption';
+import TrialExpiredScreen from '../Screens/Subscription/TrialExpiredScreen';
 import PaymentScreen from '../Screens/Payment/payment';
 import HistoryScreen from '../Screens/History/history';
 import SchedulesScreen from '../Screens/Schedules/schedules';
@@ -87,6 +88,7 @@ export default function Routes() {
         <Stack.Screen name="Notifications" component={NotificationsScreen} />
         <Stack.Screen name="Schedules" component={SchedulesScreen} />
         <Stack.Screen name="Search" component={SearchScreen} />
+        <Stack.Screen name="TrialExpired" component={TrialExpiredScreen} options={{ gestureEnabled: false }} />
         <Stack.Screen name="Subscription" component={SubscriptionScreen} />
         <Stack.Screen name="Payment" component={PaymentScreen} />
         <Stack.Screen name="History" component={HistoryScreen} />

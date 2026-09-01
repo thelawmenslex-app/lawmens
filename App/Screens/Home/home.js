@@ -18,6 +18,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import Feather from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import SideDrawerModal from '../../Components/SideDrawer';
+import { SubscriptionService } from '../../Services/subscriptionService';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = (width - 56) / 3;
@@ -27,6 +28,18 @@ export default function HomeScreen({ navigation }) {
   const [popupNotification, setPopupNotification] = useState(null);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [synced, setSynced] = useState(true);
+
+  const checkTrialStatus = async () => {
+    try {
+      const status = await SubscriptionService.getStatus();
+      if (status && status.hasAccess === false) {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'TrialExpired' }]
+        });
+      }
+    } catch (e) {}
+  };
 
   const checkLivePopups = async () => {
     try {
@@ -76,6 +89,7 @@ export default function HomeScreen({ navigation }) {
   };
 
   useEffect(() => {
+    checkTrialStatus();
     checkLivePopups();
     loadLastRead();
 
@@ -84,6 +98,7 @@ export default function HomeScreen({ navigation }) {
     });
 
     const unsubscribeFocus = navigation.addListener('focus', () => {
+      checkTrialStatus();
       loadLastRead();
       checkLivePopups();
     });
