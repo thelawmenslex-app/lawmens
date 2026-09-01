@@ -47,7 +47,7 @@ export default function Routes() {
     fcmNotificationService.checkAndRequestPermission();
   }, []);
 
-    const checkAuthSession = async () => {
+      const checkAuthSession = async () => {
     try {
       const token = await AsyncStorage.getItem('@authtoken');
       if (token) {

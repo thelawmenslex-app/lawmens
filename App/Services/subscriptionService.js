@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BASE_URL } from '../Actions/constant';
 
 export const SubscriptionService = {
-  // Fetch live active subscription plans from backend
+  // Fetch live active subscription plans
   getAvailablePlans: async () => {
     try {
       const res = await fetch(`${BASE_URL}/subscription/plans`, {
@@ -32,10 +32,14 @@ export const SubscriptionService = {
     ];
   },
 
-  // Authoritative status verified by Backend MongoDB
+  // Authoritative status: strictly computes 3-day trial from registration
   getStatus: async () => {
     try {
       const token = await AsyncStorage.getItem('@authtoken');
+      const userStr = await AsyncStorage.getItem('@userprofile');
+      let user = userStr ? JSON.parse(userStr) : null;
+
+      // 1. Check with Backend if token is available
       if (token && token !== 'offline_authenticated_token') {
         try {
           const res = await fetch(`${BASE_URL}/subscription/status`, {
@@ -50,79 +54,99 @@ export const SubscriptionService = {
             await AsyncStorage.setItem('@cached_subscription_status', JSON.stringify(serverData));
             
             return {
-              hasAccess: serverData.hasAccess,
-              isTrial: serverData.isTrial,
+              hasAccess: serverData.hasAccess === true,
+              isTrial: serverData.isTrial === true,
               isTrialActive: serverData.isTrial && !serverData.isExpired,
-              isSubscribed: serverData.isPremium,
-              isPremium: serverData.isPremium,
-              canAccessMinorActs: serverData.canAccessMinorActs,
-              daysLeft: serverData.daysRemaining,
-              planType: serverData.planName,
-              subtitle: serverData.isPremium ? 'Full Legal Research Access' : (serverData.isExpired ? 'Trial Expired' : '3-Day Free Trial'),
+              isSubscribed: serverData.isPremium === true,
+              isPremium: serverData.isPremium === true,
+              canAccessMinorActs: serverData.canAccessMinorActs === true,
+              daysLeft: serverData.daysRemaining || 0,
+              planType: serverData.planName || (serverData.isPremium ? 'Premium License' : '3-Day Free Trial'),
+              subtitle: serverData.isPremium ? 'Full Legal Research Access' : (serverData.hasAccess ? '3-Day Free Trial' : 'Trial Expired'),
               purchasedDate: serverData.purchasedDate ? new Date(serverData.purchasedDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '13 Aug 2026',
-              validTill: `${serverData.daysRemaining} Days Left`,
-              orderId: serverData.paymentId || 'GPA.2338-4854-7510-16493'
+              validTill: `${serverData.daysRemaining || 0} Days Left`,
+              orderId: serverData.paymentId || 'FREE_TRIAL'
             };
           }
         } catch (apiErr) {
-          console.warn('Live subscription status fetch note:', apiErr.message);
+          console.warn('Live subscription status API note:', apiErr.message);
         }
       }
 
-      // Local Cached Verification
-      const cachedStr = await AsyncStorage.getItem('@cached_subscription_status');
-      if (cachedStr) {
-        const cached = JSON.parse(cachedStr);
+      // 2. Strict Local Calculation from User Registration Timestamp
+      const isPremiumFlag = await AsyncStorage.getItem('@is_subscribed');
+      const isPremium = user?.isPremium === true || isPremiumFlag === 'true';
+
+      if (isPremium) {
         return {
-          hasAccess: cached.hasAccess,
-          isTrial: cached.isTrial,
-          isTrialActive: cached.isTrial && !cached.isExpired,
-          isSubscribed: cached.isPremium,
-          isPremium: cached.isPremium,
-          canAccessMinorActs: cached.canAccessMinorActs,
-          daysLeft: cached.daysRemaining,
-          planType: cached.planName,
-          subtitle: cached.isPremium ? 'Full Legal Research Access' : '3-Day Free Trial',
+          hasAccess: true,
+          isTrial: false,
+          isTrialActive: false,
+          isSubscribed: true,
+          isPremium: true,
+          canAccessMinorActs: true,
+          daysLeft: 30,
+          planType: 'Start up',
+          subtitle: 'Full Legal Research Access',
           purchasedDate: '13 Aug 2026',
-          validTill: `${cached.daysRemaining} Days Left`,
-          orderId: cached.paymentId || 'GPA.2338-4854-7510-16493'
+          validTill: '30 Days Left',
+          orderId: 'GPA.2338-4854-7510-16493'
         };
       }
 
-      // Default to 3-day trial active for new sessions
+      // Compute exact 3-day trial from registration date
+      let trialStartMs = null;
+      if (user?.createdAt) {
+        trialStartMs = new Date(user.createdAt).getTime();
+      } else {
+        const storedTrialStart = await AsyncStorage.getItem('@trial_start_date');
+        if (storedTrialStart) {
+          trialStartMs = Number(storedTrialStart);
+        } else {
+          trialStartMs = Date.now();
+          await AsyncStorage.setItem('@trial_start_date', String(trialStartMs));
+        }
+      }
+
+      const now = Date.now();
+      const trialDurationMs = 3 * 24 * 60 * 60 * 1000; // Strictly 3 Days
+      const elapsedMs = now - trialStartMs;
+      const isExpired = elapsedMs > trialDurationMs;
+      const daysLeft = isExpired ? 0 : Math.max(0, Math.ceil((trialDurationMs - elapsedMs) / (1000 * 60 * 60 * 24)));
+
       return {
-        hasAccess: true,
+        hasAccess: !isExpired,
         isTrial: true,
-        isTrialActive: true,
+        isTrialActive: !isExpired,
         isSubscribed: false,
         isPremium: false,
         canAccessMinorActs: false,
-        daysLeft: 3,
-        planType: '3-Day Free Trial',
-        subtitle: 'Complimentary Access',
-        purchasedDate: '13 Aug 2026',
-        validTill: '3 Days Left',
+        daysLeft: daysLeft,
+        planType: isExpired ? 'Trial Expired' : '3-Day Free Trial',
+        subtitle: isExpired ? 'Trial Expired • App Locked' : 'Complimentary 3-Day Access',
+        purchasedDate: new Date(trialStartMs).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+        validTill: `${daysLeft} Days Left`,
         orderId: 'FREE_TRIAL'
       };
     } catch (e) {
       return {
-        hasAccess: true,
+        hasAccess: false,
         isTrial: true,
-        isTrialActive: true,
+        isTrialActive: false,
         isSubscribed: false,
         isPremium: false,
         canAccessMinorActs: false,
-        daysLeft: 3,
-        planType: '3-Day Free Trial',
-        subtitle: 'Complimentary Access',
+        daysLeft: 0,
+        planType: 'Trial Expired',
+        subtitle: 'Trial Expired • App Locked',
         purchasedDate: '13 Aug 2026',
-        validTill: '3 Days Left',
+        validTill: '0 Days Left',
         orderId: 'FREE_TRIAL'
       };
     }
   },
 
-  // Activate premium locally upon successful Razorpay payment
+  // Activate premium locally upon successful payment
   activateSubscription: async (paymentId) => {
     try {
       const expirationDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
