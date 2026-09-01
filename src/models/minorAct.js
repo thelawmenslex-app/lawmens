@@ -6,7 +6,9 @@ const minorActSchema = Schema(
         description: { type: String },
         pdfUrl: { type: String },
         order: { type: Number, default: 0 },
-        isActive: { type: Boolean, default: true }
+        isActive: { type: Boolean, default: true },
+        isFreeTrial: { type: Boolean, default: true },
+        category: { type: String, default: 'Criminal Minor Acts' }
     },
     {
         timestamps: true,
