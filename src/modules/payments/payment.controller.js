@@ -13,8 +13,8 @@ const Razorpay = require('razorpay');
 // Razorpay Key Configuration from Environment
 const getRazorpayKeys = () => {
     return {
-        key_id: process.env.RAZORPAY_KEY_ID || "rzp_test_TXwX8ooQGH96ui",
-        key_secret: process.env.RAZORPAY_KEY_SECRET || "eOZqZX64bhM9yKmeoOX0k2EB"
+        key_id: process.env.RAZORPAY_KEY_ID || "rzp_test_TVb8DvbczBMMAK",
+        key_secret: process.env.RAZORPAY_KEY_SECRET || "2jNqS94vF1STbsl5EY2ouH0G"
     };
 };
 
