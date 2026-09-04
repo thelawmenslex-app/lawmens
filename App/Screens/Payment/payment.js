@@ -143,76 +143,16 @@ export default function PaymentScreen({ route, navigation }) {
     }
   };
 
-    const getRazorpayHtml = () => {
-    const key = razorpayOrder?.key || RAZORPAY_KEY_ID || 'rzp_live_TXxg1ZquvFEEAn';
+      const getCheckoutUrl = () => {
+    const key = razorpayOrder?.key || 'rzp_test_TXwX8ooQGH96ui';
     const amount = razorpayOrder?.amount || ((plan.price || 1500) * 100);
     const orderId = razorpayOrder?.id || '';
-    const planName = plan.name || 'Start up';
-    const validity = plan.validity || 30;
-    const name = userProfile.name || 'Advocate';
-    const email = userProfile.email || 'advocate@thelawmens.com';
-    const phone = userProfile.phone || '9876543210';
+    const planName = encodeURIComponent(plan.name || 'Start up');
+    const name = encodeURIComponent(userProfile.name || 'Advocate');
+    const email = encodeURIComponent(userProfile.email || 'advocate@thelawmens.com');
+    const phone = encodeURIComponent(userProfile.phone || '9876543210');
 
-    return '<!DOCTYPE html>' +
-      '<html><head>' +
-      '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />' +
-      '<script src="https://checkout.razorpay.com/v1/checkout.js"></script>' +
-      '<style>' +
-      '* { box-sizing: border-box; }' +
-      'body { background-color: #0F172A; color: #FFFFFF; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; padding: 20px; text-align: center; }' +
-      '.card { background: #1E293B; border-radius: 16px; padding: 24px; max-width: 380px; width: 100%; border: 1px solid #334155; }' +
-      '.loader { border: 4px solid rgba(255, 255, 255, 0.1); border-top: 4px solid #25AAE2; border-radius: 50%; width: 44px; height: 44px; animation: spin 1s linear infinite; margin: 0 auto 16px; }' +
-      '@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }' +
-      'h3 { margin: 0; color: #25AAE2; font-size: 18px; font-weight: 800; }' +
-      'p { color: #94A3B8; font-size: 13px; margin: 10px 0 16px; }' +
-      '.btn { background: #25AAE2; color: #fff; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; width: 100%; }' +
-      '</style></head><body>' +
-      '<div class="card">' +
-      '<div class="loader"></div>' +
-      '<h3>THE-LAWMEN\'S</h3>' +
-      '<p>Connecting to Razorpay Secure Gateway...</p>' +
-      '<button class="btn" onclick="openCheckout()">Tap if modal does not open</button>' +
-      '</div>' +
-      '<script>' +
-      'var options = {' +
-      '  key: "' + key + '",' +
-      '  amount: ' + amount + ',' +
-      '  currency: "INR",' +
-      '  name: "THE-LAWMEN\'S",' +
-      '  description: "' + planName + ' - ' + validity + ' Days Access",' +
-      (orderId ? '  order_id: "' + orderId + '",' : '') +
-      '  prefill: {' +
-      '    name: "' + name + '",' +
-      '    email: "' + email + '",' +
-      '    contact: "' + phone + '"' +
-      '  },' +
-      '  theme: { color: "#25AAE2" },' +
-      '  retry: { enabled: true, max_count: 3 },' +
-      '  handler: function(response) {' +
-      '    window.ReactNativeWebView.postMessage(JSON.stringify({ status: "SUCCESS", data: response }));' +
-      '  },' +
-      '  modal: {' +
-      '    ondismiss: function() {' +
-      '      window.ReactNativeWebView.postMessage(JSON.stringify({ status: "DISMISSED" }));' +
-      '    }' +
-      '  }' +
-      '};' +
-      'var rzp = null;' +
-      'function openCheckout() {' +
-      '  try {' +
-      '    if (!rzp) {' +
-      '      rzp = new Razorpay(options);' +
-      '      rzp.on("payment.failed", function(response) {' +
-      '        console.log("Payment Failed:", response.error);' +
-      '      });' +
-      '    }' +
-      '    rzp.open();' +
-      '  } catch(e) {' +
-      '    console.error("Razorpay open error:", e);' +
-      '  }' +
-      '}' +
-      'window.onload = function() { setTimeout(openCheckout, 200); };' +
-      '</script></body></html>';
+    return `${Imageurl}/checkout.html?key=${key}&amount=${amount}&order_id=${orderId}&planName=${planName}&name=${name}&email=${email}&phone=${phone}`;
   };
 
   return (
@@ -312,7 +252,7 @@ export default function PaymentScreen({ route, navigation }) {
             </TouchableOpacity>
           </View>
           <WebView
-            source={{ html: getRazorpayHtml(), baseUrl: 'https://api.razorpay.com' }}
+            source={{ uri: getCheckoutUrl() }}
             onMessage={handleWebViewMessage}
             javaScriptEnabled={true}
             domStorageEnabled={true}
