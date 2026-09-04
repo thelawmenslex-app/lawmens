@@ -13,7 +13,7 @@ import {
 import Feather from 'react-native-vector-icons/Feather';
 import { WebView } from 'react-native-webview';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { BASE_URL, RAZORPAY_KEY_ID, Imageurl } from '../../Actions/constant';
+import { BASE_URL, RAZORPAY_KEY_ID } from '../../Actions/constant';
 import { SubscriptionService } from '../../Services/subscriptionService';
 
 export default function PaymentScreen({ route, navigation }) {
@@ -24,21 +24,25 @@ export default function PaymentScreen({ route, navigation }) {
   const [razorpayOrder, setRazorpayOrder] = useState(null);
   const [userProfile, setUserProfile] = useState({ name: 'User', email: 'user@example.com', phone: '9876543210' });
 
-    useEffect(() => {
+  useEffect(() => {
     (async () => {
       try {
-        // 1. Check local storage
+        // 1. Check local profile storage
         const userStr = await AsyncStorage.getItem('@userprofile');
         if (userStr) {
           const u = JSON.parse(userStr);
+          const computedName = ((u.firstName || '') + ' ' + (u.lastName || '')).trim() || u.name || 'Advocate';
+          const computedEmail = u.email || 'advocate@thelawmens.com';
+          const computedPhone = u.phoneNumber || u.phone || '9876543210';
+
           setUserProfile({
-            name: ((u.firstName || '') + ' ' + (u.lastName || '')).trim() || u.name || 'Advocate',
-            email: u.email || 'advocate@thelawmens.com',
-            phone: u.phone || u.phoneNumber || '9876543210'
+            name: computedName,
+            email: computedEmail,
+            phone: computedPhone
           });
         }
 
-        // 2. Fetch live real-time profile from MongoDB backend if token exists
+        // 2. Fetch live real-time user profile from backend
         const token = await AsyncStorage.getItem('@authtoken');
         if (token && token !== 'offline_authenticated_token') {
           try {
@@ -51,12 +55,12 @@ export default function PaymentScreen({ route, navigation }) {
             const pData = await res.json();
             if (pData && pData.data) {
               const u = pData.data;
-              const realProfile = {
+              const liveProfile = {
                 name: ((u.firstName || '') + ' ' + (u.lastName || '')).trim() || u.name || 'Advocate',
                 email: u.email || 'advocate@thelawmens.com',
                 phone: u.phoneNumber || u.phone || '9876543210'
               };
-              setUserProfile(realProfile);
+              setUserProfile(liveProfile);
               await AsyncStorage.setItem('@userprofile', JSON.stringify(u));
             }
           } catch (liveErr) {}
@@ -168,17 +172,147 @@ export default function PaymentScreen({ route, navigation }) {
     }
   };
 
-  const getCheckoutUrl = () => {
+  // Generate completely dynamic, live Razorpay HTML with real user profile & live plan price
+  const getDynamicRazorpayHtml = () => {
     const key = razorpayOrder?.key || RAZORPAY_KEY_ID || 'rzp_test_TXwX8ooQGH96ui';
-    const amount = razorpayOrder?.amount || ((plan.price || 1500) * 100);
+    const amountInPaise = razorpayOrder?.amount || ((plan.price || 1500) * 100);
+    const rupeeAmount = (amountInPaise / 100).toFixed(2);
     const orderId = razorpayOrder?.id || '';
-    const planName = encodeURIComponent(plan.name || 'Start up');
-    const name = encodeURIComponent(userProfile.name || 'Advocate');
-    const email = encodeURIComponent(userProfile.email || 'advocate@thelawmens.com');
-    const phone = encodeURIComponent(userProfile.phone || '9876543210');
-    const host = Imageurl || 'https://lawmens-1.onrender.com';
+    const planName = plan.name || 'Start up Plan';
+    const name = userProfile.name || 'Advocate';
+    const email = userProfile.email || 'advocate@thelawmens.com';
+    const phone = userProfile.phone || '9876543210';
 
-    return `${host}/checkout.html?key=${key}&amount=${amount}&order_id=${orderId}&planName=${planName}&name=${name}&email=${email}&phone=${phone}`;
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>THE-LAWMEN'S | Razorpay Checkout</title>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4">
+
+  <div class="max-w-md w-full bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-2xl space-y-5">
+    <!-- Header -->
+    <div class="text-center">
+      <h1 class="text-2xl font-black text-white tracking-tight">THE-LAWMEN'S</h1>
+      <p class="text-xs text-sky-400 font-bold uppercase tracking-wider mt-1">Official Razorpay Checkout</p>
+    </div>
+
+    <!-- Live Selected Plan Card -->
+    <div class="space-y-1">
+      <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Subscription Plan</label>
+      <div class="p-3.5 bg-slate-900 border border-sky-500/40 rounded-xl flex items-center justify-between">
+        <div>
+          <h3 class="font-bold text-sm text-white">${planName}</h3>
+          <p class="text-xs text-slate-400">Full Legal Database Access • ${plan.validity || 30} Days</p>
+        </div>
+        <span class="text-xl font-black text-sky-400">₹${rupeeAmount}</span>
+      </div>
+    </div>
+
+    <!-- Live User Profile Details -->
+    <div class="space-y-3">
+      <div>
+        <label class="block text-xs font-semibold text-slate-400 mb-1">Subscriber Name</label>
+        <input id="userName" type="text" value="${name}" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-sky-500 font-medium">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-400 mb-1">Email Address</label>
+        <input id="userEmail" type="email" value="${email}" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-sky-500 font-medium">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-400 mb-1">Mobile Number (WhatsApp)</label>
+        <input id="userPhone" type="tel" value="${phone}" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-sky-500 font-medium">
+      </div>
+    </div>
+
+    <!-- Status Box -->
+    <div id="statusBox" class="hidden p-3 rounded-lg text-xs"></div>
+
+    <!-- Checkout Button -->
+    <button id="payBtn" onclick="openCheckout()" class="w-full py-3.5 px-6 rounded-xl font-bold text-white bg-[#25AAE2] hover:bg-[#1E90C0] transition flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20 active:scale-98">
+      <span>Proceed to Pay ₹${rupeeAmount} via Razorpay →</span>
+    </button>
+
+    <div class="text-center text-[11px] text-slate-500 flex items-center justify-center gap-1.5 pt-1">
+      <svg class="w-3.5 h-3.5 text-sky-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" clip-rule="evenodd"></path></svg>
+      <span>Secured with 256-bit Razorpay Payment Gateway</span>
+    </div>
+  </div>
+
+  <script>
+    function notifyApp(type, payload) {
+      const msg = JSON.stringify({ status: type, data: payload });
+      if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
+        window.ReactNativeWebView.postMessage(msg);
+      }
+    }
+
+    let rzp = null;
+    function openCheckout() {
+      const currentName = document.getElementById('userName').value || "${name}";
+      const currentEmail = document.getElementById('userEmail').value || "${email}";
+      const currentPhone = document.getElementById('userPhone').value || "${phone}";
+
+      const options = {
+        key: "${key}",
+        amount: ${amountInPaise},
+        currency: "INR",
+        name: "THE-LAWMEN'S",
+        description: "${planName} Subscription",
+        image: "https://lawmens-1.onrender.com/favicon.svg",
+        ${orderId ? `order_id: "${orderId}",` : ''}
+        prefill: {
+          name: currentName,
+          email: currentEmail,
+          contact: currentPhone
+        },
+        theme: {
+          color: "#25AAE2"
+        },
+        retry: {
+          enabled: true,
+          max_count: 3
+        },
+        modal: {
+          ondismiss: function () {
+            notifyApp('DISMISSED');
+          }
+        },
+        handler: function (response) {
+          const statusBox = document.getElementById('statusBox');
+          statusBox.className = 'p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 rounded-lg text-xs';
+          statusBox.innerHTML = '<strong>Payment Successful! 🎉</strong><br>Activating Subscription...';
+          notifyApp('SUCCESS', response);
+        }
+      };
+
+      try {
+        rzp = new Razorpay(options);
+        rzp.on('payment.failed', function (resp) {
+          const statusBox = document.getElementById('statusBox');
+          statusBox.className = 'p-3 bg-rose-500/10 border border-rose-500/30 text-rose-300 rounded-lg text-xs';
+          statusBox.innerText = 'Payment Declined: ' + (resp.error?.description || 'Transaction failed');
+          notifyApp('FAILED', resp);
+        });
+        rzp.open();
+      } catch (e) {
+        console.error('Failed to open Razorpay:', e);
+      }
+    }
+
+    window.onload = function () {
+      setTimeout(openCheckout, 250);
+    };
+  </script>
+</body>
+</html>`;
   };
 
   return (
@@ -234,6 +368,14 @@ export default function PaymentScreen({ route, navigation }) {
             <Text style={styles.totalLabel}>Total Payable</Text>
             <Text style={styles.totalAmount}>₹ {plan.price}</Text>
           </View>
+        </View>
+
+        {/* User Details */}
+        <View style={styles.userSummaryCard}>
+          <Text style={styles.userSummaryTitle}>Subscriber Account</Text>
+          <Text style={styles.userSummaryItem}>👤 {userProfile.name}</Text>
+          <Text style={styles.userSummaryItem}>📧 {userProfile.email}</Text>
+          <Text style={styles.userSummaryItem}>📱 +91 {userProfile.phone}</Text>
         </View>
 
         {/* Payment Methods Info */}
@@ -298,7 +440,7 @@ export default function PaymentScreen({ route, navigation }) {
           </View>
 
           <WebView
-            source={{ uri: getCheckoutUrl() }}
+            source={{ html: getDynamicRazorpayHtml(), baseUrl: 'https://api.razorpay.com' }}
             onMessage={handleWebViewMessage}
             javaScriptEnabled={true}
             domStorageEnabled={true}
@@ -313,6 +455,7 @@ export default function PaymentScreen({ route, navigation }) {
             originWhitelist={['*']}
             mixedContentMode="always"
             allowFileAccess={true}
+            allowUniversalAccessFromFileURLs={true}
           />
         </View>
       </Modal>
@@ -460,6 +603,26 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '900',
     color: '#25AAE2',
+  },
+  userSummaryCard: {
+    backgroundColor: '#F0F9FF',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1.5,
+    borderColor: '#BAE6FD',
+    marginBottom: 16,
+  },
+  userSummaryTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#0369A1',
+    marginBottom: 8,
+  },
+  userSummaryItem: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#334155',
+    marginBottom: 4,
   },
   methodsCard: {
     backgroundColor: '#FFFFFF',
