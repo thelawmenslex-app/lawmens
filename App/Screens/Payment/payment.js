@@ -69,7 +69,7 @@ export default function PaymentScreen({ route, navigation }) {
         id: order.id || '',
         amount: order.amount || ((plan.price || 1500) * 100),
         currency: order.currency || 'INR',
-        key: RAZORPAY_KEY_ID || 'rzp_test_TVb8DvbczBMMAK'
+        key: RAZORPAY_KEY_ID || 'rzp_live_TXxg1ZquvFEEAn'
       });
 
       setLoading(false);
@@ -82,7 +82,7 @@ export default function PaymentScreen({ route, navigation }) {
         id: '',
         amount: (plan.price || 1500) * 100,
         currency: 'INR',
-        key: RAZORPAY_KEY_ID || 'rzp_test_TVb8DvbczBMMAK'
+        key: RAZORPAY_KEY_ID || 'rzp_live_TXxg1ZquvFEEAn'
       });
       setShowRazorpayModal(true);
     }
@@ -144,7 +144,7 @@ export default function PaymentScreen({ route, navigation }) {
   };
 
     const getRazorpayHtml = () => {
-    const key = razorpayOrder?.key || RAZORPAY_KEY_ID || 'rzp_test_TVb8DvbczBMMAK';
+    const key = razorpayOrder?.key || RAZORPAY_KEY_ID || 'rzp_live_TXxg1ZquvFEEAn';
     const amount = razorpayOrder?.amount || ((plan.price || 1500) * 100);
     const orderId = razorpayOrder?.id || '';
     const planName = plan.name || 'Start up';

@@ -1,4 +1,4 @@
-export const RAZORPAY_KEY_ID = 'rzp_test_TVb8DvbczBMMAK';
+export const RAZORPAY_KEY_ID = 'rzp_live_TXxg1ZquvFEEAn';
 export const Imageurl = 'https://lawmens-1.onrender.com';
 export const BASE_URL = 'https://lawmens-1.onrender.com/api/v1';
 
