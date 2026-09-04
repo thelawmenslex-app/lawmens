@@ -81,7 +81,7 @@ export const ApiService = {
             profession: prof,
             role: raw.role || 'User',
             isPremium: Boolean(raw.isPremium || raw.subscriptionId),
-            readingHistoryCount: raw.count?.current ?? raw.readingHistoryCount ?? 199,
+            readingHistoryCount: raw.count?.current ?? raw.readingHistoryCount ?? 0,
             bookmarksCount: Array.isArray(raw.bookMarks) ? raw.bookMarks.length : 0
           };
 
@@ -156,7 +156,7 @@ export const ApiService = {
             profession: prof,
             role: raw.role || 'User',
             isPremium: Boolean(raw.isPremium || raw.subscriptionId),
-            readingHistoryCount: raw.count?.current ?? raw.readingHistoryCount ?? 199,
+            readingHistoryCount: raw.count?.current ?? raw.readingHistoryCount ?? 0,
             bookmarksCount: Array.isArray(raw.bookMarks) ? raw.bookMarks.length : (raw.bookmarksCount ?? 0)
           };
 
@@ -176,7 +176,7 @@ export const ApiService = {
         
         const cleanPayload = {};
         cleanPayload.userId = current._id || '6a551e1aaff786df81fa9aab';
-        cleanPayload.firstName = payload.firstName || 'Durai Gajendran';
+        cleanPayload.firstName = payload.firstName || 'gajendran';
         cleanPayload.lastName = payload.lastName !== undefined ? payload.lastName : 'M';
         cleanPayload.phoneNumber = String(payload.phoneNumber || payload.phone || '1234567890').trim();
 
@@ -258,7 +258,7 @@ export const ApiService = {
           profession: 'Student',
           role: 'User',
           isPremium: true,
-          readingHistoryCount: 199,
+          readingHistoryCount: 0,
           bookmarksCount: 0
         };
       } catch (e) {
@@ -357,11 +357,27 @@ export const ApiService = {
     }
   },
 
+  getUserScopedKey: async (prefix) => {
+    try {
+      const userStr = await AsyncStorage.getItem('@userprofile');
+      if (userStr) {
+        const u = JSON.parse(userStr);
+        const id = u._id || u.email || u.phoneNumber || u.phone || u.name;
+        if (id) {
+          const safeId = String(id).trim().replace(/[^a-zA-Z0-9_-]/g, '_');
+          return `${prefix}_${safeId}`;
+        }
+      }
+    } catch (e) {}
+    return `${prefix}_guest`;
+  },
+
   // --- BOOKMARKS ---
   bookmarks: {
     getAll: async () => {
       try {
-        const bmStr = await AsyncStorage.getItem('@bookmarks');
+        const key = await ApiService.getUserScopedKey('@bookmarks');
+        const bmStr = await AsyncStorage.getItem(key);
         return bmStr ? JSON.parse(bmStr) : [];
       } catch (e) {
         return [];
@@ -369,19 +385,107 @@ export const ApiService = {
     },
     toggle: async (item) => {
       try {
+        const key = await ApiService.getUserScopedKey('@bookmarks');
         const list = await ApiService.bookmarks.getAll();
-        const existsIdx = list.findIndex(b => b.secName === item.secName && b.actTitle === item.actTitle);
+        const itemSec = String(item.secName || item.sectionNumber || item.name || '').trim();
+        const existsIdx = list.findIndex(b => String(b.secName || b.sectionNumber || b.name || '').trim() === itemSec && b.actTitle === item.actTitle);
         let updated;
         if (existsIdx >= 0) {
           updated = list.filter((_, i) => i !== existsIdx);
         } else {
           updated = [item, ...list];
         }
-        await AsyncStorage.setItem('@bookmarks', JSON.stringify(updated));
+        await AsyncStorage.setItem(key, JSON.stringify(updated));
         return { isBookmarked: existsIdx < 0, count: updated.length };
       } catch (e) {
         return { isBookmarked: false, count: 0 };
       }
+    }
+  },
+
+  // --- READING HISTORY & CONTINUE READING ---
+  history: {
+    getReadingHistory: async () => {
+      try {
+        const key = await ApiService.getUserScopedKey('@read_history');
+        const histStr = await AsyncStorage.getItem(key);
+        if (histStr) {
+          const parsed = JSON.parse(histStr);
+          if (Array.isArray(parsed)) return parsed;
+        }
+        return [];
+      } catch (e) {
+        return [];
+      }
+    },
+
+    getLastRead: async () => {
+      try {
+        const key = await ApiService.getUserScopedKey('@last_read_section');
+        const saved = await AsyncStorage.getItem(key);
+        if (saved) {
+          return JSON.parse(saved);
+        }
+        return null;
+      } catch (e) {
+        return null;
+      }
+    },
+
+    addReadingHistory: async (itemToSave) => {
+      try {
+        const histKey = await ApiService.getUserScopedKey('@read_history');
+        const lastReadKey = await ApiService.getUserScopedKey('@last_read_section');
+
+        // 1. Save user-scoped Last Read
+        await AsyncStorage.setItem(lastReadKey, JSON.stringify(itemToSave));
+
+        // 2. Append to user-scoped History
+        const histStr = await AsyncStorage.getItem(histKey);
+        let hist = histStr ? JSON.parse(histStr) : [];
+        if (!Array.isArray(hist)) hist = [];
+        const itemSec = String(itemToSave.sectionNumber || itemToSave.secName || itemToSave.name || '').trim();
+        hist = hist.filter(h => !(h.actTitle === itemToSave.actTitle && String(h.sectionNumber || h.secName || h.name || '').trim() === itemSec));
+        hist.unshift(itemToSave);
+        if (hist.length > 50) hist = hist.slice(0, 50);
+        await AsyncStorage.setItem(histKey, JSON.stringify(hist));
+
+        return hist;
+      } catch (e) {
+        console.warn('History tracking error:', e);
+        return [];
+      }
+    },
+
+    removeItem: async (indexToRemove) => {
+      try {
+        const histKey = await ApiService.getUserScopedKey('@read_history');
+        const histStr = await AsyncStorage.getItem(histKey);
+        let hist = histStr ? JSON.parse(histStr) : [];
+        if (!Array.isArray(hist)) hist = [];
+        const updated = hist.filter((_, i) => i !== indexToRemove);
+        await AsyncStorage.setItem(histKey, JSON.stringify(updated));
+
+        // Update Last Read to latest item or null
+        const lastReadKey = await ApiService.getUserScopedKey('@last_read_section');
+        if (updated.length > 0) {
+          await AsyncStorage.setItem(lastReadKey, JSON.stringify(updated[0]));
+        } else {
+          await AsyncStorage.removeItem(lastReadKey);
+        }
+        return updated;
+      } catch (e) {
+        return [];
+      }
+    },
+
+    clearAll: async () => {
+      try {
+        const histKey = await ApiService.getUserScopedKey('@read_history');
+        const lastReadKey = await ApiService.getUserScopedKey('@last_read_section');
+        await AsyncStorage.removeItem(histKey);
+        await AsyncStorage.removeItem(lastReadKey);
+      } catch (e) {}
     }
   },
 

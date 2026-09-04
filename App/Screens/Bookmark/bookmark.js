@@ -25,42 +25,23 @@ export default function BookmarkScreen({ navigation }) {
 
   const loadBookmarks = async () => {
     try {
-      const bmStr = await AsyncStorage.getItem('@bookmarks');
-      if (bmStr) {
-        setBookmarks(JSON.parse(bmStr));
-      } else {
-        const initial = [
-          {
-            id: '1',
-            actTitle: 'Bharatiya Nyaya Sanhita , 2023',
-            secName: '4',
-            title: 'Section 4: Punishments',
-            desc: 'Death, Imprisonment for life, Rigorous imprisonment, Simple imprisonment, Forfeiture of property, Fine, Community service.'
-          },
-          {
-            id: '2',
-            actTitle: 'Indian Penal Code , 1860',
-            secName: '420',
-            title: 'Section 420: Cheating and dishonestly inducing delivery of property',
-            desc: 'Whoever cheats and thereby dishonestly induces the person deceived to deliver any property to any person...'
-          }
-        ];
-        setBookmarks(initial);
-        await AsyncStorage.setItem('@bookmarks', JSON.stringify(initial));
-      }
+      const list = await ApiService.bookmarks.getAll();
+      setBookmarks(list || []);
     } catch (e) {
       console.warn('Bookmark load error:', e);
+      setBookmarks([]);
     }
   };
 
   const removeBookmark = async (itemToRemove) => {
     try {
+      const key = await ApiService.getUserScopedKey('@bookmarks');
       const updated = bookmarks.filter(b => {
         if (b.id && itemToRemove.id) return b.id !== itemToRemove.id;
         return !(b.secName === itemToRemove.secName && b.actTitle === itemToRemove.actTitle);
       });
       setBookmarks(updated);
-      await AsyncStorage.setItem('@bookmarks', JSON.stringify(updated));
+      await AsyncStorage.setItem(key, JSON.stringify(updated));
     } catch (e) {
       console.warn('Remove bookmark error:', e);
     }
@@ -76,8 +57,9 @@ export default function BookmarkScreen({ navigation }) {
           text: 'Clear All',
           style: 'destructive',
           onPress: async () => {
+            const key = await ApiService.getUserScopedKey('@bookmarks');
             setBookmarks([]);
-            await AsyncStorage.setItem('@bookmarks', JSON.stringify([]));
+            await AsyncStorage.setItem(key, JSON.stringify([]));
           }
         }
       ]

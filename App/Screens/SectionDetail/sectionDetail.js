@@ -104,16 +104,7 @@ export default function SectionDetailScreen({ route, navigation }) {
           timestamp: Date.now()
         };
 
-        // 1. Save Last Read
-        await AsyncStorage.setItem('@last_read_section', JSON.stringify(itemToSave));
-
-        // 2. Append to History
-        const histStr = await AsyncStorage.getItem('@read_history');
-        let hist = histStr ? JSON.parse(histStr) : [];
-        hist = hist.filter(h => !(h.actTitle === itemToSave.actTitle && String(h.sectionNumber) === String(itemToSave.sectionNumber)));
-        hist.unshift(itemToSave);
-        if (hist.length > 50) hist = hist.slice(0, 50);
-        await AsyncStorage.setItem('@read_history', JSON.stringify(hist));
+        await ApiService.history.addReadingHistory(itemToSave);
       } catch (e) {
         console.warn('History tracking error:', e);
       }

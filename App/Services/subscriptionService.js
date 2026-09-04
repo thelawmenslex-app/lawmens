@@ -1,11 +1,24 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BASE_URL } from '../Actions/constant';
 
+const fetchWithTimeout = async (url, options = {}, timeoutMs = 2500) => {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(id);
+    return res;
+  } catch (e) {
+    clearTimeout(id);
+    throw e;
+  }
+};
+
 export const SubscriptionService = {
   // Fetch live active subscription plans
   getAvailablePlans: async () => {
     try {
-      const res = await fetch(`${BASE_URL}/subscription/plans`, {
+      const res = await fetchWithTimeout(`${BASE_URL}/subscription/plans`, {
         headers: { 'Content-Type': 'application/json' }
       });
       const data = await res.json();
@@ -62,7 +75,7 @@ export const SubscriptionService = {
       const token = await AsyncStorage.getItem('@authtoken');
       if (token && token !== 'offline_authenticated_token') {
         try {
-          const res = await fetch(`${BASE_URL}/subscription/status`, {
+          const res = await fetchWithTimeout(`${BASE_URL}/subscription/status`, {
             headers: {
               'Content-Type': 'application/json',
               'Authorization': token.startsWith('Bearer ') ? token : `Bearer ${token}`

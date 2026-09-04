@@ -83,8 +83,8 @@ export default function HomeScreen({ navigation }) {
 
   const loadLastRead = async () => {
     try {
-      const saved = await AsyncStorage.getItem('@last_read_section');
-      if (saved) setLastRead(JSON.parse(saved));
+      const saved = await ApiService.history.getLastRead();
+      setLastRead(saved);
     } catch (e) {}
   };
 
@@ -124,12 +124,12 @@ export default function HomeScreen({ navigation }) {
   };
 
   const criminalLaws = [
-    { id: 'bns', code: 'BNS', title: 'Bharatiya\nNyaya Sanhita...', fullName: 'Bharatiya Nyaya Sanhita , 2023' },
-    { id: 'bnss', code: 'BNSS', title: 'Bharatiya\nNagarik Surak...', fullName: 'Bharatiya Nagarik Suraksha Sanhita , 2023' },
-    { id: 'bsa', code: 'BSA', title: 'Bharatiya\nSakshya Adhin...', fullName: 'Bharatiya Sakshya Adhiniyam , 2023' },
+    { id: 'bns', code: 'BNS', title: 'Bharatiya\nNyaya Sanhita', fullName: 'Bharatiya Nyaya Sanhita , 2023' },
+    { id: 'bnss', code: 'BNSS', title: 'Bharatiya\nNagarik Suraksha', fullName: 'Bharatiya Nagarik Suraksha Sanhita , 2023' },
+    { id: 'bsa', code: 'BSA', title: 'Bharatiya\nSakshya Adhiniyam', fullName: 'Bharatiya Sakshya Adhiniyam , 2023' },
     { id: 'ipc', code: 'IPC', title: 'Indian Penal\nCode , 1860', fullName: 'Indian Penal Code , 1860' },
-    { id: 'crpc', code: 'CrPC', title: 'Code of\nCriminal Proce...', fullName: 'Code of Criminal Procedure ,1973' },
-    { id: 'iea', code: 'IEA', title: 'India Evidence\nAct, 1872', fullName: 'India Evidence Act, 1872' },
+    { id: 'crpc', code: 'CrPC', title: 'Code of Criminal\nProcedure , 1973', fullName: 'Code of Criminal Procedure ,1973' },
+    { id: 'iea', code: 'IEA', title: 'Indian Evidence\nAct , 1872', fullName: 'India Evidence Act, 1872' },
   ];
 
   return (
@@ -205,12 +205,12 @@ export default function HomeScreen({ navigation }) {
           </TouchableOpacity>
         </View>
 
-                {/* Continue Reading Card (Matching Image 2) */}
-        <TouchableOpacity
-          style={styles.continueCard}
-          activeOpacity={0.85}
-          onPress={() => {
-            if (lastRead) {
+        {/* Continue Reading Card - Dynamic per user */}
+        {lastRead ? (
+          <TouchableOpacity
+            style={styles.continueCard}
+            activeOpacity={0.85}
+            onPress={() => {
               navigation.navigate('Sectiondetail', {
                 sectionData: lastRead.sectionData || {
                   name: lastRead.sectionNumber,
@@ -220,22 +220,37 @@ export default function HomeScreen({ navigation }) {
                 actTitle: lastRead.actTitle,
                 chapterName: lastRead.chapterName || 'Provisions'
               });
-            } else {
-              navigation.navigate('ActOptions', { actTitle: 'Bharatiya Nyaya Sanhita , 2023', actCode: 'BNS' });
-            }
-          }}
-        >
-          <View style={styles.continueTopRow}>
-            <Text style={styles.continueBadge}>CONTINUE READING</Text>
-            <Feather name="book-open" size={18} color="#25AAE2" />
-          </View>
-          <Text style={styles.continueSubtitle} numberOfLines={1}>
-            {lastRead ? lastRead.actTitle : 'Bharatiya Nyaya Sanhita , 2023'}
-          </Text>
-          <Text style={styles.continueTitle} numberOfLines={1}>
-            {lastRead ? `Section ${lastRead.sectionNumber}: ${lastRead.keyword || 'Punishments'}` : 'Section 4: Punishments'}
-          </Text>
-        </TouchableOpacity>
+            }}
+          >
+            <View style={styles.continueTopRow}>
+              <Text style={styles.continueBadge}>CONTINUE READING</Text>
+              <Feather name="book-open" size={18} color="#25AAE2" />
+            </View>
+            <Text style={styles.continueSubtitle} numberOfLines={1}>
+              {lastRead.actTitle}
+            </Text>
+            <Text style={styles.continueTitle} numberOfLines={1}>
+              {lastRead.title || `Section ${lastRead.sectionNumber}: ${lastRead.keyword || 'Provisions'}`}
+            </Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={styles.continueCard}
+            activeOpacity={0.85}
+            onPress={() => navigation.navigate('ActOptions', { act: criminalLaws[0] })}
+          >
+            <View style={styles.continueTopRow}>
+              <Text style={styles.continueBadge}>START READING</Text>
+              <Feather name="book-open" size={18} color="#25AAE2" />
+            </View>
+            <Text style={styles.continueSubtitle} numberOfLines={1}>
+              Explore Central Legislation
+            </Text>
+            <Text style={styles.continueTitle} numberOfLines={1}>
+              Tap any Act below to explore sections & provisions
+            </Text>
+          </TouchableOpacity>
+        )}
 
         {/* Section Heading */}
         <Text style={styles.sectionHeading}>
@@ -254,15 +269,19 @@ export default function HomeScreen({ navigation }) {
               <View style={styles.bookIllustrationContainer}>
                 <View style={styles.bookOuterCard}>
                   <View style={styles.bookLeftSpine} />
-                  <Text style={styles.bookCodeText}>{item.code}</Text>
+                  <Text style={[styles.bookCodeText, { fontSize: item.code.length > 3 ? 10.5 : 12 }]}>
+                    {item.code}
+                  </Text>
                   <View style={styles.bookDividerLine} />
-                  <View style={[styles.bookDividerLine, { width: 16, marginTop: 3 }]} />
+                  <View style={[styles.bookDividerLine, { width: 14, marginTop: 3 }]} />
                 </View>
               </View>
 
-              <Text style={styles.bookTitle} numberOfLines={2}>
-                {item.title}
-              </Text>
+              <View style={styles.bookTitleContainer}>
+                <Text style={styles.bookTitle} numberOfLines={2}>
+                  {item.title}
+                </Text>
+              </View>
             </TouchableOpacity>
           ))}
         </View>
@@ -423,18 +442,20 @@ const styles = StyleSheet.create({
   },
   bookCard: {
     width: CARD_WIDTH,
+    height: 148,
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 6,
+    paddingVertical: 12,
+    paddingHorizontal: 4,
     alignItems: 'center',
+    justifyContent: 'flex-start',
     marginBottom: 14,
     borderWidth: 1.5,
     borderColor: '#D8ECF7',
   },
   bookIllustrationContainer: {
-    width: 64,
-    height: 74,
+    width: 60,
+    height: 68,
     borderRadius: 12,
     backgroundColor: '#EDF7FC',
     alignItems: 'center',
@@ -442,8 +463,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   bookOuterCard: {
-    width: 44,
-    height: 56,
+    width: 48,
+    height: 54,
     backgroundColor: '#FFFFFF',
     borderRadius: 6,
     borderWidth: 1.5,
@@ -451,6 +472,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
+    paddingLeft: 3,
   },
   bookLeftSpine: {
     position: 'absolute',
@@ -462,23 +484,29 @@ const styles = StyleSheet.create({
     borderRadius: 1,
   },
   bookCodeText: {
-    fontSize: 12,
     fontWeight: '900',
     color: '#25AAE2',
-    marginBottom: 4,
+    marginBottom: 3,
+    textAlign: 'center',
   },
   bookDividerLine: {
-    width: 22,
+    width: 20,
     height: 2,
     backgroundColor: '#BAE6FD',
     borderRadius: 1,
   },
+  bookTitleContainer: {
+    height: 38,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   bookTitle: {
-    fontSize: 11,
+    fontSize: 10.5,
     fontWeight: '700',
     color: '#1E293B',
     textAlign: 'center',
-    lineHeight: 15,
+    lineHeight: 14,
   },
   actionPillBtn: {
     width: '100%',

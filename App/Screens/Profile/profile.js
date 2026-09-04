@@ -123,17 +123,21 @@ export default function ProfileScreen({ navigation }) {
         };
 
         setUser(mergedUser);
-        await AsyncStorage.setItem('@userprofile', JSON.stringify(mergedUser));
-
-        const totalRead = Number(liveData.readingHistoryCount || liveData.count?.current || 199);
-        const totalBm = Number(liveData.bookmarksCount || 0);
+        const userHist = await ApiService.history.getReadingHistory();
+        const userBms = await ApiService.bookmarks.getAll();
 
         setStats({
-          readCount: totalRead,
-          bookmarkCount: totalBm
+          readCount: userHist.length,
+          bookmarkCount: userBms.length
         });
       } else {
+        const userHist = await ApiService.history.getReadingHistory();
+        const userBms = await ApiService.bookmarks.getAll();
         setUser(initialUser);
+        setStats({
+          readCount: userHist.length,
+          bookmarkCount: userBms.length
+        });
       }
     } catch (e) {
       console.warn('Load user error:', e);

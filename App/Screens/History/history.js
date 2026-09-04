@@ -9,7 +9,7 @@ import {
   Alert
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ApiService } from '../../Services/apiService';
 
 export default function HistoryScreen({ navigation }) {
   const [history, setHistory] = useState([]);
@@ -24,41 +24,21 @@ export default function HistoryScreen({ navigation }) {
 
   const loadHistory = async () => {
     try {
-      const histStr = await AsyncStorage.getItem('@read_history');
-      if (histStr) {
-        setHistory(JSON.parse(histStr));
-      } else {
-        // Default sample fallback
-        setHistory([
-          {
-            actTitle: 'Bharatiya Nyaya Sanhita , 2023',
-            sectionNumber: '4',
-            keyword: 'Punishments',
-            title: 'Section 4: Punishments',
-            chapterName: 'Punishments',
-            timestamp: Date.now() - 1000 * 60 * 5
-          },
-          {
-            actTitle: 'Indian Penal Code , 1860',
-            sectionNumber: '369',
-            keyword: 'Kidnapping or abducting child under ten years',
-            title: 'Section 369: Kidnapping or abducting child under ten years',
-            chapterName: 'Offences against the Human Body',
-            timestamp: Date.now() - 1000 * 60 * 60 * 2
-          }
-        ]);
-      }
+      const hist = await ApiService.history.getReadingHistory();
+      setHistory(hist || []);
     } catch (e) {
       console.warn('Load history error:', e);
+      setHistory([]);
     }
   };
 
   const removeHistoryItem = async (indexToRemove) => {
     try {
-      const updated = history.filter((_, i) => i !== indexToRemove);
-      setHistory(updated);
-      await AsyncStorage.setItem('@read_history', JSON.stringify(updated));
-    } catch (e) {}
+      const updated = await ApiService.history.removeItem(indexToRemove);
+      setHistory(updated || []);
+    } catch (e) {
+      console.warn('Remove history error:', e);
+    }
   };
 
   const clearAllHistory = () => {
@@ -71,8 +51,8 @@ export default function HistoryScreen({ navigation }) {
           text: 'Clear All',
           style: 'destructive',
           onPress: async () => {
+            await ApiService.history.clearAll();
             setHistory([]);
-            await AsyncStorage.removeItem('@read_history');
           }
         }
       ]
