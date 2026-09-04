@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>THE-LAWMEN'S | Razorpay Web Checkout</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Razorpay Standard Checkout SDK -->
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4">
+
+  <div class="max-w-md w-full bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-2xl space-y-6">
+    <!-- Header -->
+    <div class="text-center">
+      <h1 class="text-2xl font-black text-white tracking-tight">THE-LAWMEN'S</h1>
+      <p class="text-xs text-sky-400 font-bold uppercase tracking-wider mt-1">Razorpay Standard Web Checkout</p>
+    </div>
+
+    <!-- Plan Selection -->
+    <div class="space-y-3">
+      <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Select Subscription Plan</label>
+      
+      <div class="p-3 bg-slate-900 border border-sky-500/50 rounded-xl flex items-center justify-between cursor-pointer">
+        <div>
+          <h3 class="font-bold text-sm text-white">Start up Plan</h3>
+          <p class="text-xs text-slate-400">Full 30-Day Legal Research Access</p>
+        </div>
+        <span class="text-lg font-black text-sky-400">₹1.00 <span class="text-xs text-slate-400">(Test)</span></span>
+      </div>
+    </div>
+
+    <!-- User Details Form -->
+    <div class="space-y-3">
+      <div>
+        <label class="block text-xs font-semibold text-slate-400 mb-1">Your Name</label>
+        <input id="userName" type="text" value="Advocate Sharma" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-sky-500">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-400 mb-1">Email Address</label>
+        <input id="userEmail" type="email" value="advocate@thelawmens.com" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-sky-500">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-slate-400 mb-1">Mobile Number</label>
+        <input id="userPhone" type="tel" value="9876543210" class="w-full px-3.5 py-2 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-sky-500">
+      </div>
+    </div>
+
+    <!-- Status Message -->
+    <div id="statusBox" class="hidden p-3 rounded-lg text-sm"></div>
+
+    <!-- Checkout Button -->
+    <button id="payBtn" onclick="initiateRazorpayCheckout()" class="w-full py-3.5 px-6 rounded-xl font-bold text-white bg-[#25AAE2] hover:bg-[#1E90C0] transition flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20">
+      <span>Proceed to Pay ₹1.00 via Razorpay →</span>
+    </button>
+
+    <p class="text-center text-[11px] text-slate-500">Secured with 256-bit Razorpay Payment Gateway</p>
+  </div>
+
+  <script>
+    async function initiateRazorpayCheckout() {
+      const payBtn = document.getElementById('payBtn');
+      const statusBox = document.getElementById('statusBox');
+      const name = document.getElementById('userName').value || 'Advocate';
+      const email = document.getElementById('userEmail').value || 'advocate@thelawmens.com';
+      const phone = document.getElementById('userPhone').value || '9876543210';
+
+      payBtn.disabled = true;
+      payBtn.innerHTML = 'Creating Order...';
+      statusBox.className = 'hidden';
+
+      try {
+        // STEP 1: Create Order on Backend
+        const res = await fetch('/api/v1/payments/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            amount: 1, // ₹1 (100 paise)
+            planId: 'startup_pass',
+            planName: 'Start up Plan',
+            email: email
+          })
+        });
+
+        const orderData = await res.json();
+        if (!orderData || !orderData.order_id && !orderData.id) {
+          throw new Error(orderData.message || 'Order creation failed');
+        }
+
+        const orderId = orderData.order_id || orderData.id;
+        const keyId = orderData.key || 'rzp_test_TXwX8ooQGH96ui';
+
+        payBtn.innerHTML = 'Opening Razorpay Modal...';
+
+        // STEP 2: Open Razorpay Checkout Modal
+        const options = {
+          key: keyId,
+          amount: orderData.amount,
+          currency: orderData.currency || 'INR',
+          name: "THE-LAWMEN'S",
+          description: "Start up Plan Subscription",
+          order_id: orderId,
+          prefill: {
+            name: name,
+            email: email,
+            contact: phone
+          },
+          theme: {
+            color: "#25AAE2"
+          },
+          modal: {
+            ondismiss: function() {
+              payBtn.disabled = false;
+              payBtn.innerHTML = 'Proceed to Pay ₹1.00 via Razorpay →';
+              statusBox.className = 'p-3 bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-lg text-xs';
+              statusBox.innerText = 'Payment window was closed by user.';
+            }
+          },
+          handler: async function (response) {
+            // STEP 3: Verify Payment Signature on Backend
+            payBtn.innerHTML = 'Verifying Payment Signature...';
+            try {
+              const verifyRes = await fetch('/api/v1/payments/verify-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  razorpay_order_id: response.razorpay_order_id,
+                  razorpay_payment_id: response.razorpay_payment_id,
+                  razorpay_signature: response.razorpay_signature,
+                  baseAmount: 1,
+                  planId: 'startup_pass',
+                  planName: 'Start up Plan',
+                  validityDays: 30,
+                  email: email
+                })
+              });
+
+              const verifyData = await verifyRes.json();
+              if (verifyData && verifyData.status) {
+                statusBox.className = 'p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 rounded-lg text-xs';
+                statusBox.innerHTML = '<strong>Payment Verified Successfully! 🎉</strong><br>Payment ID: ' + response.razorpay_payment_id + '<br>Subscription Active for 30 Days.';
+              } else {
+                throw new Error(verifyData.message || 'Signature verification failed');
+              }
+            } catch (err) {
+              statusBox.className = 'p-3 bg-rose-500/10 border border-rose-500/30 text-rose-300 rounded-lg text-xs';
+              statusBox.innerText = 'Verification Error: ' + err.message;
+            } finally {
+              payBtn.disabled = false;
+              payBtn.innerHTML = 'Proceed to Pay ₹1.00 via Razorpay →';
+            }
+          }
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.on('payment.failed', function (resp) {
+          statusBox.className = 'p-3 bg-rose-500/10 border border-rose-500/30 text-rose-300 rounded-lg text-xs';
+          statusBox.innerText = 'Payment Failed: ' + (resp.error?.description || 'Transaction declined');
+          payBtn.disabled = false;
+          payBtn.innerHTML = 'Proceed to Pay ₹1.00 via Razorpay →';
+        });
+
+        rzp.open();
+      } catch (err) {
+        statusBox.className = 'p-3 bg-rose-500/10 border border-rose-500/30 text-rose-300 rounded-lg text-xs';
+        statusBox.innerText = 'Error: ' + err.message;
+        payBtn.disabled = false;
+        payBtn.innerHTML = 'Proceed to Pay ₹1.00 via Razorpay →';
+      }
+    }
+  </script>
+</body>
+</html>

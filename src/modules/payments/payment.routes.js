@@ -2,12 +2,11 @@ const router = require('express').Router();
 const { auth } = require('../../../middleware/auth.middleware');
 const paymentController = require('./payment.controller');
 
-// Optional auth for order creation and verification (supports guest & registered checkouts)
+// Optional auth for order creation and verification (supports both guest and authenticated users)
 const optionalAuth = (req, res, next) => {
     const authHeader = req.headers.authorization;
     if (authHeader) {
         return auth(req, res, (err) => {
-            // Proceed even if token is expired/invalid so guest checkout doesn't fail
             next();
         });
     }

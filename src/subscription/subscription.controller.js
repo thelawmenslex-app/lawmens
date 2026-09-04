@@ -163,38 +163,74 @@ const verifyGooglePlaySubscription = async (req, res) => {
 
 const getSubscriptionStatus = async (req, res) => {
     try {
-        const { profile } = req;
+        const { userId, profile } = req;
+        const User = require('../models/user');
         const SubscriptionHistory = require('../models/subscriptionHistory');
         const Subscription = require('../models/subscription');
 
-        const isPremium = profile?.isPremium === true;
-        const createdAt = profile?.createdAt ? new Date(profile.createdAt) : new Date();
-        const fallbackTrialEnd = new Date(createdAt.getTime() + 7 * 24 * 60 * 60 * 1000);
-        const expiryDate = profile?.trialEndDate ? new Date(profile.trialEndDate) : fallbackTrialEnd;
-        
-        const now = new Date();
-        const isExpired = now > expiryDate;
-        const daysRemaining = !isExpired ? Math.max(0, Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0;
-
-        let activePlan = null;
-        if (profile?.subscriptionId) {
-            activePlan = await Subscription.findById(profile.subscriptionId).lean();
+        let user = null;
+        if (userId) {
+            user = await User.findById(userId).lean();
+        } else if (profile?._id) {
+            user = await User.findById(profile._id).lean();
         }
 
-        const history = await SubscriptionHistory.find({ userId: profile._id }).sort({ createdAt: -1 }).lean();
+        if (!user && profile) user = profile;
+
+        const now = new Date();
+        const createdAt = user?.createdAt ? new Date(user.createdAt) : now;
+        
+        // Strict 3-day trial end date calculated from account creation
+        const trialEndDate = user?.trialEndDate ? new Date(user.trialEndDate) : new Date(createdAt.getTime() + 3 * 24 * 60 * 60 * 1000);
+        
+        const isPremium = user?.isPremium === true;
+        let isExpired = false;
+        let hasAccess = true;
+        let isTrial = false;
+        let daysRemaining = 0;
+        let reason = 'trial_active';
+
+        if (isPremium) {
+            const subscriptionExpiry = user?.subscriptionExpiresAt ? new Date(user.subscriptionExpiresAt) : trialEndDate;
+            isExpired = now > subscriptionExpiry;
+            hasAccess = !isExpired;
+            isTrial = false;
+            daysRemaining = !isExpired ? Math.max(0, Math.ceil((subscriptionExpiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0;
+            reason = isExpired ? 'subscription_expired' : 'premium_active';
+        } else {
+            // Free Trial evaluation (Strict 3 Days)
+            isExpired = now > trialEndDate;
+            hasAccess = !isExpired;
+            isTrial = true;
+            daysRemaining = !isExpired ? Math.max(0, Math.ceil((trialEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0;
+            reason = isExpired ? 'trial_expired' : 'trial_active';
+        }
+
+        let activePlan = null;
+        if (user?.subscriptionId) {
+            activePlan = await Subscription.findById(user.subscriptionId).lean();
+        }
+
+        const history = user?._id ? await SubscriptionHistory.find({ userId: user._id }).sort({ createdAt: -1 }).lean() : [];
 
         return sendResponse(res, true, 200, 'Subscription status retrieved.', {
-            isPremium: isPremium && !isExpired,
-            isExpired: isExpired,
-            purchasedDate: profile?.premiumPurchaseDate || profile?.createdAt,
-            expiryDate: expiryDate,
-            daysRemaining: daysRemaining,
-            paymentId: profile?.premiumPaymentId || "FREE_TRIAL",
-            planName: activePlan ? activePlan.name : (isPremium ? "Premium License" : "7-Day Free Trial"),
-            planPrice: activePlan ? activePlan.price : 0,
-            validityDays: activePlan ? activePlan.validity : 7,
-            planType: activePlan ? activePlan.planType : "trial",
-            history: history
+            hasAccess,
+            isPremium,
+            isTrial,
+            isExpired,
+            canAccessMinorActs: isPremium && !isExpired,
+            daysRemaining,
+            reason,
+            serverTime: now.toISOString(),
+            trialStartDate: createdAt.toISOString(),
+            trialEndDate: trialEndDate.toISOString(),
+            purchasedDate: user?.premiumPurchaseDate || user?.createdAt,
+            expiryDate: trialEndDate.toISOString(),
+            paymentId: user?.premiumPaymentId || "FREE_TRIAL",
+            planName: activePlan ? activePlan.name : (isPremium ? "Premium License" : (isExpired ? "Trial Expired" : "3-Day Free Trial")),
+            planPrice: activePlan ? activePlan.price : 1500,
+            validityDays: activePlan ? activePlan.validity : (isPremium ? 30 : 3),
+            history
         });
     } catch (error) {
         return errorHandler(error, res);
