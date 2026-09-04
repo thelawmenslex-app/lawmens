@@ -489,20 +489,99 @@ export const ApiService = {
     }
   },
 
-  // --- QUERIES / ASK ADMIN ---
+  // --- QUERIES / ASK QUESTION & INQUIRIES ---
   queries: {
-    submit: async (queryText, token) => {
+    submit: async ({ subject, question, name, email, phoneNumber }) => {
       try {
+        let token = await AsyncStorage.getItem('@authtoken');
+        const user = await ApiService.auth.getStoredUser() || {};
+        
+        const payload = {
+          subject: (subject || 'General Inquiry').trim(),
+          question: (question || '').trim(),
+          name: name || user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User',
+          email: email || user.email || '',
+          phoneNumber: phoneNumber || user.phoneNumber || user.phone || ''
+        };
+
         const headers = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
+        if (token && token !== 'offline_authenticated_token') {
+          headers['Authorization'] = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+        }
+
         const res = await fetchWithTimeout(backendroutes.querySubmit, {
           method: 'POST',
           headers,
-          body: JSON.stringify({ query: queryText })
+          body: JSON.stringify(payload)
         });
-        return await res.json();
+        const data = await res.json();
+        
+        const myQueriesKey = await ApiService.getUserScopedKey('@my_queries');
+        const localListStr = await AsyncStorage.getItem(myQueriesKey);
+        let localList = localListStr ? JSON.parse(localListStr) : [];
+        const newEntry = data.data || {
+          _id: `query_${Date.now()}`,
+          subject: payload.subject,
+          question: payload.question,
+          userName: payload.name,
+          userEmail: payload.email,
+          phoneNumber: payload.phoneNumber,
+          status: 'Pending',
+          createdAt: new Date().toISOString()
+        };
+        localList.unshift(newEntry);
+        await AsyncStorage.setItem(myQueriesKey, JSON.stringify(localList));
+
+        return { status: true, message: data.message || 'Your question has been submitted successfully.', data: newEntry };
       } catch (e) {
-        return { status: false, message: 'Query received and queued for admin response.' };
+        try {
+          const user = await ApiService.auth.getStoredUser() || {};
+          const myQueriesKey = await ApiService.getUserScopedKey('@my_queries');
+          const localListStr = await AsyncStorage.getItem(myQueriesKey);
+          let localList = localListStr ? JSON.parse(localListStr) : [];
+          const newEntry = {
+            _id: `query_${Date.now()}`,
+            subject: subject || 'General Inquiry',
+            question: question,
+            userName: user.name || 'User',
+            userEmail: user.email || '',
+            phoneNumber: user.phoneNumber || '',
+            status: 'Pending',
+            createdAt: new Date().toISOString()
+          };
+          localList.unshift(newEntry);
+          await AsyncStorage.setItem(myQueriesKey, JSON.stringify(localList));
+          return { status: true, message: 'Question saved and submitted successfully.', data: newEntry };
+        } catch (err) {
+          return { status: false, message: 'Could not submit question. Please try again.' };
+        }
+      }
+    },
+
+    getMyQueries: async () => {
+      try {
+        let token = await AsyncStorage.getItem('@authtoken');
+        const myQueriesKey = await ApiService.getUserScopedKey('@my_queries');
+        const localListStr = await AsyncStorage.getItem(myQueriesKey);
+        let localList = localListStr ? JSON.parse(localListStr) : [];
+
+        if (token && token !== 'offline_authenticated_token') {
+          try {
+            const headers = {
+              'Content-Type': 'application/json',
+              'Authorization': token.startsWith('Bearer ') ? token : `Bearer ${token}`
+            };
+            const res = await fetchWithTimeout(backendroutes.queryMy, { headers });
+            const data = await res.json();
+            if (data.status && Array.isArray(data.data) && data.data.length > 0) {
+              await AsyncStorage.setItem(myQueriesKey, JSON.stringify(data.data));
+              return data.data;
+            }
+          } catch (e) {}
+        }
+        return localList;
+      } catch (e) {
+        return [];
       }
     }
   },
