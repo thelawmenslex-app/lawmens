@@ -98,24 +98,6 @@ export default function SideDrawerModal({ visible, onClose, navigation }) {
 
             <TouchableOpacity
               style={styles.menuItem}
-              onPress={() => navigateTo('MinorActs')}
-            >
-              <Feather name="book" size={20} color="#25AAE2" style={styles.menuItemIcon} />
-              <Text style={styles.menuItemText}>Criminal Minor Acts</Text>
-              <Feather name="arrow-right" size={18} color="#94A3B8" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.menuItem}
-              onPress={() => navigateTo('Schedules')}
-            >
-              <Feather name="calendar" size={20} color="#25AAE2" style={styles.menuItemIcon} />
-              <Text style={styles.menuItemText}>First & Second Schedules</Text>
-              <Feather name="arrow-right" size={18} color="#94A3B8" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.menuItem}
               onPress={() => navigateTo('Contact')}
             >
               <Feather name="mail" size={20} color="#25AAE2" style={styles.menuItemIcon} />
