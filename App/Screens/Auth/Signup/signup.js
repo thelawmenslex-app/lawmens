@@ -120,7 +120,7 @@ export default function SignupScreen({ navigation }) {
       {/* Top Header */}
       <View style={styles.headerRow}>
         <Text style={styles.brandTitle}>THE-LAWMEN'S</Text>
-        <MaterialCommunityIcons name="star-four-points" size={24} color="#382D21" style={styles.sparkleIcon} />
+        <MaterialCommunityIcons name="scale-balance" size={26} color="#25AAE2" style={styles.sparkleIcon} />
       </View>
 
       <ScrollView
