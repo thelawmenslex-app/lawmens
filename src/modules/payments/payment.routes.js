@@ -14,6 +14,7 @@ const optionalAuth = (req, res, next) => {
 };
 
 // 1. Create Razorpay Order
+router.get('/checkout-page', paymentController.renderCheckoutPage);
 router.post('/create-order', optionalAuth, paymentController.createOrder);
 
 // 2. Verify Razorpay Payment signature

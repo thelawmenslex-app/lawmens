@@ -418,7 +418,12 @@ const verifyMobilePurchase = async (req, res) => {
     }
 };
 
+const renderCheckoutPage = (req, res) => {
+    res.sendFile(path.join(__dirname, '../../../public/checkout.html'));
+};
+
 module.exports = {
+    renderCheckoutPage,
     createOrder,
     verifyPayment,
     handleWebhook,

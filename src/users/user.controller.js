@@ -431,24 +431,28 @@ const getPublicSignupConfig = async (req, res) => {
 
 const submitQuery = async (req, res) => {
     try {
-        const { body: { subject, question }, profile } = req;
+        const { body: { subject, question, userName, userEmail, phoneNumber, name, email }, profile } = req;
         const targetUserId = req.userId || profile?._id || req.user?._id;
         if (!subject || !question) {
             return sendResponse(res, false, 400, 'Subject and question details are required.');
         }
 
         const UserQuery = require('../models/userQuery');
+        const finalName = name || userName || `${profile?.firstName || ''} ${profile?.lastName || ''}`.trim() || profile?.name || 'User';
+        const finalEmail = email || userEmail || profile?.email || '';
+        const finalPhone = phoneNumber || profile?.phoneNumber || profile?.phone || '';
+
         const queryDoc = await UserQuery.create({
             userId: targetUserId,
-            userName: `${profile?.firstName || ''} ${profile?.lastName || ''}`.trim() || 'User',
-            userEmail: profile?.email || '',
-            phoneNumber: profile?.phoneNumber || '',
+            userName: finalName,
+            userEmail: finalEmail,
+            phoneNumber: String(finalPhone),
             subject,
             question,
             status: 'Pending'
         });
 
-        return sendResponse(res, true, 200, 'Your query has been submitted successfully to the Admin team.', queryDoc);
+        return sendResponse(res, true, 200, 'Your query has been submitted successfully.', queryDoc);
     } catch (error) {
         return errorHandler(error, res);
     }
