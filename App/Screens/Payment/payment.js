@@ -143,14 +143,14 @@ export default function PaymentScreen({ route, navigation }) {
     }
   };
 
-  const getRazorpayHtml = () => {
-    const key = razorpayOrder?.key || 'rzp_test_TVb8DvbczBMMAK';
+    const getRazorpayHtml = () => {
+    const key = razorpayOrder?.key || RAZORPAY_KEY_ID || 'rzp_test_TVb8DvbczBMMAK';
     const amount = razorpayOrder?.amount || ((plan.price || 1500) * 100);
     const orderId = razorpayOrder?.id || '';
     const planName = plan.name || 'Start up';
     const validity = plan.validity || 30;
-    const name = userProfile.name || 'User';
-    const email = userProfile.email || 'user@example.com';
+    const name = userProfile.name || 'Advocate';
+    const email = userProfile.email || 'advocate@thelawmens.com';
     const phone = userProfile.phone || '9876543210';
 
     return '<!DOCTYPE html>' +
@@ -170,8 +170,8 @@ export default function PaymentScreen({ route, navigation }) {
       '<div class="card">' +
       '<div class="loader"></div>' +
       '<h3>THE-LAWMEN\'S</h3>' +
-      '<p>Opening Razorpay Checkout Gateway...</p>' +
-      '<button class="btn" onclick="openCheckout()">Tap if checkout doesn\'t open</button>' +
+      '<p>Connecting to Razorpay Secure Gateway...</p>' +
+      '<button class="btn" onclick="openCheckout()">Tap if modal does not open</button>' +
       '</div>' +
       '<script>' +
       'var options = {' +
@@ -179,7 +179,7 @@ export default function PaymentScreen({ route, navigation }) {
       '  amount: ' + amount + ',' +
       '  currency: "INR",' +
       '  name: "THE-LAWMEN\'S",' +
-      '  description: "' + planName + ' - ' + validity + ' Days Full Access",' +
+      '  description: "' + planName + ' - ' + validity + ' Days Access",' +
       (orderId ? '  order_id: "' + orderId + '",' : '') +
       '  prefill: {' +
       '    name: "' + name + '",' +
@@ -197,12 +197,21 @@ export default function PaymentScreen({ route, navigation }) {
       '    }' +
       '  }' +
       '};' +
-      'var rzp = new Razorpay(options);' +
-      'rzp.on("payment.failed", function(response) {' +
-      '  console.log("Failed:", response.error);' +
-      '});' +
-      'function openCheckout() { try { rzp.open(); } catch(e) { console.log(e); } }' +
-      'window.onload = function() { setTimeout(openCheckout, 300); };' +
+      'var rzp = null;' +
+      'function openCheckout() {' +
+      '  try {' +
+      '    if (!rzp) {' +
+      '      rzp = new Razorpay(options);' +
+      '      rzp.on("payment.failed", function(response) {' +
+      '        console.log("Payment Failed:", response.error);' +
+      '      });' +
+      '    }' +
+      '    rzp.open();' +
+      '  } catch(e) {' +
+      '    console.error("Razorpay open error:", e);' +
+      '  }' +
+      '}' +
+      'window.onload = function() { setTimeout(openCheckout, 200); };' +
       '</script></body></html>';
   };
 
@@ -303,7 +312,7 @@ export default function PaymentScreen({ route, navigation }) {
             </TouchableOpacity>
           </View>
           <WebView
-            source={{ html: getRazorpayHtml() }}
+            source={{ html: getRazorpayHtml(), baseUrl: 'https://api.razorpay.com' }}
             onMessage={handleWebViewMessage}
             javaScriptEnabled={true}
             domStorageEnabled={true}
