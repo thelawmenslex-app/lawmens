@@ -24,17 +24,42 @@ export default function PaymentScreen({ route, navigation }) {
   const [razorpayOrder, setRazorpayOrder] = useState(null);
   const [userProfile, setUserProfile] = useState({ name: 'User', email: 'user@example.com', phone: '9876543210' });
 
-  useEffect(() => {
+    useEffect(() => {
     (async () => {
       try {
+        // 1. Check local storage
         const userStr = await AsyncStorage.getItem('@userprofile');
         if (userStr) {
           const u = JSON.parse(userStr);
           setUserProfile({
-            name: (u.firstName ? u.firstName + ' ' + (u.lastName || '') : 'User').trim(),
-            email: u.email || 'user@example.com',
-            phone: u.phone || '9876543210'
+            name: ((u.firstName || '') + ' ' + (u.lastName || '')).trim() || u.name || 'Advocate',
+            email: u.email || 'advocate@thelawmens.com',
+            phone: u.phone || u.phoneNumber || '9876543210'
           });
+        }
+
+        // 2. Fetch live real-time profile from MongoDB backend if token exists
+        const token = await AsyncStorage.getItem('@authtoken');
+        if (token && token !== 'offline_authenticated_token') {
+          try {
+            const res = await fetch(`${BASE_URL}/user/profile`, {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': token.startsWith('Bearer ') ? token : `Bearer ${token}`
+              }
+            });
+            const pData = await res.json();
+            if (pData && pData.data) {
+              const u = pData.data;
+              const realProfile = {
+                name: ((u.firstName || '') + ' ' + (u.lastName || '')).trim() || u.name || 'Advocate',
+                email: u.email || 'advocate@thelawmens.com',
+                phone: u.phoneNumber || u.phone || '9876543210'
+              };
+              setUserProfile(realProfile);
+              await AsyncStorage.setItem('@userprofile', JSON.stringify(u));
+            }
+          } catch (liveErr) {}
         }
       } catch (e) {}
     })();
