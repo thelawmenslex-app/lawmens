@@ -243,16 +243,24 @@ export default function SignupScreen({ navigation }) {
         </View>
 
         {/* Terms and conditions checkbox */}
-        <TouchableOpacity
-          style={styles.termsRow}
-          activeOpacity={0.8}
-          onPress={() => setTermsAccepted(!termsAccepted)}
-        >
-          <View style={[styles.checkbox, termsAccepted && styles.checkboxActive]}>
-            {termsAccepted && <Icon name="checkmark-outline" size={14} color="#FFFFFF" />}
-          </View>
-          <Text style={styles.termsLink}>Terms and conditions</Text>
-        </TouchableOpacity>
+        <View style={styles.termsRow}>
+          <TouchableOpacity
+            onPress={() => setTermsAccepted(!termsAccepted)}
+            activeOpacity={0.8}
+            style={{ paddingRight: 8, paddingVertical: 4 }}
+          >
+            <View style={[styles.checkbox, termsAccepted && styles.checkboxActive]}>
+              {termsAccepted && <Icon name="checkmark-outline" size={14} color="#FFFFFF" />}
+            </View>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => navigation.navigate('TermsAndConditions')}
+            activeOpacity={0.7}
+            style={{ paddingVertical: 4 }}
+          >
+            <Text style={styles.termsLink}>Terms and conditions</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Signup Button */}
         <TouchableOpacity

@@ -125,6 +125,15 @@ export default function SideDrawerModal({ visible, onClose, navigation }) {
 
             <TouchableOpacity
               style={styles.menuItem}
+              onPress={() => navigateTo('TermsAndConditions')}
+            >
+              <Feather name="file-text" size={20} color="#25AAE2" style={styles.menuItemIcon} />
+              <Text style={styles.menuItemText}>Terms & Conditions</Text>
+              <Feather name="arrow-right" size={18} color="#94A3B8" />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.menuItem}
               onPress={() => navigateTo('PrivacyPolicy')}
             >
               <Feather name="shield" size={20} color="#25AAE2" style={styles.menuItemIcon} />

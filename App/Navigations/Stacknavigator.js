@@ -35,6 +35,7 @@ import AboutScreen from '../Screens/CMS/about';
 import PrivacyPolicyScreen from '../Screens/CMS/privacy';
 import DisclaimerScreen from '../Screens/CMS/disclaimer';
 import ContactScreen from '../Screens/CMS/contact';
+import TermsAndConditionsScreen from '../Screens/CMS/terms';
 
 const Stack = createStackNavigator();
 
@@ -105,6 +106,8 @@ export default function Routes() {
         <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
         <Stack.Screen name="Disclaimer" component={DisclaimerScreen} />
         <Stack.Screen name="Contact" component={ContactScreen} />
+        <Stack.Screen name="TermsAndConditions" component={TermsAndConditionsScreen} />
+        <Stack.Screen name="Terms" component={TermsAndConditionsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
