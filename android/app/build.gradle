@@ -38,8 +38,12 @@ android {
         release {
             signingConfig signingConfigs.debug
             minifyEnabled false
+            crunchPngs false
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
+    }
+    aaptOptions {
+        cruncherEnabled = false
     }
 }
 
