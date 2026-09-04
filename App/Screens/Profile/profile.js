@@ -178,7 +178,7 @@ export default function ProfileScreen({ navigation }) {
       setUser({ ...user, ...payload, phone: payload.phoneNumber });
       await AsyncStorage.setItem('@userprofile', JSON.stringify({ ...user, ...payload }));
 
-      Alert.alert('Success', 'Profile details updated and synchronized successfully with Admin Portal.');
+      Alert.alert('Success', 'Profile details updated successfully.');
     } catch (e) {
       setSaving(false);
       setIsEditing(false);
@@ -332,7 +332,7 @@ export default function ProfileScreen({ navigation }) {
               <ActivityIndicator color="#FFFFFF" size="small" />
             ) : (
               <Text style={styles.editBtnText}>
-                {isEditing ? 'Save to Admin Portal' : 'Edit Profile'}
+                {isEditing ? 'Save Changes' : 'Edit Profile'}
               </Text>
             )}
           </TouchableOpacity>

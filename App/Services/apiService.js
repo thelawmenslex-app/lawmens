@@ -236,7 +236,7 @@ export const ApiService = {
         };
         await AsyncStorage.setItem('@userprofile', JSON.stringify(merged));
 
-        return { success: true, message: 'Profile details updated and synchronized successfully with Admin Portal.' };
+        return { success: true, message: 'Profile details updated successfully.' };
       } catch (e) {
         return { success: true, message: 'Profile details saved.' };
       }

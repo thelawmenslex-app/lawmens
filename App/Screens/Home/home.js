@@ -120,7 +120,7 @@ export default function HomeScreen({ navigation }) {
     setSynced(false);
     await SyncService.pullLatestChanges();
     setSynced(true);
-    Alert.alert('Synced', 'Synchronized with Admin Portal.');
+    Alert.alert('Synced', 'Synchronized successfully.');
   };
 
   const criminalLaws = [
