@@ -1,6 +1,8 @@
 export const RAZORPAY_KEY_ID = 'rzp_live_TXxg1ZquvFEEAn';
 export const Imageurl = 'https://lawmens-1.onrender.com';
 export const BASE_URL = 'https://lawmens-1.onrender.com/api/v1';
+export const WEBSITE_URL = 'https://thelawmens.com';
+export const WEBSITE_CHECKOUT_URL = 'https://thelawmens.com/checkout';
 
 export const backendroutes = {
   register: `${BASE_URL}/user/register`,
