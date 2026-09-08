@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,12 +6,75 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  StatusBar
+  StatusBar,
+  Animated,
+  Easing
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 export default function WelcomeScreen({ navigation }) {
+  const floatAnim = useRef(new Animated.Value(0)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const floatLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(floatAnim, {
+          toValue: 1,
+          duration: 2000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+        Animated.timing(floatAnim, {
+          toValue: 0,
+          duration: 2000,
+          easing: Easing.inOut(Easing.sin),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    const rotateLoop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(rotateAnim, {
+          toValue: 1,
+          duration: 3000,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(rotateAnim, {
+          toValue: -1,
+          duration: 3000,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ])
+    );
+
+    floatLoop.start();
+    rotateLoop.start();
+
+    return () => {
+      floatLoop.stop();
+      rotateLoop.stop();
+    };
+  }, []);
+
+  const translateY = floatAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -10],
+  });
+
+  const rotateY = rotateAnim.interpolate({
+    inputRange: [-1, 0, 1],
+    outputRange: ['-10deg', '0deg', '10deg'],
+  });
+
+  const scale = floatAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.03],
+  });
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#EDF7FC" />
@@ -27,8 +90,20 @@ export default function WelcomeScreen({ navigation }) {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Center Circular LM Logo */}
-        <View style={styles.logoCircleWrapper}>
+        {/* Center Circular LM Logo with 3D Float & Depth */}
+        <Animated.View
+          style={[
+            styles.logoCircleWrapper,
+            {
+              transform: [
+                { perspective: 800 },
+                { translateY },
+                { rotateY },
+                { scale },
+              ],
+            },
+          ]}
+        >
           <View style={styles.logoCircle}>
             <Image
               source={require('../../Assets/Icons/logo.png')}
@@ -36,7 +111,7 @@ export default function WelcomeScreen({ navigation }) {
               resizeMode="contain"
             />
           </View>
-        </View>
+        </Animated.View>
 
         {/* Title */}
         <Text style={styles.mainTitle}>Explore the app</Text>

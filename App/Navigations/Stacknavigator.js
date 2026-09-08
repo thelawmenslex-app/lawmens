@@ -48,7 +48,46 @@ import {
   SessionExpiredScreen
 } from '../Screens/StateScreens';
 
+import LawAnimation3D from '../Components/LawAnimation3D';
+
 const Stack = createStackNavigator();
+
+// 3D Perspective Card Transition Interpolator
+const custom3DCardInterpolator = ({ current, next, layouts }) => {
+  const progress = current.progress;
+
+  const translateX = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [layouts.screen.width, 0],
+  });
+
+  const scale = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.93, 1],
+  });
+
+  const rotateY = progress.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['12deg', '0deg'],
+  });
+
+  const opacity = progress.interpolate({
+    inputRange: [0, 0.35, 1],
+    outputRange: [0, 0.6, 1],
+  });
+
+  return {
+    cardStyle: {
+      opacity,
+      transform: [
+        { translateX },
+        { scale },
+        { perspective: 1000 },
+        { rotateY },
+      ],
+    },
+  };
+};
 
 export default function Routes() {
   const [initialRoute, setInitialRoute] = useState(null);
@@ -59,7 +98,7 @@ export default function Routes() {
     fcmNotificationService.checkAndRequestPermission();
   }, []);
 
-      const checkAuthSession = async () => {
+  const checkAuthSession = async () => {
     try {
       const token = await AsyncStorage.getItem('@authtoken');
       if (token) {
@@ -80,14 +119,21 @@ export default function Routes() {
   if (!initialRoute) {
     return (
       <View style={{ flex: 1, backgroundColor: '#181A20', alignItems: 'center', justifyContent: 'center' }}>
-        <ActivityIndicator size="large" color="#25AAE2" />
+        <LawAnimation3D size={100} color="#25AAE2" />
       </View>
     );
   }
 
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName={initialRoute} screenOptions={{ headerShown: false }}>
+      <Stack.Navigator
+        initialRouteName={initialRoute}
+        screenOptions={{
+          headerShown: false,
+          cardStyleInterpolator: custom3DCardInterpolator,
+          gestureEnabled: true
+        }}
+      >
         <Stack.Screen name="Welcome" component={WelcomeScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Signup" component={SignupScreen} />

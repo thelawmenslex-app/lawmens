@@ -18,6 +18,7 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import Feather from 'react-native-vector-icons/Feather';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import SideDrawerModal from '../../Components/SideDrawer';
+import Card3D from '../../Components/Card3D';
 import { SubscriptionService } from '../../Services/subscriptionService';
 
 const { width } = Dimensions.get('window');
@@ -207,7 +208,7 @@ export default function HomeScreen({ navigation }) {
 
         {/* Continue Reading Card - Dynamic per user */}
         {lastRead ? (
-          <TouchableOpacity
+          <Card3D
             style={styles.continueCard}
             activeOpacity={0.85}
             onPress={() => {
@@ -232,9 +233,9 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.continueTitle} numberOfLines={1}>
               {lastRead.title || `Section ${lastRead.sectionNumber}: ${lastRead.keyword || 'Provisions'}`}
             </Text>
-          </TouchableOpacity>
+          </Card3D>
         ) : (
-          <TouchableOpacity
+          <Card3D
             style={styles.continueCard}
             activeOpacity={0.85}
             onPress={() => navigation.navigate('ActOptions', { act: criminalLaws[0] })}
@@ -249,7 +250,7 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.continueTitle} numberOfLines={1}>
               Tap any Act below to explore sections & provisions
             </Text>
-          </TouchableOpacity>
+          </Card3D>
         )}
 
         {/* Section Heading */}
@@ -260,7 +261,7 @@ export default function HomeScreen({ navigation }) {
         {/* 3-Column Law Book Grid */}
         <View style={styles.gridContainer}>
           {criminalLaws.map((item) => (
-            <TouchableOpacity
+            <Card3D
               key={item.id}
               style={styles.bookCard}
               activeOpacity={0.8}
@@ -282,29 +283,29 @@ export default function HomeScreen({ navigation }) {
                   {item.title}
                 </Text>
               </View>
-            </TouchableOpacity>
+            </Card3D>
           ))}
         </View>
 
         {/* Central Criminal Minor Acts Action Button (Page 6) */}
-        <TouchableOpacity
+        <Card3D
           style={styles.actionPillBtn}
           activeOpacity={0.85}
           onPress={() => navigation.navigate('MinorActs')}
         >
           <Feather name="book" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
           <Text style={styles.actionPillText}>Central Criminal Minor Acts</Text>
-        </TouchableOpacity>
+        </Card3D>
 
         {/* Ask Question Action Button (Page 6) */}
-        <TouchableOpacity
+        <Card3D
           style={styles.actionPillBtn}
           activeOpacity={0.85}
           onPress={() => navigation.navigate('Contact')}
         >
           <MaterialCommunityIcons name="chat-question-outline" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
           <Text style={styles.actionPillText}>Ask Question</Text>
-        </TouchableOpacity>
+        </Card3D>
       </ScrollView>
           {/* In-App Broadcast Popup Alert */}
       <Modal

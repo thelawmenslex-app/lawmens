@@ -9,6 +9,7 @@ import {
   Image
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import LawAnimation3D from '../../Components/LawAnimation3D';
 
 export default function LoadingScreen({ route, navigation }) {
   const {
@@ -34,13 +35,10 @@ export default function LoadingScreen({ route, navigation }) {
       </View>
 
       <View style={styles.content}>
-        {/* Animated Scales Icon Circle */}
-        <View style={styles.iconCircle}>
-          <MaterialCommunityIcons name="scale-balance" size={54} color="#25AAE2" />
+        {/* 3D Animated Scales of Justice */}
+        <View style={{ marginBottom: 24, alignItems: 'center' }}>
+          <LawAnimation3D size={100} color="#25AAE2" />
         </View>
-
-        {/* Activity Indicator */}
-        <ActivityIndicator size="large" color="#25AAE2" style={styles.spinner} />
 
         {/* Texts */}
         <Text style={styles.title}>{title}</Text>
