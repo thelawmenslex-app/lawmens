@@ -14,6 +14,17 @@ const fetchWithTimeout = async (url, options = {}, timeoutMs = 2500) => {
   }
 };
 
+const formatDate = (dateVal) => {
+  if (!dateVal) return '';
+  try {
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return String(dateVal);
+    return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  } catch (e) {
+    return String(dateVal);
+  }
+};
+
 export const SubscriptionService = {
   // Fetch live active subscription plans
   getAvailablePlans: async () => {
@@ -76,6 +87,9 @@ export const SubscriptionService = {
                 await AsyncStorage.setItem('@userprofile', JSON.stringify(user));
               }
 
+              const pDate = serverData.purchasedDate || user?.premiumPurchaseDate || user?.createdAt || new Date();
+              const expDate = serverData.expiryDate || (serverData.daysRemaining ? new Date(Date.now() + Number(serverData.daysRemaining) * 24 * 60 * 60 * 1000) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
+
               return {
                 hasAccess: true,
                 isTrial: false,
@@ -84,11 +98,11 @@ export const SubscriptionService = {
                 isPremium: true,
                 canAccessMinorActs: true,
                 daysLeft: serverData.daysRemaining || 30,
-                planType: serverData.planName || 'Premium Membership',
+                planType: serverData.planName || 'Start up',
                 subtitle: 'Full Legal Research Access (Active)',
-                purchasedDate: serverData.purchasedDate ? new Date(serverData.purchasedDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-                validTill: `${serverData.daysRemaining || 30} Days Left`,
-                orderId: serverData.paymentId || 'PAY_ACTIVE_PASS'
+                purchasedDate: formatDate(pDate),
+                validTill: formatDate(expDate),
+                orderId: serverData.paymentId || orderId || 'PAY_ACTIVE_PASS'
               };
             }
             
@@ -103,8 +117,8 @@ export const SubscriptionService = {
                 daysLeft: 0,
                 planType: 'Trial Expired',
                 subtitle: 'Trial Expired • App Locked',
-                purchasedDate: '13 Aug 2026',
-                validTill: '0 Days Left',
+                purchasedDate: formatDate(serverData.purchasedDate || user?.createdAt || '2026-08-13'),
+                validTill: formatDate(serverData.expiryDate || user?.trialEndDate || new Date()),
                 orderId: 'FREE_TRIAL'
               };
             }
@@ -116,6 +130,9 @@ export const SubscriptionService = {
 
       // 2. Offline / Local fallback: If user completed payment or profile is marked premium:
       if (isSubscribedFlag === 'true' || user?.isPremium === true) {
+        const pDateOffline = user?.premiumPurchaseDate || user?.createdAt || new Date();
+        const expDateOffline = user?.trialEndDate ? new Date(user.trialEndDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
         return {
           hasAccess: true,
           isTrial: false,
@@ -124,10 +141,10 @@ export const SubscriptionService = {
           isPremium: true,
           canAccessMinorActs: true,
           daysLeft: 30,
-          planType: 'Premium Membership',
+          planType: 'Start up',
           subtitle: 'Full Legal Research Access (Active)',
-          purchasedDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-          validTill: '30 Days Left',
+          purchasedDate: formatDate(pDateOffline),
+          validTill: formatDate(expDateOffline),
           orderId: orderId || 'PAY_ACTIVE_PASS'
         };
       }
@@ -151,6 +168,7 @@ export const SubscriptionService = {
       const elapsedMs = now - trialStartMs;
       const isExpired = elapsedMs > trialDurationMs;
       const daysLeft = isExpired ? 0 : Math.max(0, Math.ceil((trialDurationMs - elapsedMs) / (1000 * 60 * 60 * 24)));
+      const trialExpiryMs = trialStartMs + trialDurationMs;
 
       return {
         hasAccess: !isExpired,
@@ -162,8 +180,8 @@ export const SubscriptionService = {
         daysLeft: daysLeft,
         planType: isExpired ? 'Trial Expired' : '3-Day Free Trial',
         subtitle: isExpired ? 'Trial Expired • App Locked' : 'Complimentary 3-Day Access',
-        purchasedDate: new Date(trialStartMs).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-        validTill: `${daysLeft} Days Left`,
+        purchasedDate: formatDate(trialStartMs),
+        validTill: formatDate(trialExpiryMs),
         orderId: 'FREE_TRIAL'
       };
     } catch (e) {
@@ -178,7 +196,7 @@ export const SubscriptionService = {
         planType: 'Trial Expired',
         subtitle: 'Trial Expired • App Locked',
         purchasedDate: '13 Aug 2026',
-        validTill: '0 Days Left',
+        validTill: '16 Aug 2026',
         orderId: 'FREE_TRIAL'
       };
     }
