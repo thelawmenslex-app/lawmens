@@ -264,26 +264,56 @@ const profileUpdate = async (req, res) => {
 }
 
 const getProfile = async (req, res) => {
-
-    console.log("Profile was called");
     try {
-        const { userId, profile } = req;
-        // const users = await userService.getSettings()
-        // const about = await userService.getcms();
-        // const searchCount = await getHistory({ isActive: true });
-        const [users, cms, searchCount] = await Promise.all([userService.getSettings(), userService.getcms(), getHistory({ userId: userId, isActive: true })])
-        profile.contact = users
-        profile.about = cms.find(item => item.type === "about")?.content
-        profile.privacy = cms.find(item => item.type === "privacy")?.content
-        profile.disclaimer = { content: cms.find(item => item.type === "disclaimer")?.content, email: users.email }
-        profile.count = { current: searchCount, total: Number(process.env.COUNT) }
-        delete profile.bookMarks
-        return sendResponse(res, true, 200, 'Profile data', profile);
+        const { userId } = req;
+        const User = require('../models/user');
+        const userDoc = await User.findById(userId)
+            .select('-password -otp -otpCreatedOn')
+            .populate('professionId', 'name')
+            .lean();
 
+        if (!userDoc) {
+            return sendResponse(res, false, 404, 'User not found.');
+        }
+
+        const [users, cms, searchCount] = await Promise.all([
+            userService.getSettings(), 
+            userService.getcms(), 
+            getHistory({ userId: userId, isActive: true })
+        ]);
+
+        const professionName = typeof userDoc.professionId === 'object' && userDoc.professionId?.name 
+            ? userDoc.professionId.name 
+            : (userDoc.profession || 'Other');
+
+        const profileData = {
+            _id: userDoc._id,
+            firstName: userDoc.firstName || '',
+            lastName: userDoc.lastName || '',
+            name: `${userDoc.firstName || ''} ${userDoc.lastName || ''}`.trim() || userDoc.name || 'Advocate',
+            email: userDoc.email,
+            phoneNumber: userDoc.phoneNumber,
+            phone: userDoc.phoneNumber,
+            professionId: typeof userDoc.professionId === 'object' ? userDoc.professionId?._id : userDoc.professionId,
+            profession: professionName,
+            role: userDoc.role || 'User',
+            isPremium: Boolean(userDoc.isPremium || userDoc.subscriptionId),
+            subscriptionId: userDoc.subscriptionId,
+            isActive: userDoc.isActive !== false,
+            trialEndDate: userDoc.trialEndDate,
+            createdAt: userDoc.createdAt,
+            contact: users,
+            about: cms.find(item => item.type === "about")?.content,
+            privacy: cms.find(item => item.type === "privacy")?.content,
+            disclaimer: { content: cms.find(item => item.type === "disclaimer")?.content, email: users.email },
+            count: { current: searchCount, total: Number(process.env.COUNT || 500) }
+        };
+
+        return sendResponse(res, true, 200, 'Profile data', profileData);
     } catch (error) {
         return errorHandler(error, res);
     }
-}
+};
 const getBookMark = async (req, res) => {
     try {
         const { userId, profile } = req;
