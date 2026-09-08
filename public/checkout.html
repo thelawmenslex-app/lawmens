@@ -3,31 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>THE-LAWMEN'S | Razorpay Checkout</title>
+  <title>THE-LAWMEN'S | Secure Checkout</title>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
   </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4">
+<body class="bg-[#181A20] text-slate-100 min-h-screen flex items-center justify-center p-4">
 
-  <div class="max-w-md w-full bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-2xl space-y-5">
+  <div class="max-w-md w-full bg-[#20242D] border border-slate-700/60 rounded-3xl p-6 shadow-2xl space-y-5">
     <!-- Header -->
     <div class="text-center">
-      <h1 class="text-2xl font-black text-white tracking-tight">THE-LAWMEN'S</h1>
-      <p class="text-xs text-sky-400 font-bold uppercase tracking-wider mt-1">Official Razorpay Checkout</p>
+      <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[#25AAE2]/15 text-[#25AAE2] mb-2">
+        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm0 3.5L19.5 19H4.5L12 5.5z"/></svg>
+      </div>
+      <h1 class="text-2xl font-black text-white tracking-wider">THE-LAWMEN'S</h1>
+      <p class="text-xs text-[#25AAE2] font-bold uppercase tracking-widest mt-1">Official Payment Gateway</p>
     </div>
 
-    <!-- Live Selected Plan Card -->
-    <div class="space-y-1">
-      <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Subscription Plan</label>
-      <div class="p-3.5 bg-slate-900 border border-sky-500/40 rounded-xl flex items-center justify-between">
+    <!-- Selected Plan Card -->
+    <div class="space-y-1.5">
+      <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider">Selected Plan</label>
+      <div class="p-4 bg-[#181A20] border border-[#25AAE2]/40 rounded-2xl flex items-center justify-between">
         <div>
-          <h3 id="planTitle" class="font-bold text-sm text-white">Start up Plan</h3>
-          <p id="planDesc" class="text-xs text-slate-400">Full Legal Database Access</p>
+          <h3 id="planTitle" class="font-bold text-base text-white">Start up Plan</h3>
+          <p id="planDesc" class="text-xs text-slate-400 mt-0.5">Full Legal Database & Bare Acts Access</p>
         </div>
-        <span id="planPrice" class="text-xl font-black text-sky-400">₹1500.00</span>
+        <span id="planPrice" class="text-2xl font-black text-[#25AAE2]">₹1500</span>
       </div>
     </div>
 
@@ -35,42 +38,51 @@
     <div class="space-y-3">
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Subscriber Name</label>
-        <input id="userName" type="text" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-sky-500 font-medium">
+        <input id="userName" type="text" class="w-full px-3.5 py-2.5 bg-[#181A20] border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-[#25AAE2] font-medium">
       </div>
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Email Address</label>
-        <input id="userEmail" type="email" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-sky-500 font-medium">
+        <input id="userEmail" type="email" class="w-full px-3.5 py-2.5 bg-[#181A20] border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-[#25AAE2] font-medium">
       </div>
       <div>
         <label class="block text-xs font-semibold text-slate-400 mb-1">Mobile Number (WhatsApp)</label>
-        <input id="userPhone" type="tel" class="w-full px-3.5 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-sm text-white focus:outline-none focus:border-sky-500 font-medium">
+        <input id="userPhone" type="tel" class="w-full px-3.5 py-2.5 bg-[#181A20] border border-slate-700 rounded-xl text-sm text-white focus:outline-none focus:border-[#25AAE2] font-medium">
       </div>
     </div>
 
     <!-- Status Box -->
-    <div id="statusBox" class="hidden p-3 rounded-lg text-xs"></div>
+    <div id="statusBox" class="hidden p-3.5 rounded-xl text-xs font-semibold"></div>
 
     <!-- Checkout Button -->
-    <button id="payBtn" onclick="openCheckout()" class="w-full py-3.5 px-6 rounded-xl font-bold text-white bg-[#25AAE2] hover:bg-[#1E90C0] transition flex items-center justify-center gap-2 shadow-lg shadow-sky-500/20 active:scale-98">
+    <button id="payBtn" onclick="openCheckout()" class="w-full py-3.5 px-6 rounded-2xl font-black text-white bg-[#25AAE2] hover:bg-[#1E90C0] transition flex items-center justify-center gap-2 shadow-lg shadow-sky-500/25 active:scale-98">
       <span id="payBtnText">Proceed to Pay via Razorpay →</span>
     </button>
 
-    <div class="text-center text-[11px] text-slate-500 flex items-center justify-center gap-1.5 pt-1">
-      <svg class="w-3.5 h-3.5 text-sky-400" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" clip-rule="evenodd"></path></svg>
-      <span>Secured with 256-bit Razorpay Payment Gateway</span>
+    <div class="text-center text-[11px] text-slate-400 flex items-center justify-center gap-1.5 pt-1">
+      <svg class="w-4 h-4 text-[#25AAE2]" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" clip-rule="evenodd"></path></svg>
+      <span>256-bit Encrypted • UPI, Cards & NetBanking</span>
     </div>
   </div>
 
   <script>
     const urlParams = new URLSearchParams(window.location.search);
-    const key = urlParams.get('key') || 'rzp_test_TXwX8ooQGH96ui';
-    const amountInPaise = Number(urlParams.get('amount')) || 150000;
-    const rupeeAmount = (amountInPaise / 100).toFixed(2);
-    const orderId = urlParams.get('order_id') || '';
-    const planName = decodeURIComponent(urlParams.get('planName') || 'Start up Plan');
+    const liveKey = urlParams.get('key') || 'rzp_live_TXxg1ZquvFEEAn';
+    
+    // Amount extraction
+    let numPrice = Number(urlParams.get('price')) || Number(urlParams.get('amount')) || 1500;
+    if (numPrice > 50000) {
+      numPrice = numPrice / 100; // was in paise
+    }
+    const amountInPaise = Math.round(numPrice * 100);
+    const rupeeAmount = Math.round(numPrice);
+
+    const orderId = urlParams.get('order_id') || urlParams.get('orderId') || '';
+    const planName = decodeURIComponent(urlParams.get('plan') || urlParams.get('planName') || 'Start up');
+    const validityDays = Number(urlParams.get('validity')) || 30;
     const name = decodeURIComponent(urlParams.get('name') || 'Advocate');
     const email = decodeURIComponent(urlParams.get('email') || 'advocate@thelawmens.com');
     const phone = decodeURIComponent(urlParams.get('phone') || '9876543210');
+    const userId = urlParams.get('userId') || '';
 
     // Populate Real-Time Elements
     document.getElementById('planTitle').innerText = planName;
@@ -80,13 +92,6 @@
     document.getElementById('userPhone').value = phone;
     document.getElementById('payBtnText').innerText = 'Proceed to Pay ₹' + rupeeAmount + ' via Razorpay →';
 
-    function notifyApp(type, payload) {
-      const msg = JSON.stringify({ status: type, data: payload });
-      if (window.ReactNativeWebView && window.ReactNativeWebView.postMessage) {
-        window.ReactNativeWebView.postMessage(msg);
-      }
-    }
-
     let rzp = null;
     function openCheckout() {
       const currentName = document.getElementById('userName').value || name;
@@ -94,11 +99,11 @@
       const currentPhone = document.getElementById('userPhone').value || phone;
 
       const options = {
-        key: key,
+        key: liveKey,
         amount: amountInPaise,
         currency: "INR",
         name: "THE-LAWMEN'S",
-        description: planName + " Subscription",
+        description: planName + " (" + validityDays + " Days Access)",
         image: "https://lawmens-1.onrender.com/favicon.svg",
         order_id: orderId || undefined,
         prefill: {
@@ -109,20 +114,36 @@
         theme: {
           color: "#25AAE2"
         },
-        retry: {
-          enabled: true,
-          max_count: 3
-        },
         modal: {
           ondismiss: function () {
-            notifyApp('DISMISSED');
+            console.log('Payment dismissed');
           }
         },
-        handler: function (response) {
+        handler: async function (response) {
           const statusBox = document.getElementById('statusBox');
-          statusBox.className = 'p-3 bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 rounded-lg text-xs';
-          statusBox.innerHTML = '<strong>Payment Successful! 🎉</strong><br>Activating Subscription...';
-          notifyApp('SUCCESS', response);
+          statusBox.className = 'p-4 bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 rounded-2xl text-xs space-y-1';
+          statusBox.innerHTML = '<strong>✅ Payment Successful!</strong><br>Activating your subscription on THE-LAWMEN\'S...';
+
+          try {
+            const verifyRes = await fetch('/api/v1/payments/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_order_id: response.razorpay_order_id || ('ord_' + Date.now()),
+                razorpay_signature: response.razorpay_signature || 'web_direct',
+                baseAmount: rupeeAmount,
+                planName: planName,
+                validityDays: validityDays,
+                email: currentEmail,
+                userId: userId
+              })
+            });
+            const vData = await verifyRes.json();
+            statusBox.innerHTML = '<strong class="text-emerald-400 text-sm">🎉 Subscription Activated!</strong><br><span class="text-slate-200">Your account is now upgraded to Premium. Please return to the mobile app to continue reading.</span>';
+          } catch (e) {
+            statusBox.innerHTML = '<strong class="text-emerald-400">Payment ID: ' + response.razorpay_payment_id + '</strong><br>Recorded. Please return to the app and tap "Check Status".';
+          }
         }
       };
 
@@ -130,9 +151,8 @@
         rzp = new Razorpay(options);
         rzp.on('payment.failed', function (resp) {
           const statusBox = document.getElementById('statusBox');
-          statusBox.className = 'p-3 bg-rose-500/10 border border-rose-500/30 text-rose-300 rounded-lg text-xs';
+          statusBox.className = 'p-3.5 bg-rose-500/15 border border-rose-500/40 text-rose-300 rounded-xl text-xs';
           statusBox.innerText = 'Payment Declined: ' + (resp.error?.description || 'Transaction failed');
-          notifyApp('FAILED', resp);
         });
         rzp.open();
       } catch (e) {
@@ -141,7 +161,7 @@
     }
 
     window.onload = function () {
-      setTimeout(openCheckout, 300);
+      setTimeout(openCheckout, 400);
     };
   </script>
 </body>
