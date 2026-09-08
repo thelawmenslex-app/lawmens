@@ -282,9 +282,22 @@ const getProfile = async (req, res) => {
             getHistory({ userId: userId, isActive: true })
         ]);
 
-        const professionName = typeof userDoc.professionId === 'object' && userDoc.professionId?.name 
-            ? userDoc.professionId.name 
-            : (userDoc.profession || 'Other');
+        let professionName = 'Other';
+        if (typeof userDoc.professionId === 'object' && userDoc.professionId?.name && !/^[0-9a-fA-F]{24}$/.test(String(userDoc.professionId.name).trim())) {
+            professionName = userDoc.professionId.name;
+        } else if (userDoc.profession && !/^[0-9a-fA-F]{24}$/.test(String(userDoc.profession).trim())) {
+            professionName = userDoc.profession;
+        } else if (userDoc.professionId && !/^[0-9a-fA-F]{24}$/.test(String(userDoc.professionId).trim())) {
+            professionName = String(userDoc.professionId);
+        } else if (userDoc.professionId) {
+            try {
+                const Profession = require('../models/profession');
+                const profDoc = await Profession.findById(userDoc.professionId).lean();
+                if (profDoc && profDoc.name && !/^[0-9a-fA-F]{24}$/.test(String(profDoc.name).trim())) {
+                    professionName = profDoc.name;
+                }
+            } catch (e) {}
+        }
 
         const profileData = {
             _id: userDoc._id,
