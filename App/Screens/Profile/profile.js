@@ -17,28 +17,25 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ApiService } from '../../Services/apiService';
 
 const resolveProfessionName = (prof) => {
-  if (!prof) return 'Student';
+  if (!prof) return 'Other';
   if (typeof prof === 'object' && prof.name) return prof.name;
   const str = String(prof).trim();
-  if (/^[0-9a-fA-F]{24}$/.test(str)) {
-    return 'Student';
-  }
-  return str;
+  return str || 'Other';
 };
 
 export default function ProfileScreen({ navigation }) {
   const [user, setUser] = useState({
-    firstName: 'gajendran',
-    lastName: 'M',
-    name: 'gajendran M',
-    phone: '12345678902',
-    email: 'example@gmal.com',
-    profession: 'Student',
+    firstName: '',
+    lastName: '',
+    name: '',
+    phone: '',
+    email: '',
+    profession: 'Other',
     role: 'User',
-    isPremium: true
+    isPremium: false
   });
   const [stats, setStats] = useState({
-    readCount: 199,
+    readCount: 0,
     bookmarkCount: 0
   });
   const [isLoggedIn, setIsLoggedIn] = useState(true);
@@ -47,7 +44,7 @@ export default function ProfileScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
 
-      useEffect(() => {
+  useEffect(() => {
     loadUser();
     const unsubscribe = navigation.addListener('focus', () => {
       loadUser();
@@ -57,7 +54,7 @@ export default function ProfileScreen({ navigation }) {
     try {
       if (liveSyncService && typeof liveSyncService.subscribe === 'function') {
         removeListener = liveSyncService.subscribe((event) => {
-          if (event?.type === 'CONTENT_CHANGED' && event?.data?.entity === 'user') {
+          if (event?.type === 'CONTENT_CHANGED' && (event?.data?.entity === 'user' || event?.data?.entity === 'subscription')) {
             loadUser();
           }
         });
@@ -74,42 +71,47 @@ export default function ProfileScreen({ navigation }) {
 
   const loadUser = async () => {
     try {
-      const token = await AsyncStorage.getItem('@authtoken');
       const stored = await AsyncStorage.getItem('@userprofile');
-      
       let initialUser = {
-        firstName: 'gajendran',
-        lastName: 'M',
-        name: 'gajendran M',
-        phone: '12345678902',
-        email: 'example@gmal.com',
-        profession: 'Student',
+        firstName: '',
+        lastName: '',
+        name: '',
+        phone: '',
+        email: '',
+        profession: 'Other',
         role: 'User',
-        isPremium: true
+        isPremium: false
       };
 
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
-          initialUser = { ...initialUser, ...parsed, profession: resolveProfessionName(parsed.profession || parsed.professionId) };
+          initialUser = { 
+            ...initialUser, 
+            ...parsed, 
+            profession: resolveProfessionName(parsed.profession || parsed.professionId),
+            isPremium: Boolean(parsed.isPremium || parsed.subscriptionId)
+          };
+          setUser(initialUser);
         } catch (err) {}
       }
 
       setIsLoggedIn(true);
 
-      // Fetch live data from Admin Portal backend
+      // Fetch live authoritative data from Admin Portal / Backend
       const liveData = await ApiService.auth.getProfile();
       if (liveData) {
-        const fName = liveData.firstName || initialUser.firstName;
-        const lName = liveData.lastName || initialUser.lastName;
+        const fName = liveData.firstName || initialUser.firstName || '';
+        const lName = liveData.lastName || initialUser.lastName || '';
         const fullName = (liveData.firstName || liveData.lastName) 
           ? `${fName} ${lName}`.trim() 
-          : (liveData.name && !liveData.name.includes('@') ? liveData.name : initialUser.name);
+          : (liveData.name && !liveData.name.includes('@') ? liveData.name : (initialUser.name || 'User'));
 
-        const phoneVal = liveData.phoneNumber || liveData.phone || initialUser.phone;
-        const emailVal = liveData.email || initialUser.email;
+        const phoneVal = liveData.phoneNumber || liveData.phone || initialUser.phone || '';
+        const emailVal = liveData.email || initialUser.email || '';
         const profVal = resolveProfessionName(liveData.profession || liveData.professionId || initialUser.profession);
-        const roleVal = liveData.role || initialUser.role;
+        const roleVal = liveData.role || initialUser.role || 'User';
+        const isPrem = Boolean(liveData.isPremium || liveData.subscriptionId);
 
         const mergedUser = {
           firstName: fName,
@@ -119,10 +121,12 @@ export default function ProfileScreen({ navigation }) {
           email: emailVal,
           profession: profVal,
           role: roleVal,
-          isPremium: Boolean(liveData.isPremium || liveData.subscriptionId)
+          isPremium: isPrem
         };
 
         setUser(mergedUser);
+        await AsyncStorage.setItem('@userprofile', JSON.stringify({ ...liveData, ...mergedUser }));
+
         const userHist = await ApiService.history.getReadingHistory();
         const userBms = await ApiService.bookmarks.getAll();
 
@@ -133,7 +137,6 @@ export default function ProfileScreen({ navigation }) {
       } else {
         const userHist = await ApiService.history.getReadingHistory();
         const userBms = await ApiService.bookmarks.getAll();
-        setUser(initialUser);
         setStats({
           readCount: userHist.length,
           bookmarkCount: userBms.length
@@ -237,11 +240,11 @@ export default function ProfileScreen({ navigation }) {
             <View style={styles.roleBadge}>
               <Text style={styles.roleText}>{user.role || 'User'}</Text>
             </View>
-            {user.isPremium && (
-              <View style={styles.premiumBadge}>
-                <Text style={styles.premiumText}>PREMIUM</Text>
-              </View>
-            )}
+            <View style={[styles.premiumBadge, { backgroundColor: user.isPremium ? '#DCFCE7' : '#F1F5F9', borderColor: user.isPremium ? '#86EFAC' : '#E2E8F0' }]}>
+              <Text style={[styles.premiumText, { color: user.isPremium ? '#16A34A' : '#64748B' }]}>
+                {user.isPremium ? 'PREMIUM' : 'FREE TIER'}
+              </Text>
+            </View>
           </View>
         </View>
 
