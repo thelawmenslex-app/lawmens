@@ -29,21 +29,82 @@ export default function SignupScreen({ navigation }) {
 
   const professionsList = ['Advocate', 'Judge', 'Judicial Officer', 'Police Officer', 'Law Student', 'Researcher', 'Consultant'];
 
+  const getPasswordStrength = (pass) => {
+    if (!pass) {
+      return {
+        score: 0,
+        checks: { length: false, uppercase: false, lowercase: false, number: false, special: false },
+        label: 'Empty',
+        color: '#94A3B8',
+        widthPercent: '0%',
+        isStrong: false
+      };
+    }
+
+    const checks = {
+      length: pass.length >= 8,
+      uppercase: /[A-Z]/.test(pass),
+      lowercase: /[a-z]/.test(pass),
+      number: /[0-9]/.test(pass),
+      special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pass)
+    };
+
+    let score = 0;
+    if (checks.length) score += 1;
+    if (checks.uppercase && checks.lowercase) score += 1;
+    if (checks.number) score += 1;
+    if (checks.special) score += 1;
+
+    let label = 'Weak';
+    let color = '#EF4444';
+    let widthPercent = '25%';
+
+    if (score === 1) {
+      label = 'Weak (Needs uppercase, number & symbol)';
+      color = '#EF4444';
+      widthPercent = '25%';
+    } else if (score === 2) {
+      label = 'Fair (Add numbers or special symbols)';
+      color = '#F59E0B';
+      widthPercent = '50%';
+    } else if (score === 3) {
+      label = 'Good (Almost strong)';
+      color = '#25AAE2';
+      widthPercent = '75%';
+    } else if (score === 4) {
+      label = 'Strong Password ✓';
+      color = '#10B981';
+      widthPercent = '100%';
+    }
+
+    const isStrong = checks.length && checks.uppercase && checks.lowercase && checks.number && checks.special;
+    return { score, checks, label, color, widthPercent, isStrong };
+  };
+
+  const passwordStrength = getPasswordStrength(password);
+
   const handleSignup = async () => {
     if (!firstName.trim()) {
       Alert.alert('Validation Error', 'Please enter your First Name');
       return;
     }
-    if (!phone.trim()) {
-      Alert.alert('Validation Error', 'Please enter your Phone Number');
+    if (!phone.trim() || phone.trim().length < 10) {
+      Alert.alert('Validation Error', 'Please enter a valid 10-digit Phone Number');
       return;
     }
-    if (!email.trim()) {
-      Alert.alert('Validation Error', 'Please enter your Email Address');
+    if (!email.trim() || !email.includes('@')) {
+      Alert.alert('Validation Error', 'Please enter a valid Email Address');
       return;
     }
     if (!password.trim()) {
       Alert.alert('Validation Error', 'Please enter a Password');
+      return;
+    }
+    if (!passwordStrength.isStrong) {
+      Alert.alert(
+        'Strong Password Required',
+        'For legal account security, your password must be Strong:\\n• At least 8 characters\\n• 1 Uppercase letter (A-Z)\\n• 1 Lowercase letter (a-z)\\n• 1 Number (0-9)\\n• 1 Special symbol (@#$%...)'
+      );
       return;
     }
     if (password !== confirmPassword) {
@@ -201,7 +262,7 @@ export default function SignupScreen({ navigation }) {
         <View style={styles.inputContainer}>
           <TextInput
             style={styles.textInput}
-            placeholder="must be at least 6 characters"
+            placeholder="At least 8 chars (letters, numbers, symbols)"
             placeholderTextColor="#94A3B8"
             value={password}
             onChangeText={setPassword}
@@ -218,6 +279,75 @@ export default function SignupScreen({ navigation }) {
             />
           </TouchableOpacity>
         </View>
+
+        {/* PASSWORD STRENGTH PROGRESS BAR */}
+        {password.length > 0 && (
+          <View style={styles.strengthWrapper}>
+            <View style={styles.strengthHeader}>
+              <Text style={styles.strengthTitle}>Password Strength:</Text>
+              <Text style={[styles.strengthLabel, { color: passwordStrength.color }]}>
+                {passwordStrength.label}
+              </Text>
+            </View>
+
+            {/* Continuous / Segmented Progress Bar */}
+            <View style={styles.strengthBarBackground}>
+              <View
+                style={[
+                  styles.strengthBarFill,
+                  { width: passwordStrength.widthPercent, backgroundColor: passwordStrength.color }
+                ]}
+              />
+            </View>
+
+            {/* Requirement Checklist */}
+            <View style={styles.rulesContainer}>
+              <View style={styles.ruleItem}>
+                <Icon
+                  name={passwordStrength.checks.length ? 'checkmark-circle' : 'ellipse-outline'}
+                  size={14}
+                  color={passwordStrength.checks.length ? '#10B981' : '#94A3B8'}
+                />
+                <Text style={[styles.ruleText, passwordStrength.checks.length && styles.ruleTextValid]}>
+                  8+ characters
+                </Text>
+              </View>
+
+              <View style={styles.ruleItem}>
+                <Icon
+                  name={passwordStrength.checks.uppercase ? 'checkmark-circle' : 'ellipse-outline'}
+                  size={14}
+                  color={passwordStrength.checks.uppercase ? '#10B981' : '#94A3B8'}
+                />
+                <Text style={[styles.ruleText, passwordStrength.checks.uppercase && styles.ruleTextValid]}>
+                  Uppercase (A-Z)
+                </Text>
+              </View>
+
+              <View style={styles.ruleItem}>
+                <Icon
+                  name={passwordStrength.checks.number ? 'checkmark-circle' : 'ellipse-outline'}
+                  size={14}
+                  color={passwordStrength.checks.number ? '#10B981' : '#94A3B8'}
+                />
+                <Text style={[styles.ruleText, passwordStrength.checks.number && styles.ruleTextValid]}>
+                  Number (0-9)
+                </Text>
+              </View>
+
+              <View style={styles.ruleItem}>
+                <Icon
+                  name={passwordStrength.checks.special ? 'checkmark-circle' : 'ellipse-outline'}
+                  size={14}
+                  color={passwordStrength.checks.special ? '#10B981' : '#94A3B8'}
+                />
+                <Text style={[styles.ruleText, passwordStrength.checks.special && styles.ruleTextValid]}>
+                  Special symbol (@#$...)
+                </Text>
+              </View>
+            </View>
+          </View>
+        )}
 
         {/* Confirm password */}
         <Text style={styles.fieldLabel}>Confirm password</Text>
@@ -324,6 +454,63 @@ const styles = StyleSheet.create({
   },
   textInput: { flex: 1, fontSize: 14, color: '#111827' },
   eyeBtn: { padding: 4 },
+  strengthWrapper: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 12,
+    marginTop: -8,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  strengthHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  strengthTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#475569',
+  },
+  strengthLabel: {
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  strengthBarBackground: {
+    width: '100%',
+    height: 6,
+    backgroundColor: '#E2E8F0',
+    borderRadius: 3,
+    overflow: 'hidden',
+    marginBottom: 10,
+  },
+  strengthBarFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  rulesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  ruleItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginRight: 10,
+    marginBottom: 4,
+  },
+  ruleText: {
+    fontSize: 11,
+    color: '#94A3B8',
+    fontWeight: '500',
+  },
+  ruleTextValid: {
+    color: '#10B981',
+    fontWeight: '700',
+  },
   termsRow: {
     flexDirection: 'row',
     alignItems: 'center',

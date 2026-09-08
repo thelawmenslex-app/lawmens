@@ -36,6 +36,17 @@ import PrivacyPolicyScreen from '../Screens/CMS/privacy';
 import DisclaimerScreen from '../Screens/CMS/disclaimer';
 import ContactScreen from '../Screens/CMS/contact';
 import TermsAndConditionsScreen from '../Screens/CMS/terms';
+import {
+  LoadingScreen,
+  EmptyScreen,
+  SuccessScreen,
+  ErrorScreen,
+  NoInternetScreen,
+  PermissionDeniedScreen,
+  PartialDataScreen,
+  FormValidationErrorScreen,
+  SessionExpiredScreen
+} from '../Screens/StateScreens';
 
 const Stack = createStackNavigator();
 
@@ -108,6 +119,15 @@ export default function Routes() {
         <Stack.Screen name="Contact" component={ContactScreen} />
         <Stack.Screen name="TermsAndConditions" component={TermsAndConditionsScreen} />
         <Stack.Screen name="Terms" component={TermsAndConditionsScreen} />
+        <Stack.Screen name="LoadingState" component={LoadingScreen} />
+        <Stack.Screen name="EmptyState" component={EmptyScreen} />
+        <Stack.Screen name="SuccessState" component={SuccessScreen} />
+        <Stack.Screen name="ErrorState" component={ErrorScreen} />
+        <Stack.Screen name="NoInternetState" component={NoInternetScreen} />
+        <Stack.Screen name="PermissionDeniedState" component={PermissionDeniedScreen} />
+        <Stack.Screen name="PartialDataState" component={PartialDataScreen} />
+        <Stack.Screen name="FormValidationErrorState" component={FormValidationErrorScreen} />
+        <Stack.Screen name="SessionExpiredState" component={SessionExpiredScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
