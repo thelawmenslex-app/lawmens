@@ -50,14 +50,18 @@ export default function ComparisonScreen({ route, navigation }) {
     if (!foundPair) {
       foundPair = pairList.find(p => p.newSec === querySec);
     }
+    if (!foundPair) {
+      const baseSec = querySec.split('(')[0].trim();
+      foundPair = pairList.find(p => p.oldSec === baseSec || p.newSec === baseSec || p.oldSec.startsWith(baseSec) || p.newSec.startsWith(baseSec));
+    }
 
     let leftSecNum = foundPair ? foundPair.oldSec : (oldSec || querySec);
-    let rightSecNum = foundPair ? foundPair.newSec : (newSec || querySec);
+    let rightSecNum = foundPair ? foundPair.newSec : (newSec || (pairInfo.mapping?.[leftSecNum]?.bnsSec || pairInfo.mapping?.[leftSecNum]?.bnssSec || pairInfo.mapping?.[leftSecNum]?.bsaSec || querySec));
 
     let leftHeading = sectionData?.keyword || foundPair?.title || `Section ${leftSecNum}`;
     let rightHeading = foundPair?.title || leftHeading;
 
-    let leftContentText = sectionData?.content?.[0]?.content || foundPair?.oldContent || '';
+    let leftContentText = foundPair?.oldContent || sectionData?.content?.[0]?.content || '';
     let rightContentText = foundPair?.newContent || '';
 
     // Search rawData for old law text if not yet resolved
@@ -77,7 +81,7 @@ export default function ComparisonScreen({ route, navigation }) {
     }
 
     // Search rawData for new law text if not yet resolved
-    if (!rightContentText) {
+    if (!rightContentText && rightSecNum !== 'Repealed' && !rightSecNum.includes('Omitted')) {
       for (const ch of rawData.casebooks || []) {
         const cId = (ch.categoryId && ch.categoryId['$oid']) || ch.categoryId;
         if (cId === pairInfo.newCatId) {
@@ -96,7 +100,11 @@ export default function ComparisonScreen({ route, navigation }) {
       leftContentText = `Statutory legal provision under ${pairInfo.oldTitle} Section ${leftSecNum}.`;
     }
     if (!rightContentText) {
-      rightContentText = `Corresponding statutory legal provision under ${pairInfo.newTitle} Section ${rightSecNum}.`;
+      if (rightSecNum.includes('Repealed') || rightSecNum.includes('Omitted')) {
+        rightContentText = `This provision has been repealed and omitted in the ${pairInfo.newTitle}.`;
+      } else {
+        rightContentText = `Corresponding statutory legal provision under ${pairInfo.newTitle} Section ${rightSecNum}.`;
+      }
     }
 
     // Compute live 100% accurate LCS diff highlights

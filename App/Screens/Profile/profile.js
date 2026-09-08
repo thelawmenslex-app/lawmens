@@ -18,8 +18,16 @@ import { ApiService } from '../../Services/apiService';
 
 const resolveProfessionName = (prof) => {
   if (!prof) return 'Other';
-  if (typeof prof === 'object' && prof.name) return prof.name;
+  if (typeof prof === 'object') {
+    if (prof.name && !/^[0-9a-fA-F]{24}$/.test(String(prof.name).trim())) {
+      return String(prof.name).trim();
+    }
+    return 'Other';
+  }
   const str = String(prof).trim();
+  if (/^[0-9a-fA-F]{24}$/.test(str) || str.toLowerCase() === 'undefined' || str.toLowerCase() === 'null') {
+    return 'Other';
+  }
   return str || 'Other';
 };
 

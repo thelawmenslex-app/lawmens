@@ -1,4 +1,4 @@
-const fetchWithTimeout = async (url, options = {}, timeoutMs = 3500) => {
+const fetchWithTimeout = async (url, options = {}, timeoutMs = 12000) => {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -127,13 +127,17 @@ export const ApiService = {
           const lName = raw.lastName || 'M';
           const fullName = (fName || lName) ? `${fName} ${lName}`.trim() : (raw.name && !raw.name.includes('@') ? raw.name : 'gajendran M');
           
-          let prof = 'Student';
-          if (typeof raw.professionId === 'object' && raw.professionId?.name) {
-            prof = raw.professionId.name;
-          } else if (typeof raw.professionId === 'string' && raw.professionId) {
-            prof = raw.professionId;
-          } else if (raw.profession) {
-            prof = typeof raw.profession === 'object' ? raw.profession.name : raw.profession;
+          let prof = 'Other';
+          if (typeof raw.professionId === 'object' && raw.professionId?.name && !/^[0-9a-fA-F]{24}$/.test(String(raw.professionId.name).trim())) {
+            prof = String(raw.professionId.name).trim();
+          } else if (typeof raw.profession === 'object' && raw.profession?.name && !/^[0-9a-fA-F]{24}$/.test(String(raw.profession.name).trim())) {
+            prof = String(raw.profession.name).trim();
+          } else if (raw.profession && !/^[0-9a-fA-F]{24}$/.test(String(raw.profession).trim())) {
+            prof = String(raw.profession).trim();
+          } else if (raw.professionId && !/^[0-9a-fA-F]{24}$/.test(String(raw.professionId).trim())) {
+            prof = String(raw.professionId).trim();
+          } else {
+            prof = 'Other';
           }
 
           let phoneStr = '';

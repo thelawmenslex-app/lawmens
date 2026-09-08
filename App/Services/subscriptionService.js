@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BASE_URL } from '../Actions/constant';
 
-const fetchWithTimeout = async (url, options = {}, timeoutMs = 2500) => {
+const fetchWithTimeout = async (url, options = {}, timeoutMs = 12000) => {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
   try {

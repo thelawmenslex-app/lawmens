@@ -102,7 +102,8 @@ export default function Routes() {
     try {
       const token = await AsyncStorage.getItem('@authtoken');
       if (token) {
-        const subStatus = await SubscriptionService.getStatus();
+        const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve(null), 1500));
+        const subStatus = await Promise.race([SubscriptionService.getStatus(), timeoutPromise]);
         if (subStatus && subStatus.hasAccess === false) {
           setInitialRoute('TrialExpired');
         } else {

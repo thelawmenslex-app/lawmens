@@ -84,6 +84,15 @@ export default function LoginScreen({ navigation }) {
           phoneStr = String(raw.phone);
         }
 
+        let profName = 'Other';
+        if (typeof raw.professionId === 'object' && raw.professionId?.name && !/^[0-9a-fA-F]{24}$/.test(String(raw.professionId.name).trim())) {
+          profName = String(raw.professionId.name).trim();
+        } else if (raw.profession && !/^[0-9a-fA-F]{24}$/.test(String(raw.profession).trim())) {
+          profName = String(raw.profession).trim();
+        } else if (raw.professionId && !/^[0-9a-fA-F]{24}$/.test(String(raw.professionId).trim())) {
+          profName = String(raw.professionId).trim();
+        }
+
         const userObj = {
           _id: raw._id || '',
           firstName: fName,
@@ -92,7 +101,7 @@ export default function LoginScreen({ navigation }) {
           email: raw.email || (identifier.includes('@') ? identifier : ''),
           phone: phoneStr,
           phoneNumber: phoneStr,
-          profession: raw.profession || (typeof raw.professionId === 'object' ? raw.professionId?.name : (raw.professionId || 'Student')),
+          profession: profName,
           role: raw.role || 'User',
           isPremium: Boolean(raw.isPremium || raw.subscriptionId),
           readingHistoryCount: raw.count?.current ?? raw.readingHistoryCount ?? 199,

@@ -183,16 +183,21 @@ export default function SearchScreen({ navigation }) {
           newSecStr.startsWith(q) ||
           titleStr.includes(q)
         ) {
+          const isOldMatch = oldSecStr === q || oldSecStr.startsWith(q);
+          const showOldFirst = selectedLawFilter === 'IPC' || (selectedLawFilter === 'ALL' && isOldMatch && newSecStr !== q && !newSecStr.startsWith(q));
+
           matches.push({
             id: `ipc_bns_${idx}`,
-            lawCode: 'BNS',
-            secNum: item.newSec,
-            equivLawCode: 'IPC',
-            equivSecNum: item.oldSec,
-            status: item.oldSec ? 'Change' : 'New',
+            lawCode: showOldFirst ? 'IPC' : 'BNS',
+            secNum: showOldFirst ? item.oldSec : item.newSec,
+            equivLawCode: showOldFirst ? 'BNS' : 'IPC',
+            equivSecNum: showOldFirst ? item.newSec : item.oldSec,
+            status: item.newSec === 'Repealed' || (item.newSec && item.newSec.includes('Omitted')) ? 'Repealed' : (item.oldSec ? 'Change' : 'New'),
             title: item.title || 'Statutory Section',
             newContent: item.newContent,
-            oldContent: item.oldContent
+            oldContent: item.oldContent,
+            rawOldSec: item.oldSec,
+            rawNewSec: item.newSec
           });
           if (matches.length >= 40) break;
         }
@@ -216,16 +221,21 @@ export default function SearchScreen({ navigation }) {
           newSecStr.startsWith(q) ||
           titleStr.includes(q)
         ) {
+          const isOldMatch = oldSecStr === q || oldSecStr.startsWith(q);
+          const showOldFirst = selectedLawFilter === 'CrPC' || (selectedLawFilter === 'ALL' && isOldMatch && newSecStr !== q && !newSecStr.startsWith(q));
+
           matches.push({
             id: `crpc_bnss_${idx}`,
-            lawCode: 'BNSS',
-            secNum: item.newSec,
-            equivLawCode: 'CrPC',
-            equivSecNum: item.oldSec,
-            status: item.oldSec ? 'Change' : 'New',
+            lawCode: showOldFirst ? 'CrPC' : 'BNSS',
+            secNum: showOldFirst ? item.oldSec : item.newSec,
+            equivLawCode: showOldFirst ? 'BNSS' : 'CrPC',
+            equivSecNum: showOldFirst ? item.newSec : item.oldSec,
+            status: item.newSec === 'Repealed' || (item.newSec && item.newSec.includes('Omitted')) ? 'Repealed' : (item.oldSec ? 'Change' : 'New'),
             title: item.title || 'Statutory Section',
             newContent: item.newContent,
-            oldContent: item.oldContent
+            oldContent: item.oldContent,
+            rawOldSec: item.oldSec,
+            rawNewSec: item.newSec
           });
           if (matches.length >= 40) break;
         }
@@ -249,16 +259,21 @@ export default function SearchScreen({ navigation }) {
           newSecStr.startsWith(q) ||
           titleStr.includes(q)
         ) {
+          const isOldMatch = oldSecStr === q || oldSecStr.startsWith(q);
+          const showOldFirst = selectedLawFilter === 'IEA' || (selectedLawFilter === 'ALL' && isOldMatch && newSecStr !== q && !newSecStr.startsWith(q));
+
           matches.push({
             id: `iea_bsa_${idx}`,
-            lawCode: 'BSA',
-            secNum: item.newSec,
-            equivLawCode: 'IEA',
-            equivSecNum: item.oldSec,
-            status: item.oldSec ? 'Change' : 'New',
+            lawCode: showOldFirst ? 'IEA' : 'BSA',
+            secNum: showOldFirst ? item.oldSec : item.newSec,
+            equivLawCode: showOldFirst ? 'BSA' : 'IEA',
+            equivSecNum: showOldFirst ? item.newSec : item.oldSec,
+            status: item.newSec === 'Repealed' || (item.newSec && item.newSec.includes('Omitted')) ? 'Repealed' : (item.oldSec ? 'Change' : 'New'),
             title: item.title || 'Statutory Section',
             newContent: item.newContent,
-            oldContent: item.oldContent
+            oldContent: item.oldContent,
+            rawOldSec: item.oldSec,
+            rawNewSec: item.newSec
           });
           if (matches.length >= 40) break;
         }
@@ -569,8 +584,12 @@ export default function SearchScreen({ navigation }) {
 
                   {/* Dual Column Headers */}
                   <View style={styles.colHeaderRow}>
-                    <Text style={styles.colTitleLeft}>{item.lawCode} (New Law)</Text>
-                    <Text style={styles.colTitleRight}>{item.equivLawCode} (Old Law)</Text>
+                    <Text style={styles.colTitleLeft}>
+                      {['BNS', 'BNSS', 'BSA'].includes(item.lawCode) ? `${item.lawCode} (New Law)` : `${item.equivLawCode} (New Law)`}
+                    </Text>
+                    <Text style={styles.colTitleRight}>
+                      {['IPC', 'CrPC', 'IEA'].includes(item.lawCode) ? `${item.lawCode} (Old Law)` : `${item.equivLawCode} (Old Law)`}
+                    </Text>
                   </View>
 
                   {/* Dual Column Diff Body */}
@@ -588,10 +607,10 @@ export default function SearchScreen({ navigation }) {
                     style={styles.compareBtn}
                     activeOpacity={0.85}
                     onPress={() => navigation.navigate('Comparison', {
-                      ipcSec: item.equivSecNum,
+                      ipcSec: item.rawOldSec || item.equivSecNum || item.secNum,
                       actCode: item.lawCode,
-                      oldSec: item.equivSecNum,
-                      newSec: item.secNum
+                      oldSec: item.rawOldSec || item.equivSecNum,
+                      newSec: item.rawNewSec || item.secNum
                     })}
                   >
                     <Text style={styles.compareBtnText}>
