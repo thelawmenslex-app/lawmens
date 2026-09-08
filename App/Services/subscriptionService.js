@@ -53,25 +53,7 @@ export const SubscriptionService = {
       let user = userStr ? JSON.parse(userStr) : null;
       const orderId = await AsyncStorage.getItem('@subscription_order_id');
 
-      // 1. If user completed payment (isSubscribed === 'true' or user.isPremium === true), UNLOCK FULL APP!
-      if (isSubscribedFlag === 'true' || user?.isPremium === true) {
-        return {
-          hasAccess: true,
-          isTrial: false,
-          isTrialActive: false,
-          isSubscribed: true,
-          isPremium: true,
-          canAccessMinorActs: true,
-          daysLeft: 30,
-          planType: 'Start up',
-          subtitle: 'Full Legal Research Access (Active)',
-          purchasedDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-          validTill: '30 Days Left',
-          orderId: orderId || 'PAY_ACTIVE_PASS'
-        };
-      }
-
-      // 2. Check with Backend if token is available
+      // 1. Check with Backend first if auth token is available (live sync)
       const token = await AsyncStorage.getItem('@authtoken');
       if (token && token !== 'offline_authenticated_token') {
         try {
@@ -85,8 +67,15 @@ export const SubscriptionService = {
           if (json && json.status && json.data) {
             const serverData = json.data;
             
-            if (serverData.isPremium === true && serverData.hasAccess === true) {
+            // If user is premium OR hasAccess is true on backend
+            if (serverData.isPremium === true || serverData.hasAccess === true) {
               await AsyncStorage.setItem('@is_subscribed', 'true');
+              
+              if (user) {
+                user.isPremium = true;
+                await AsyncStorage.setItem('@userprofile', JSON.stringify(user));
+              }
+
               return {
                 hasAccess: true,
                 isTrial: false,
@@ -95,15 +84,15 @@ export const SubscriptionService = {
                 isPremium: true,
                 canAccessMinorActs: true,
                 daysLeft: serverData.daysRemaining || 30,
-                planType: serverData.planName || 'Start up',
+                planType: serverData.planName || 'Premium Membership',
                 subtitle: 'Full Legal Research Access (Active)',
-                purchasedDate: serverData.purchasedDate ? new Date(serverData.purchasedDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '13 Aug 2026',
+                purchasedDate: serverData.purchasedDate ? new Date(serverData.purchasedDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
                 validTill: `${serverData.daysRemaining || 30} Days Left`,
                 orderId: serverData.paymentId || 'PAY_ACTIVE_PASS'
               };
             }
             
-            if (serverData.hasAccess === false) {
+            if (serverData.hasAccess === false && !isSubscribedFlag && !user?.isPremium) {
               return {
                 hasAccess: false,
                 isTrial: true,
@@ -123,6 +112,24 @@ export const SubscriptionService = {
         } catch (apiErr) {
           console.warn('Live subscription status API note:', apiErr.message);
         }
+      }
+
+      // 2. Offline / Local fallback: If user completed payment or profile is marked premium:
+      if (isSubscribedFlag === 'true' || user?.isPremium === true) {
+        return {
+          hasAccess: true,
+          isTrial: false,
+          isTrialActive: false,
+          isSubscribed: true,
+          isPremium: true,
+          canAccessMinorActs: true,
+          daysLeft: 30,
+          planType: 'Premium Membership',
+          subtitle: 'Full Legal Research Access (Active)',
+          purchasedDate: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+          validTill: '30 Days Left',
+          orderId: orderId || 'PAY_ACTIVE_PASS'
+        };
       }
 
       // 3. Strict 3-day calculation from registration

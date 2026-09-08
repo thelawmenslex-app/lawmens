@@ -17,6 +17,7 @@ export default function TrialExpiredScreen({ navigation }) {
   const [plans, setPlans] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [checkingStatus, setCheckingStatus] = useState(false);
 
   // Prevent back navigation on Android when trial is expired
   useEffect(() => {
@@ -25,9 +26,34 @@ export default function TrialExpiredScreen({ navigation }) {
     return () => backHandler.remove();
   }, []);
 
+  const checkAndUnlock = async (showPrompt = false) => {
+    try {
+      setCheckingStatus(true);
+      const status = await SubscriptionService.getStatus();
+      if (status && (status.hasAccess === true || status.isPremium === true || status.isSubscribed === true)) {
+        await AsyncStorage.setItem('@is_subscribed', 'true');
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'MainTabs' }]
+        });
+        return;
+      }
+      if (showPrompt) {
+        alert('No active subscription found. If you recently completed payment, please wait 30 seconds or contact support.');
+      }
+    } catch (e) {
+      if (showPrompt) {
+        alert('Could not verify subscription. Please check your internet connection.');
+      }
+    } finally {
+      setCheckingStatus(false);
+    }
+  };
+
   useEffect(() => {
     (async () => {
       try {
+        await checkAndUnlock(false);
         const availablePlans = await SubscriptionService.getAvailablePlans();
         setPlans(availablePlans || []);
         if (availablePlans && availablePlans.length > 0) {
@@ -38,7 +64,15 @@ export default function TrialExpiredScreen({ navigation }) {
         setLoading(false);
       }
     })();
-  }, []);
+
+    const unsubFocus = navigation.addListener('focus', () => {
+      checkAndUnlock(false);
+    });
+
+    return () => {
+      if (typeof unsubFocus === 'function') unsubFocus();
+    };
+  }, [navigation]);
 
   const handleGoToPayment = () => {
     const planToPay = selectedPlan || { name: 'Start up', price: 1500, validity: 30 };
@@ -130,6 +164,22 @@ export default function TrialExpiredScreen({ navigation }) {
           onPress={handleGoToPayment}
         >
           <Text style={styles.payBtnText}>Unlock Full App • Go to Payment →</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.verifyBtn}
+          activeOpacity={0.85}
+          onPress={() => checkAndUnlock(true)}
+          disabled={checkingStatus}
+        >
+          {checkingStatus ? (
+            <ActivityIndicator size="small" color="#25AAE2" />
+          ) : (
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Feather name="refresh-cw" size={15} color="#25AAE2" style={{ marginRight: 6 }} />
+              <Text style={styles.verifyBtnText}>Already Paid? Verify & Restore Premium</Text>
+            </View>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -315,6 +365,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '900',
     color: '#FFFFFF',
+  },
+  verifyBtn: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#25AAE2',
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  verifyBtnText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#25AAE2',
   },
   logoutBtn: {
     paddingVertical: 12,

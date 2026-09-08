@@ -100,7 +100,21 @@ export default function LoginScreen({ navigation }) {
         };
 
         if (token) await AsyncStorage.setItem('@authtoken', token);
+        if (userObj.isPremium) {
+          await AsyncStorage.setItem('@is_subscribed', 'true');
+        }
         await AsyncStorage.setItem('@userprofile', JSON.stringify(userObj));
+        try {
+          const subCheck = await SubscriptionService.getStatus();
+          if (subCheck && subCheck.hasAccess === false) {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'TrialExpired' }],
+            });
+            return;
+          }
+        } catch (e) {}
+
         navigation.reset({
           index: 0,
           routes: [{ name: 'MainTabs' }],
