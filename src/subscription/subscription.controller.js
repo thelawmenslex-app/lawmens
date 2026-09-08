@@ -183,7 +183,7 @@ const getSubscriptionStatus = async (req, res) => {
         // Strict 3-day trial end date calculated from account creation
         const trialEndDate = user?.trialEndDate ? new Date(user.trialEndDate) : new Date(createdAt.getTime() + 3 * 24 * 60 * 60 * 1000);
         
-        const isPremium = user?.isPremium === true;
+        const isPremium = user?.isPremium === true || Boolean(user?.subscriptionId);
         let isExpired = false;
         let hasAccess = true;
         let isTrial = false;
@@ -191,12 +191,29 @@ const getSubscriptionStatus = async (req, res) => {
         let reason = 'trial_active';
 
         if (isPremium) {
-            const subscriptionExpiry = user?.subscriptionExpiresAt ? new Date(user.subscriptionExpiresAt) : trialEndDate;
-            isExpired = now > subscriptionExpiry;
-            hasAccess = !isExpired;
+            let subscriptionExpiry = null;
+            if (user?.subscriptionExpiresAt) {
+                subscriptionExpiry = new Date(user.subscriptionExpiresAt);
+            } else if (user?.trialEndDate && new Date(user.trialEndDate) > now) {
+                subscriptionExpiry = new Date(user.trialEndDate);
+            } else {
+                // If isPremium is true without explicit expiry or past date, default to active access
+                subscriptionExpiry = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000);
+            }
+
+            // Only mark expired if subscriptionExpiresAt is explicitly in the past
+            if (user?.subscriptionExpiresAt && now > new Date(user.subscriptionExpiresAt)) {
+                isExpired = true;
+                hasAccess = false;
+                daysRemaining = 0;
+                reason = 'subscription_expired';
+            } else {
+                isExpired = false;
+                hasAccess = true;
+                daysRemaining = Math.max(1, Math.ceil((subscriptionExpiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+                reason = 'premium_active';
+            }
             isTrial = false;
-            daysRemaining = !isExpired ? Math.max(0, Math.ceil((subscriptionExpiry.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0;
-            reason = isExpired ? 'subscription_expired' : 'premium_active';
         } else {
             // Free Trial evaluation (Strict 3 Days)
             isExpired = now > trialEndDate;
