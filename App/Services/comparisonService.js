@@ -1,25 +1,40 @@
 import rawData from '../Assets/Data/lawData.json';
 import mappingData from '../Assets/Data/comprehensiveMappings.json';
 
-// Build dynamic lookup maps from comprehensiveMappings.json
+// Build dynamic lookup maps from comprehensiveMappings.json (Bidirectional)
 const dynamicIpcMap = {};
+const dynamicBnsMap = {};
 (mappingData.ipcToBns || []).forEach(m => {
-  dynamicIpcMap[m.oldSec] = { bnsSec: m.newSec, title: m.title };
+  dynamicIpcMap[m.oldSec] = { bnsSec: m.newSec, title: m.title, oldContent: m.oldContent, newContent: m.newContent };
+  if (m.newSec && m.newSec !== 'Deleted' && m.newSec !== 'Repealed') {
+    dynamicBnsMap[m.newSec] = { ipcSec: m.oldSec, title: m.title, oldContent: m.oldContent, newContent: m.newContent };
+  }
 });
 
 const dynamicCrpcMap = {};
+const dynamicBnssMap = {};
 (mappingData.crpcToBnss || []).forEach(m => {
-  dynamicCrpcMap[m.oldSec] = { bnssSec: m.newSec, title: m.title };
+  dynamicCrpcMap[m.oldSec] = { bnssSec: m.newSec, title: m.title, oldContent: m.oldContent, newContent: m.newContent };
+  if (m.newSec && m.newSec !== 'Deleted' && m.newSec !== 'Repealed') {
+    dynamicBnssMap[m.newSec] = { crpcSec: m.oldSec, title: m.title, oldContent: m.oldContent, newContent: m.newContent };
+  }
 });
 
 const dynamicIeaMap = {};
+const dynamicBsaMap = {};
 (mappingData.ieaToBsa || []).forEach(m => {
-  dynamicIeaMap[m.oldSec] = { bsaSec: m.newSec, title: m.title };
+  dynamicIeaMap[m.oldSec] = { bsaSec: m.newSec, title: m.title, oldContent: m.oldContent, newContent: m.newContent };
+  if (m.newSec && m.newSec !== 'Deleted' && m.newSec !== 'Repealed') {
+    dynamicBsaMap[m.newSec] = { ieaSec: m.oldSec, title: m.title, oldContent: m.oldContent, newContent: m.newContent };
+  }
 });
 
 export const IPC_BNS_MAPPING = dynamicIpcMap;
+export const BNS_IPC_MAPPING = dynamicBnsMap;
 export const CRPC_BNSS_MAPPING = dynamicCrpcMap;
+export const BNSS_CRPC_MAPPING = dynamicBnssMap;
 export const IEA_BSA_MAPPING = dynamicIeaMap;
+export const BSA_IEA_MAPPING = dynamicBsaMap;
 
 // Compute Word Diffs between two legal texts
 export function computeLegalDiff(oldText = '', newText = '') {
@@ -58,17 +73,35 @@ export const ComparisonService = {
     const base = s.split('(')[0].trim();
     return IPC_BNS_MAPPING[base] || null;
   },
+  getMappingForBns: (bnsSec) => {
+    const s = String(bnsSec || '').trim();
+    if (BNS_IPC_MAPPING[s]) return BNS_IPC_MAPPING[s];
+    const base = s.split('(')[0].trim();
+    return BNS_IPC_MAPPING[base] || null;
+  },
   getMappingForCrpc: (crpcSec) => {
     const s = String(crpcSec || '').trim();
     if (CRPC_BNSS_MAPPING[s]) return CRPC_BNSS_MAPPING[s];
     const base = s.split('(')[0].trim();
     return CRPC_BNSS_MAPPING[base] || null;
   },
+  getMappingForBnss: (bnssSec) => {
+    const s = String(bnssSec || '').trim();
+    if (BNSS_CRPC_MAPPING[s]) return BNSS_CRPC_MAPPING[s];
+    const base = s.split('(')[0].trim();
+    return BNSS_CRPC_MAPPING[base] || null;
+  },
   getMappingForIea: (ieaSec) => {
     const s = String(ieaSec || '').trim();
     if (IEA_BSA_MAPPING[s]) return IEA_BSA_MAPPING[s];
     const base = s.split('(')[0].trim();
     return IEA_BSA_MAPPING[base] || null;
+  },
+  getMappingForBsa: (bsaSec) => {
+    const s = String(bsaSec || '').trim();
+    if (BSA_IEA_MAPPING[s]) return BSA_IEA_MAPPING[s];
+    const base = s.split('(')[0].trim();
+    return BSA_IEA_MAPPING[base] || null;
   },
 
   getComparisonPairInfo: (actCodeOrTitle = '') => {
