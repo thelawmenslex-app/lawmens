@@ -377,33 +377,42 @@ const googleLogin = async (req, res) => {
         }
 
         const cleanEmail = data.email.trim().toLowerCase();
-        const checkUser = await userService.getUser({ email: { $regex: new RegExp(`^${cleanEmail}$`, 'i') } });
-        if (checkUser) {
-            // Existing user -> direct login to Home
-            const deviceId = data.deviceId || `device_${Date.now()}`;
-            await userService.updateUser({ _id: checkUser._id }, { currentDeviceId: deviceId });
-            const token = generateToken({ id: checkUser._id, deviceId: deviceId });
+        let checkUser = await userService.getUser({ email: { $regex: new RegExp(`^${cleanEmail}$`, 'i') } });
+        const deviceId = data.deviceId || `device_${Date.now()}`;
 
-            const response = {
-                isNewUser: false,
-                firstName: checkUser.firstName || data.firstName || 'User',
-                lastName: checkUser.lastName || data.lastName || '',
-                email: checkUser.email,
-                phoneNumber: checkUser.phoneNumber || '',
-                _id: checkUser._id,
-                token: token
-            };
-
-            return sendResponse(res, true, 200, 'Login successfull.', response);
-        } else {
-            // New Google user -> return Google info so user can complete remaining details (phone & profession)
-            return sendResponse(res, true, 200, 'New Google account. Please complete remaining registration details.', {
-                isNewUser: true,
+        if (!checkUser) {
+            const fName = (data.firstName || cleanEmail.split('@')[0] || 'User').trim();
+            const lName = (data.lastName || '').trim();
+            checkUser = await userService.createUser({
+                firstName: fName,
+                lastName: lName,
                 email: cleanEmail,
-                firstName: data.firstName || '',
-                lastName: data.lastName || ''
+                phoneNumber: data.phoneNumber || '',
+                currentDeviceId: deviceId,
+                role: 'User',
+                isActive: true,
+                trialStartDate: new Date(),
+                trialEndDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
             });
+        } else {
+            await userService.updateUser({ _id: checkUser._id }, { currentDeviceId: deviceId });
         }
+
+        const token = generateToken({ id: checkUser._id, deviceId: deviceId });
+
+        const response = {
+            isNewUser: false,
+            firstName: checkUser.firstName || data.firstName || 'User',
+            lastName: checkUser.lastName || data.lastName || '',
+            email: checkUser.email,
+            phoneNumber: checkUser.phoneNumber || '',
+            _id: checkUser._id,
+            role: checkUser.role || 'User',
+            isPremium: Boolean(checkUser.isPremium || checkUser.subscriptionId),
+            token: token
+        };
+
+        return sendResponse(res, true, 200, 'Login successfull.', response);
     } catch (error) {
         return errorHandler(error, res);
     }
