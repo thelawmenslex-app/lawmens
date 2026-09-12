@@ -13,8 +13,21 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { backendroutes } from '../../../Actions/constant';
+import { SubscriptionService } from '../../../Services/subscriptionService';
+
+// Configure Google Sign-In with Web Client ID from google-services.json
+try {
+  GoogleSignin.configure({
+    webClientId: '988610679047-ki032ocej8oa2j30t2btj2avlp1h13rh.apps.googleusercontent.com',
+    offlineAccess: false,
+    forceCodeForRefreshToken: true,
+  });
+} catch (e) {
+  console.log('GoogleSignin.configure error:', e);
+}
 
 export default function LoginScreen({ navigation }) {
   const [identifier, setIdentifier] = useState('');
@@ -25,24 +38,95 @@ export default function LoginScreen({ navigation }) {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
-      const googleUser = {
-        name: 'Google User',
-        email: 'user@gmail.com',
-        provider: 'google.com'
-      };
-      await AsyncStorage.setItem('@authtoken', 'GOOGLE_PLAY_USER_TOKEN');
-      await AsyncStorage.setItem('@userprofile', JSON.stringify(googleUser));
-      setLoading(false);
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'MainTabs' }],
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      const signInResult = await GoogleSignin.signIn();
+      
+      const gUser = signInResult.data?.user || signInResult.user || {};
+      const idToken = signInResult.data?.idToken || signInResult.idToken || '';
+      const email = gUser.email;
+
+      if (!email) {
+        setLoading(false);
+        Alert.alert('Google Sign-In', 'Could not retrieve email from selected Google account.');
+        return;
+      }
+
+      const fName = gUser.givenName || (gUser.name ? gUser.name.split(' ')[0] : 'User');
+      const lName = gUser.familyName || (gUser.name ? gUser.name.split(' ').slice(1).join(' ') : '');
+
+      const response = await fetch(backendroutes.google, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          firstName: fName,
+          lastName: lName,
+          idToken: idToken
+        })
       });
-    } catch (e) {
+
+      const data = await response.json();
       setLoading(false);
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'MainTabs' }],
-      });
+
+      if (data.status && data.data && data.data.token) {
+        const raw = data.data;
+        const fullName = `${raw.firstName || fName} ${raw.lastName || lName}`.trim();
+        const userObj = {
+          _id: raw._id || '',
+          firstName: raw.firstName || fName,
+          lastName: raw.lastName || lName,
+          name: fullName,
+          email: raw.email || email,
+          phone: raw.phoneNumber || '',
+          phoneNumber: raw.phoneNumber || '',
+          profession: raw.profession || 'Advocate',
+          role: raw.role || 'User',
+          isPremium: Boolean(raw.isPremium),
+          readingHistoryCount: 199,
+          bookmarksCount: 0
+        };
+
+        await AsyncStorage.setItem('@authtoken', raw.token);
+        if (userObj.isPremium) {
+          await AsyncStorage.setItem('@is_subscribed', 'true');
+        }
+        await AsyncStorage.setItem('@userprofile', JSON.stringify(userObj));
+
+        try {
+          const subCheck = await SubscriptionService.getStatus();
+          if (subCheck && subCheck.hasAccess === false) {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'TrialExpired' }],
+            });
+            return;
+          }
+        } catch (e) {}
+
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'MainTabs' }],
+        });
+      } else {
+        Alert.alert(
+          'Google Login Notice',
+          data.message || 'Unable to authenticate with Google. Please try regular login or signup.'
+        );
+      }
+    } catch (error) {
+      setLoading(false);
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        // User cancelled the login prompt
+        return;
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        // Sign-in already in progress
+        return;
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert('Google Play Services', 'Google Play Services is not available or needs to be updated on this device.');
+      } else {
+        console.log('Google Sign-In Error:', error);
+        Alert.alert('Google Sign-In', error.message || 'Something went wrong during Google Sign-In.');
+      }
     }
   };
 

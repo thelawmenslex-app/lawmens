@@ -12,13 +12,28 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import FontAwesome from 'react-native-vector-icons/FontAwesome';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { backendroutes } from '../../../Actions/constant';
+import { SubscriptionService } from '../../../Services/subscriptionService';
 
-export default function SignupScreen({ navigation }) {
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
+try {
+  GoogleSignin.configure({
+    webClientId: '988610679047-ki032ocej8oa2j30t2btj2avlp1h13rh.apps.googleusercontent.com',
+    offlineAccess: false,
+    forceCodeForRefreshToken: true,
+  });
+} catch (e) {
+  console.log('GoogleSignin.configure error in signup:', e);
+}
+
+export default function SignupScreen({ navigation, route }) {
+  const prefilled = route?.params || {};
+  const [firstName, setFirstName] = useState(prefilled.prefilledFirstName || '');
+  const [lastName, setLastName] = useState(prefilled.prefilledLastName || '');
   const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(prefilled.prefilledEmail || '');
   const [profession, setProfession] = useState('Advocate');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -82,6 +97,98 @@ export default function SignupScreen({ navigation }) {
   };
 
   const passwordStrength = getPasswordStrength(password);
+
+  const handleGoogleSignup = async () => {
+    setLoading(true);
+    try {
+      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      const signInResult = await GoogleSignin.signIn();
+      
+      const gUser = signInResult.data?.user || signInResult.user || {};
+      const idToken = signInResult.data?.idToken || signInResult.idToken || '';
+      const gEmail = gUser.email;
+
+      if (!gEmail) {
+        setLoading(false);
+        Alert.alert('Google Sign-In', 'Could not retrieve email from selected Google account.');
+        return;
+      }
+
+      const fName = gUser.givenName || (gUser.name ? gUser.name.split(' ')[0] : 'User');
+      const lName = gUser.familyName || (gUser.name ? gUser.name.split(' ').slice(1).join(' ') : '');
+
+      const response = await fetch(backendroutes.google, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: gEmail.trim().toLowerCase(),
+          firstName: fName,
+          lastName: lName,
+          idToken: idToken
+        })
+      });
+
+      const data = await response.json();
+      setLoading(false);
+
+      if (data.status && data.data && data.data.token) {
+        const raw = data.data;
+        const fullName = `${raw.firstName || fName} ${raw.lastName || lName}`.trim();
+        const userObj = {
+          _id: raw._id || '',
+          firstName: raw.firstName || fName,
+          lastName: raw.lastName || lName,
+          name: fullName,
+          email: raw.email || gEmail,
+          phone: raw.phoneNumber || '',
+          phoneNumber: raw.phoneNumber || '',
+          profession: raw.profession || 'Advocate',
+          role: raw.role || 'User',
+          isPremium: Boolean(raw.isPremium),
+          readingHistoryCount: 199,
+          bookmarksCount: 0
+        };
+
+        await AsyncStorage.setItem('@authtoken', raw.token);
+        if (userObj.isPremium) {
+          await AsyncStorage.setItem('@is_subscribed', 'true');
+        }
+        await AsyncStorage.setItem('@userprofile', JSON.stringify(userObj));
+
+        try {
+          const subCheck = await SubscriptionService.getStatus();
+          if (subCheck && subCheck.hasAccess === false) {
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'TrialExpired' }],
+            });
+            return;
+          }
+        } catch (e) {}
+
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'MainTabs' }],
+        });
+      } else {
+        Alert.alert(
+          'Google Registration Notice',
+          data.message || 'Unable to register with Google. Please use standard registration.'
+        );
+      }
+    } catch (error) {
+      setLoading(false);
+      if (error.code === statusCodes.SIGN_IN_CANCELLED) {
+        return;
+      } else if (error.code === statusCodes.IN_PROGRESS) {
+        return;
+      } else if (error.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert('Google Play Services', 'Google Play Services is not available or needs updating.');
+      } else {
+        Alert.alert('Google Sign-In', error.message || 'Google Sign-In failed. Please try again.');
+      }
+    }
+  };
 
   const handleSignup = async () => {
     if (!firstName.trim()) {
@@ -405,6 +512,24 @@ export default function SignupScreen({ navigation }) {
             <Text style={styles.signupBtnText}>Send Verification OTP →</Text>
           )}
         </TouchableOpacity>
+
+        {/* Or Register With Divider */}
+        <View style={styles.dividerRow}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>Or Register With</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        {/* Continue with Google Button */}
+        <TouchableOpacity
+          style={styles.googleBtn}
+          activeOpacity={0.85}
+          onPress={handleGoogleSignup}
+          disabled={loading}
+        >
+          <FontAwesome name="google" size={18} color="#EA4335" />
+          <Text style={styles.googleBtnText}>Continue with Google</Text>
+        </TouchableOpacity>
       </ScrollView>
 
       {/* Bottom Login Prompt */}
@@ -545,6 +670,23 @@ const styles = StyleSheet.create({
     marginVertical: 14,
   },
   signupBtnText: { fontSize: 16, fontWeight: '800', color: '#FFFFFF' },
+  dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 16 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: '#D8ECF7' },
+  dividerText: { paddingHorizontal: 12, fontSize: 13, color: '#64748B', fontWeight: '600' },
+  googleBtn: {
+    width: '100%',
+    height: 52,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    marginBottom: 16,
+  },
+  googleBtnText: { fontSize: 15, fontWeight: '700', color: '#1E293B' },
   bottomPromptRow: {
     paddingVertical: 18,
     flexDirection: 'row',
