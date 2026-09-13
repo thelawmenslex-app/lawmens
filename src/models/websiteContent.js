@@ -14,7 +14,7 @@ const sectionContentSchema = new Schema({
     },
     about: {
         title: { type: String, default: "About THE-LAWMEN'S" },
-        content: { type: String, default: "THE-LAWMEN'S provides quick, reliable, and user-friendly access to statutes, comparative legal provisions, and legal reference materials for advocates, judges, law students, academicians, government officials, law enforcement agencies, corporate professionals, and the general public." },
+        content: { type: String, default: "THE-LAWMEN'S provides quick, reliable, and user-friendly access to statutes, comparative legal provisions, and legal reference materials for advocates, judges, Legal Fraternity, academicians, government officials, law enforcement agencies, corporate professionals, and the general public." },
         tagline: { type: String, default: "Empowering Legal Knowledge. Advancing Justice." }
     },
     vision: {
