@@ -94,9 +94,14 @@ export default function MinorActsScreen({ navigation }) {
       ? rawPdf
       : `${Imageurl}${rawPdf.startsWith('/') ? '' : '/'}${rawPdf}`;
 
+    const actId = item._id?.$oid || item._id || item.name || actTitle;
+    const fallbackPdfUrl = `${BASE_URL}/minoract/pdf/${encodeURIComponent(actId)}`;
+
     navigation.navigate('PdfViewer', {
       title: actTitle,
       pdfUrl: fullPdfUrl,
+      fallbackPdfUrl: fallbackPdfUrl,
+      actItem: item,
       totalPageCount: 33
     });
   };

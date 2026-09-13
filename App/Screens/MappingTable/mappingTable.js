@@ -210,10 +210,16 @@ export default function MappingTableScreen({ route, navigation }) {
             activeOpacity={0.85}
             onPress={() => {
               navigation.navigate('Comparison', {
+                primaryCode: config.leftCode,
+                leftCode: config.leftCode,
+                rightCode: config.rightCode,
+                leftSec: item.leftSec,
+                rightSec: item.rightSec,
                 ipcSec: item.rawOldSec,
                 actCode: config.leftCode,
                 oldSec: item.rawOldSec,
                 newSec: item.rawNewSec,
+                titleText: config.titleText,
                 sectionData: {
                   keyword: item.title,
                   name: item.leftSec,

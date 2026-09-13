@@ -607,6 +607,8 @@ export default function SearchScreen({ navigation }) {
                     style={styles.compareBtn}
                     activeOpacity={0.85}
                     onPress={() => navigation.navigate('Comparison', {
+                      primaryCode: item.lawCode,
+                      leftCode: item.lawCode,
                       ipcSec: item.rawOldSec || item.equivSecNum || item.secNum,
                       actCode: item.lawCode,
                       oldSec: item.rawOldSec || item.equivSecNum,

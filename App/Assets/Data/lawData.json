@@ -47857,394 +47857,1014 @@
   ],
   "minoracts": [
     {
-      "_id": {
-        "$oid": "6a6209dcd90a0beed8ad2cef"
-      },
-      "name": "THE ADVOCATES ACT, 1961",
-      "description": "",
-      "pdfUrl": "/uploads/minor-acts/minor_act_pdf_1784809948348.pdf",
+      "order": 0,
+      "name": "Ancient Monuments Preservation Act, 1904",
+      "description": "Central Legislation: Ancient Monuments Preservation Act, 1904",
+      "filename": "4. Ancient Monuments Preservation Act, 1904..pdf",
+      "pdfUrl": "/uploads/minor-acts/4. Ancient Monuments Preservation Act, 1904..pdf",
+      "category": "Criminal Minor Acts",
       "isActive": true,
-      "createdAt": {
-        "$date": "2026-07-23T12:32:28.459Z"
-      },
-      "updatedAt": {
-        "$date": "2026-07-23T12:32:28.459Z"
-      }
+      "isFreeTrial": true
     },
     {
-      "_id": {
-        "$oid": "6a620d8bd90a0beed8ad2d0c"
-      },
-      "name": "THE AIR (PREVENTION AND CONTROL OF POLLUTION) ACT, 1981 ",
-      "description": "",
-      "pdfUrl": "/uploads/minor-acts/minor_act_pdf_1784810891672.pdf",
+      "order": 1,
+      "name": "Bonded Labour System (Abolition) Act, 1976",
+      "description": "Central Legislation: Bonded Labour System (Abolition) Act, 1976",
+      "filename": "11. bonded labour system [abolition]Act 1976.pdf",
+      "pdfUrl": "/uploads/minor-acts/11. bonded labour system [abolition]Act 1976.pdf",
+      "category": "Criminal Minor Acts",
       "isActive": true,
-      "createdAt": {
-        "$date": "2026-07-23T12:48:11.786Z"
-      },
-      "updatedAt": {
-        "$date": "2026-07-23T12:48:11.786Z"
-      }
+      "isFreeTrial": true
     },
     {
-      "_id": {
-        "$oid": "6a620dd9d90a0beed8ad2d23"
-      },
-      "name": "THE ANCIENT MONUMENTS AND ARCHAEOLOGICAL SITES  AND REMAINS ACT, 1958",
-      "description": "",
-      "pdfUrl": "/uploads/minor-acts/minor_act_pdf_1784810967199.pdf",
+      "order": 2,
+      "name": "Cable Television Networks (Regulation) Act, 1995",
+      "description": "Central Legislation: Cable Television Networks (Regulation) Act, 1995",
+      "filename": "12. Cable Television networks [regulation]Act 1995.pdf",
+      "pdfUrl": "/uploads/minor-acts/12. Cable Television networks [regulation]Act 1995.pdf",
+      "category": "Criminal Minor Acts",
       "isActive": true,
-      "createdAt": {
-        "$date": "2026-07-23T12:49:29.004Z"
-      },
-      "updatedAt": {
-        "$date": "2026-07-23T12:49:29.004Z"
-      }
+      "isFreeTrial": true
     },
     {
-      "_id": {
-        "$oid": "6a620eced90a0beed8ad2d32"
-      },
-      "name": "Ancient Monuments Preservation Act, 1904.",
-      "description": "",
-      "pdfUrl": "/uploads/minor-acts/minor_act_pdf_1784811213910.pdf",
+      "order": 3,
+      "name": "Cattle-Trespass Act, 1871",
+      "description": "Central Legislation: Cattle-Trespass Act, 1871",
+      "filename": "13 . Cattle-trespass_act,_1871.pdf",
+      "pdfUrl": "/uploads/minor-acts/13 . Cattle-trespass_act,_1871.pdf",
+      "category": "Criminal Minor Acts",
       "isActive": true,
-      "createdAt": {
-        "$date": "2026-07-23T12:53:34.568Z"
-      },
-      "updatedAt": {
-        "$date": "2026-07-23T12:53:34.568Z"
-      }
+      "isFreeTrial": true
     },
     {
-      "_id": {
-        "$oid": "6a620ef9d90a0beed8ad2d3f"
-      },
-      "name": "THE ANTIQUITIES AND ART TREASURES ACT, 1972  ",
-      "description": "",
-      "pdfUrl": "/uploads/minor-acts/minor_act_pdf_1784811257538.pdf",
+      "order": 4,
+      "name": "Central Vigilance Commission Act, 2003",
+      "description": "Central Legislation: Central Vigilance Commission Act, 2003",
+      "filename": "14. central vigilance commission act 2003.pdf",
+      "pdfUrl": "/uploads/minor-acts/14. central vigilance commission act 2003.pdf",
+      "category": "Criminal Minor Acts",
       "isActive": true,
-      "createdAt": {
-        "$date": "2026-07-23T12:54:17.929Z"
-      },
-      "updatedAt": {
-        "$date": "2026-07-23T12:54:17.929Z"
-      }
+      "isFreeTrial": true
     },
     {
-      "_id": {
-        "$oid": "6a620f35d90a0beed8ad2d4d"
-      },
-      "name": "THE ANTI-HIJACKING ACT, 1982 ",
-      "description": "",
-      "pdfUrl": "/uploads/minor-acts/minor_act_pdf_1784811317473.pdf",
+      "order": 5,
+      "name": "Cigarettes and Other Tobacco Products (Prohibition of Advertisement and Regulation of Trade and Commerce, Production, Supply and Distribution) Act, 2003",
+      "description": "Central Legislation: Cigarettes and Other Tobacco Products (Prohibition of Advertisement and Regulation of Trade and Commerce, Production, Supply and Distribution) Act, 2003",
+      "filename": "16. Cigarette and other tobacco product (prohibition of Advertisement and regulation of trade and commerce, production, supply and distribution)Act 2003.pdf",
+      "pdfUrl": "/uploads/minor-acts/16. Cigarette and other tobacco product (prohibition of Advertisement and regulation of trade and commerce, production, supply and distribution)Act 2003.pdf",
+      "category": "Criminal Minor Acts",
       "isActive": true,
-      "createdAt": {
-        "$date": "2026-07-23T12:55:17.553Z"
-      },
-      "updatedAt": {
-        "$date": "2026-07-23T12:55:17.553Z"
-      }
+      "isFreeTrial": true
     },
     {
-      "_id": {
-        "$oid": "6a620f72d90a0beed8ad2d5c"
-      },
-      "name": "THE ARMS ACT, 1959 ",
-      "description": "",
-      "pdfUrl": "/uploads/minor-acts/minor_act_pdf_1784811378538.pdf",
+      "order": 6,
+      "name": "Cinematograph Act, 1952",
+      "description": "Central Legislation: Cinematograph Act, 1952",
+      "filename": "17. cinematograph act 1952.pdf",
+      "pdfUrl": "/uploads/minor-acts/17. cinematograph act 1952.pdf",
+      "category": "Criminal Minor Acts",
       "isActive": true,
-      "createdAt": {
-        "$date": "2026-07-23T12:56:18.742Z"
-      },
-      "updatedAt": {
-        "$date": "2026-07-23T12:56:18.742Z"
-      }
+      "isFreeTrial": true
     },
     {
-      "_id": {
-        "$oid": "6a6210cad90a0beed8ad2d71"
-      },
-      "name": "ARMS ACT AMENDED 2019",
-      "description": "",
-      "pdfUrl": "/uploads/minor-acts/minor_act_pdf_1784811722003.pdf",
+      "order": 7,
+      "name": "Commission of Sati (Prevention) Act, 1987",
+      "description": "Central Legislation: Commission of Sati (Prevention) Act, 1987",
+      "filename": "20. commission of sati [prevention]Act 1987.pdf",
+      "pdfUrl": "/uploads/minor-acts/20. commission of sati [prevention]Act 1987.pdf",
+      "category": "Criminal Minor Acts",
       "isActive": true,
-      "createdAt": {
-        "$date": "2026-07-23T13:02:02.156Z"
-      },
-      "updatedAt": {
-        "$date": "2026-07-23T13:02:02.156Z"
-      }
+      "isFreeTrial": true
     },
     {
-      "_id": {
-        "$oid": "6a62132f07710fa206520819"
-      },
-      "name": "THE ARMS RULES 1962",
-      "description": "",
-      "pdfUrl": "/uploads/minor-acts/minor_act_pdf_1784812334852.pdf",
-      "isActive": true,
-      "createdAt": {
-        "$date": "2026-07-23T13:12:15.018Z"
-      },
-      "updatedAt": {
-        "$date": "2026-07-23T13:12:15.018Z"
-      }
-    },
-    {
-      "_id": {
-        "$oid": "6a62134f07710fa20652082a"
-      },
-      "name": "The Army Act, 1950 ",
-      "description": "",
-      "pdfUrl": "/uploads/minor-acts/minor_act_pdf_1784812366978.pdf",
-      "isActive": true,
-      "createdAt": {
-        "$date": "2026-07-23T13:12:47.073Z"
-      },
-      "updatedAt": {
-        "$date": "2026-07-23T13:12:47.073Z"
-      }
-    },
-    {
-      "_id": {
-        "$oid": "6a62138107710fa20652083d"
-      },
-      "name": "THE PROHIBITION OF BENAMI PROPERTY TRANSACTIONS ACT, 1988 ",
-      "description": "",
-      "pdfUrl": "/uploads/minor-acts/minor_act_pdf_1784812417171.pdf",
-      "isActive": true,
-      "createdAt": {
-        "$date": "2026-07-23T13:13:37.290Z"
-      },
-      "updatedAt": {
-        "$date": "2026-07-23T13:13:37.290Z"
-      }
-    },
-    {
-      "_id": {
-        "$oid": "6a6213f107710fa20652085e"
-      },
-      "name": "THE BONDED LABOUR SYSTEM (ABOLITION) ACT, 1976 ",
-      "description": "",
-      "pdfUrl": "/uploads/minor-acts/minor_act_pdf_1784812519655.pdf",
-      "isActive": true,
-      "createdAt": {
-        "$date": "2026-07-23T13:15:29.640Z"
-      },
-      "updatedAt": {
-        "$date": "2026-07-23T13:15:29.640Z"
-      }
-    },
-    {
-      "_id": {
-        "$oid": "6a62141e07710fa206520873"
-      },
-      "name": "THE CABLE TELEVISION NETWORKS  (REGULATION) ACT, 1995 ",
-      "description": "",
-      "pdfUrl": "/uploads/minor-acts/minor_act_pdf_1784812574723.pdf",
-      "isActive": true,
-      "createdAt": {
-        "$date": "2026-07-23T13:16:14.811Z"
-      },
-      "updatedAt": {
-        "$date": "2026-07-23T13:16:14.811Z"
-      }
-    },
-    {
-      "_id": {
-        "$oid": "6a62145207710fa206520889"
-      },
-      "name": "THE CATTLE-TRESPASS ACT, 1871 ",
-      "description": "",
-      "pdfUrl": "/uploads/minor-acts/minor_act_pdf_1784812626162.pdf",
-      "isActive": true,
-      "createdAt": {
-        "$date": "2026-07-23T13:17:06.704Z"
-      },
-      "updatedAt": {
-        "$date": "2026-07-23T13:17:06.704Z"
-      }
-    },
-    {
-      "_id": {
-        "$oid": "6a62149a07710fa2065208a0"
-      },
-      "name": "THE CENTRAL VIGILANCE COMMISSION ACT, 2003 ",
-      "description": "",
-      "pdfUrl": "/uploads/minor-acts/minor_act_pdf_1784812698059.pdf",
-      "isActive": true,
-      "createdAt": {
-        "$date": "2026-07-23T13:18:18.137Z"
-      },
-      "updatedAt": {
-        "$date": "2026-07-23T13:18:18.137Z"
-      }
-    },
-    {
-      "_id": {
-        "$oid": "6a6214b207710fa2065208b7"
-      },
-      "name": "THE CHIT FUNDS ACT, 1982 ",
-      "description": "",
-      "pdfUrl": "/uploads/minor-acts/minor_act_pdf_1784812722138.pdf",
-      "isActive": true,
-      "createdAt": {
-        "$date": "2026-07-23T13:18:42.226Z"
-      },
-      "updatedAt": {
-        "$date": "2026-07-23T13:18:42.226Z"
-      }
-    },
-    {
-      "_id": {
-        "$oid": "6a6216a307710fa2065208d7"
-      },
-      "name": "THE CIGARETTES AND OTHER TOBACCO PRODUCTS (PROHIBITION OFADVERTISEMENT AND REGULATION OF TRADE AND COMMERCE, PRODUCTION, SUPPLY AND DISTRIBUTION) ACT, 2003 ",
-      "description": "",
-      "pdfUrl": "/uploads/minor-acts/minor_act_pdf_1784813219133.pdf",
-      "isActive": true,
-      "createdAt": {
-        "$date": "2026-07-23T13:26:59.331Z"
-      },
-      "updatedAt": {
-        "$date": "2026-07-23T13:26:59.331Z"
-      }
-    },
-    {
-      "_id": {
-        "$oid": "6a6216c907710fa2065208f1"
-      },
-      "name": "THE CINEMATOGRAPH ACT, 1952",
-      "description": "",
-      "pdfUrl": "/uploads/minor-acts/minor_act_pdf_1784813256950.pdf",
-      "isActive": true,
-      "createdAt": {
-        "$date": "2026-07-23T13:27:37.049Z"
-      },
-      "updatedAt": {
-        "$date": "2026-07-23T13:27:37.049Z"
-      }
-    },
-    {
-      "_id": {
-        "$oid": "6a62172d07710fa20652090d"
-      },
-      "name": "THE CITIZENSHIP ACT, 1955 ",
-      "description": "",
-      "pdfUrl": "/uploads/minor-acts/minor_act_pdf_1784813357346.pdf",
-      "isActive": true,
-      "createdAt": {
-        "$date": "2026-07-23T13:29:17.443Z"
-      },
-      "updatedAt": {
-        "$date": "2026-07-23T13:29:17.443Z"
-      }
-    },
-    {
-      "_id": {
-        "$oid": "6a621a1b07710fa206520934"
-      },
-      "name": "THE COMMISSIONS OF INQUIRY ACT, 1952 ",
-      "description": "",
-      "pdfUrl": "/uploads/minor-acts/minor_act_pdf_1784814106870.pdf",
-      "isActive": true,
-      "createdAt": {
-        "$date": "2026-07-23T13:41:47.664Z"
-      },
-      "updatedAt": {
-        "$date": "2026-07-23T13:41:47.664Z"
-      }
-    },
-    {
-      "_id": {
-        "$oid": "6a621b3407710fa206520955"
-      },
-      "name": "THE COMMISSION OF SATI (PREVENTION) ACT, 1987 ",
-      "description": "",
-      "pdfUrl": "/uploads/minor-acts/minor_act_pdf_1784814382957.pdf",
-      "isActive": true,
-      "createdAt": {
-        "$date": "2026-07-23T13:46:28.036Z"
-      },
-      "updatedAt": {
-        "$date": "2026-07-23T13:46:28.036Z"
-      }
-    },
-    {
-      "_id": {
-        "$oid": "6a621c4107710fa2065209b0"
-      },
+      "order": 8,
       "name": "Commission of Sati (Prevention) Rules, 1988",
-      "description": "",
-      "pdfUrl": "/uploads/minor-acts/minor_act_pdf_1784814657295.pdf",
+      "description": "Central Legislation: Commission of Sati (Prevention) Rules, 1988",
+      "filename": "21. Commission of Sati (Prevention) Rules, 1988..pdf",
+      "pdfUrl": "/uploads/minor-acts/21. Commission of Sati (Prevention) Rules, 1988..pdf",
+      "category": "Criminal Minor Acts",
       "isActive": true,
-      "createdAt": {
-        "$date": "2026-07-23T13:50:57.375Z"
-      },
-      "updatedAt": {
-        "$date": "2026-07-23T13:50:57.375Z"
-      }
+      "isFreeTrial": true
     },
     {
-      "_id": {
-        "$oid": "6a621c6207710fa2065209cf"
-      },
-      "name": "THE CONSERVATION OF FOREIGN EXCHANGE AND  PREVENTION OF SMUGGLING ACTIVITIES ACT, 1974 ",
-      "description": "",
-      "pdfUrl": "/uploads/minor-acts/minor_act_pdf_1784814690172.pdf",
+      "order": 9,
+      "name": "Commissions of Inquiry Act, 1952",
+      "description": "Central Legislation: Commissions of Inquiry Act, 1952",
+      "filename": "19. commission of inquiry act 1952 pdf.pdf",
+      "pdfUrl": "/uploads/minor-acts/19. commission of inquiry act 1952 pdf.pdf",
+      "category": "Criminal Minor Acts",
       "isActive": true,
-      "createdAt": {
-        "$date": "2026-07-23T13:51:30.751Z"
-      },
-      "updatedAt": {
-        "$date": "2026-07-23T13:51:30.751Z"
-      }
+      "isFreeTrial": true
     },
     {
-      "_id": {
-        "$oid": "6a621ca107710fa2065209ef"
-      },
-      "name": "THE CONTEMPT OF COURTS ACT, 1971",
-      "description": "",
-      "pdfUrl": "/uploads/minor-acts/minor_act_pdf_1784814742268.pdf",
+      "order": 10,
+      "name": "Conservation of Foreign Exchange and Prevention of Smuggling Activities Act, 1974",
+      "description": "Central Legislation: Conservation of Foreign Exchange and Prevention of Smuggling Activities Act, 1974",
+      "filename": "22. the Conservation of foreign exchange and prevention of smuggling act 1974.pdf",
+      "pdfUrl": "/uploads/minor-acts/22. the Conservation of foreign exchange and prevention of smuggling act 1974.pdf",
+      "category": "Criminal Minor Acts",
       "isActive": true,
-      "createdAt": {
-        "$date": "2026-07-23T13:52:33.695Z"
-      },
-      "updatedAt": {
-        "$date": "2026-07-23T13:52:33.695Z"
-      }
+      "isFreeTrial": true
     },
     {
-      "_id": {
-        "$oid": "6a621cd007710fa206520a10"
-      },
-      "name": "THE COPYRIGHT ACT, 1957 ",
-      "description": "",
-      "pdfUrl": "/uploads/minor-acts/minor_act_pdf_1784814799931.pdf",
+      "order": 11,
+      "name": "Copyright Rules, 1957",
+      "description": "Central Legislation: Copyright Rules, 1957",
+      "filename": "24. copyrightrules1957.pdf",
+      "pdfUrl": "/uploads/minor-acts/24. copyrightrules1957.pdf",
+      "category": "Criminal Minor Acts",
       "isActive": true,
-      "createdAt": {
-        "$date": "2026-07-23T13:53:20.020Z"
-      },
-      "updatedAt": {
-        "$date": "2026-07-23T13:53:20.020Z"
-      }
+      "isFreeTrial": true
     },
     {
-      "_id": {
-        "$oid": "6a621da807710fa206520a34"
-      },
-      "name": "THE CREDIT INFORMATION COMPANIES (REGULATION) ACT, 2005",
-      "description": "",
-      "pdfUrl": "/uploads/minor-acts/minor_act_pdf_1784815014898.pdf",
+      "order": 12,
+      "name": "Credit Information Companies (Regulation) Act, 2005",
+      "description": "Central Legislation: Credit Information Companies (Regulation) Act, 2005",
+      "filename": "25. credit information companies (regulation) act 2005.pdf",
+      "pdfUrl": "/uploads/minor-acts/25. credit information companies (regulation) act 2005.pdf",
+      "category": "Criminal Minor Acts",
       "isActive": true,
-      "createdAt": {
-        "$date": "2026-07-23T13:56:56.079Z"
-      },
-      "updatedAt": {
-        "$date": "2026-07-23T13:56:56.079Z"
-      }
+      "isFreeTrial": true
+    },
+    {
+      "order": 13,
+      "name": "Dangerous Machines (Regulation) Rules, 2007",
+      "description": "Central Legislation: Dangerous Machines (Regulation) Rules, 2007",
+      "filename": "35. dangerous_machines_regulation_rules_2007.pdf",
+      "pdfUrl": "/uploads/minor-acts/35. dangerous_machines_regulation_rules_2007.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 14,
+      "name": "Delhi Special Police Establishment Act, 1946",
+      "description": "Central Legislation: Delhi Special Police Establishment Act, 1946",
+      "filename": "36. delhi special police establishment act 1946.pdf",
+      "pdfUrl": "/uploads/minor-acts/36. delhi special police establishment act 1946.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 15,
+      "name": "Depositories Act, 1996",
+      "description": "Central Legislation: Depositories Act, 1996",
+      "filename": "38. depositories act 1996.pdf",
+      "pdfUrl": "/uploads/minor-acts/38. depositories act 1996.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 16,
+      "name": "Dowry Prohibition Act, 1961",
+      "description": "Central Legislation: Dowry Prohibition Act, 1961",
+      "filename": "39. Dowry Prohibition Act, 1961.pdf",
+      "pdfUrl": "/uploads/minor-acts/39. Dowry Prohibition Act, 1961.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 17,
+      "name": "Draft AI Regulations for Courts Guidelines",
+      "description": "Central Legislation: Draft AI Regulations for Courts Guidelines",
+      "filename": "Draft AI regulations for courts.pdf",
+      "pdfUrl": "/uploads/minor-acts/Draft AI regulations for courts.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 18,
+      "name": "Drugs and Magic Remedies (Objectionable Advertisements) Act, 1954",
+      "description": "Central Legislation: Drugs and Magic Remedies (Objectionable Advertisements) Act, 1954",
+      "filename": "43, drug and cosmetic [objectionable Advertisements] act 1940 and rules 1945 pdf.pdf",
+      "pdfUrl": "/uploads/minor-acts/43, drug and cosmetic [objectionable Advertisements] act 1940 and rules 1945 pdf.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 19,
+      "name": "Immoral Traffic (Prevention) Amendment Bill, 2006",
+      "description": "Central Legislation: Immoral Traffic (Prevention) Amendment Bill, 2006",
+      "filename": "1167469313_immoral_traffic_prevention_amendment_bill2006.pdf",
+      "pdfUrl": "/uploads/minor-acts/1167469313_immoral_traffic_prevention_amendment_bill2006.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 20,
+      "name": "Legal Case & Court Calendar Schedule",
+      "description": "Central Legislation: Legal Case & Court Calendar Schedule",
+      "filename": "White Minimalist Weekly Planner.pdf",
+      "pdfUrl": "/uploads/minor-acts/White Minimalist Weekly Planner.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 21,
+      "name": "Tamil Nadu Money-Lenders Rules, 1959",
+      "description": "Central Legislation: Tamil Nadu Money-Lenders Rules, 1959",
+      "filename": "006b_Tamil Nadu Money-Lenders Rules 1959 (1).pdf",
+      "pdfUrl": "/uploads/minor-acts/006b_Tamil Nadu Money-Lenders Rules 1959 (1).pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 22,
+      "name": "THE ADVOCATES ACT, 1961",
+      "description": "Central Legislation: THE ADVOCATES ACT, 1961",
+      "filename": "THE ADVOCATES ACT, 1961.pdf",
+      "pdfUrl": "/uploads/minor-acts/THE ADVOCATES ACT, 1961.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 23,
+      "name": "THE AIR (PREVENTION AND CONTROL OF POLLUTION) ACT, 1981",
+      "description": "Central Legislation: THE AIR (PREVENTION AND CONTROL OF POLLUTION) ACT, 1981",
+      "filename": "THE AIR (PREVENTION AND CONTROL OF POLLUTION) ACT, 1981 .pdf",
+      "pdfUrl": "/uploads/minor-acts/THE AIR (PREVENTION AND CONTROL OF POLLUTION) ACT, 1981 .pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 24,
+      "name": "The Ancient Monuments and Archaeological Sites and Remains Act, 1958",
+      "description": "Central Legislation: The Ancient Monuments and Archaeological Sites and Remains Act, 1958",
+      "filename": "3. TheAncientMonumentsandArchaeologicalSitesandRemainsAct1958.pdf",
+      "pdfUrl": "/uploads/minor-acts/3. TheAncientMonumentsandArchaeologicalSitesandRemainsAct1958.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 25,
+      "name": "The Anti-Hijacking Act, 1982",
+      "description": "Central Legislation: The Anti-Hijacking Act, 1982",
+      "filename": "6. anti hijacking act 1982.pdf",
+      "pdfUrl": "/uploads/minor-acts/6. anti hijacking act 1982.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 26,
+      "name": "The Antiquities and Art Treasures Act, 1972",
+      "description": "Central Legislation: The Antiquities and Art Treasures Act, 1972",
+      "filename": "5. TheAntiquitiesandArtTreasuresAct1972.pdf",
+      "pdfUrl": "/uploads/minor-acts/5. TheAntiquitiesandArtTreasuresAct1972.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 27,
+      "name": "The Armed Forces (Special Powers) Act, 1958",
+      "description": "Central Legislation: The Armed Forces (Special Powers) Act, 1958",
+      "filename": "APSA14.pdf",
+      "pdfUrl": "/uploads/minor-acts/APSA14.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 28,
+      "name": "The Arms (Amendment) Act, 2019",
+      "description": "Central Legislation: The Arms (Amendment) Act, 2019",
+      "filename": "7.a. arms act amended 2019.pdf",
+      "pdfUrl": "/uploads/minor-acts/7.a. arms act amended 2019.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 29,
+      "name": "The Arms Act, 1959",
+      "description": "Central Legislation: The Arms Act, 1959",
+      "filename": "7. arms act 1959.pdf",
+      "pdfUrl": "/uploads/minor-acts/7. arms act 1959.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 30,
+      "name": "The Arms Rules, 1962",
+      "description": "Central Legislation: The Arms Rules, 1962",
+      "filename": "8. TheArmsRules1962_0[1].pdf",
+      "pdfUrl": "/uploads/minor-acts/8. TheArmsRules1962_0[1].pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 31,
+      "name": "The Army Act, 1950",
+      "description": "Central Legislation: The Army Act, 1950",
+      "filename": "9. The Army Act 1950.pdf",
+      "pdfUrl": "/uploads/minor-acts/9. The Army Act 1950.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 32,
+      "name": "The Bharatiya Vayuyan Vidheyak Act, 2024",
+      "description": "Central Legislation: The Bharatiya Vayuyan Vidheyak Act, 2024",
+      "filename": "A2025-13.pdf",
+      "pdfUrl": "/uploads/minor-acts/A2025-13.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 33,
+      "name": "The Chit Funds Act, 1982",
+      "description": "Central Legislation: The Chit Funds Act, 1982",
+      "filename": "15. the_chit_funds_act,_1982.pdf",
+      "pdfUrl": "/uploads/minor-acts/15. the_chit_funds_act,_1982.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 34,
+      "name": "The Citizenship Act, 1955",
+      "description": "Central Legislation: The Citizenship Act, 1955",
+      "filename": "18. the_citizenship_act,_1955.pdf",
+      "pdfUrl": "/uploads/minor-acts/18. the_citizenship_act,_1955.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 35,
+      "name": "The Contempt of Courts Act, 1971",
+      "description": "Central Legislation: The Contempt of Courts Act, 1971",
+      "filename": "23. The contempt of court act 1971.pdf",
+      "pdfUrl": "/uploads/minor-acts/23. The contempt of court act 1971.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 36,
+      "name": "The Criminal Procedure (Identification) Act, 2022",
+      "description": "Central Legislation: The Criminal Procedure (Identification) Act, 2022",
+      "filename": "CriminalPro_14112022[1].pdf",
+      "pdfUrl": "/uploads/minor-acts/CriminalPro_14112022[1].pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 37,
+      "name": "The Customs Act, 1962",
+      "description": "Central Legislation: The Customs Act, 1962",
+      "filename": "34. the_customs_act,_1962.pdf",
+      "pdfUrl": "/uploads/minor-acts/34. the_customs_act,_1962.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 38,
+      "name": "The Departmental Inquiries (Enforcement of Attendance of Witnesses and Production of Documents) Act, 1972",
+      "description": "Central Legislation: The Departmental Inquiries (Enforcement of Attendance of Witnesses and Production of Documents) Act, 1972",
+      "filename": "37. The Departmental Inquiries (Enforcement of Attendance of Witnesses and Production of Documents) Act, 1972.pdf",
+      "pdfUrl": "/uploads/minor-acts/37. The Departmental Inquiries (Enforcement of Attendance of Witnesses and Production of Documents) Act, 1972.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 39,
+      "name": "The Dowry Prohibition (Maintenance of Lists of Presents to the Bride and Bridegroom) Rules, 1985",
+      "description": "Central Legislation: The Dowry Prohibition (Maintenance of Lists of Presents to the Bride and Bridegroom) Rules, 1985",
+      "filename": "40. THE-DOWRY-PROHIBITION-(MAINTENANCE-OF-LISTS-OF-PRESENTS-TO-THE-BRIDE_0.pdf",
+      "pdfUrl": "/uploads/minor-acts/40. THE-DOWRY-PROHIBITION-(MAINTENANCE-OF-LISTS-OF-PRESENTS-TO-THE-BRIDE_0.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 40,
+      "name": "The Dramatic Performances Act, 1876",
+      "description": "Central Legislation: The Dramatic Performances Act, 1876",
+      "filename": "41_The_Dramatic_Performances_Control_Act_1876.pdf",
+      "pdfUrl": "/uploads/minor-acts/41_The_Dramatic_Performances_Control_Act_1876.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 41,
+      "name": "The Drugs (Control) Act, 1950",
+      "description": "Central Legislation: The Drugs (Control) Act, 1950",
+      "filename": "44. The Drugs (control) Act,1950.pdf",
+      "pdfUrl": "/uploads/minor-acts/44. The Drugs (control) Act,1950.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 42,
+      "name": "The Drugs and Cosmetics Act, 1940 and Rules, 1945",
+      "description": "Central Legislation: The Drugs and Cosmetics Act, 1940 and Rules, 1945",
+      "filename": "42. TheDrugsandCosmeticsAct1940andRules1945.pdf",
+      "pdfUrl": "/uploads/minor-acts/42. TheDrugsandCosmeticsAct1940andRules1945.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 43,
+      "name": "The Electricity Act, 2003",
+      "description": "Central Legislation: The Electricity Act, 2003",
+      "filename": "45. electricity act 2003 pdf.pdf",
+      "pdfUrl": "/uploads/minor-acts/45. electricity act 2003 pdf.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 44,
+      "name": "The Environment (Protection) Act, 1986",
+      "description": "Central Legislation: The Environment (Protection) Act, 1986",
+      "filename": "ep_act_1986.pdf",
+      "pdfUrl": "/uploads/minor-acts/ep_act_1986.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 45,
+      "name": "The Essential Commodities Act, 1955",
+      "description": "Central Legislation: The Essential Commodities Act, 1955",
+      "filename": "essential_commodities_act_1955.pdf",
+      "pdfUrl": "/uploads/minor-acts/essential_commodities_act_1955.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 46,
+      "name": "The Essential Services Maintenance Act, 1968",
+      "description": "Central Legislation: The Essential Services Maintenance Act, 1968",
+      "filename": "SpentActFileOpenServlet.pdf",
+      "pdfUrl": "/uploads/minor-acts/SpentActFileOpenServlet.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 47,
+      "name": "The Essential Services Maintenance Act, 1980",
+      "description": "Central Legislation: The Essential Services Maintenance Act, 1980",
+      "filename": "a1980-07.pdf",
+      "pdfUrl": "/uploads/minor-acts/a1980-07.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 48,
+      "name": "The Explosive Substances Act, 1908",
+      "description": "Central Legislation: The Explosive Substances Act, 1908",
+      "filename": "AAA1908___06.pdf",
+      "pdfUrl": "/uploads/minor-acts/AAA1908___06.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 49,
+      "name": "The Explosives Act, 1884",
+      "description": "Central Legislation: The Explosives Act, 1884",
+      "filename": "the_explosives_act,_1884.pdf",
+      "pdfUrl": "/uploads/minor-acts/the_explosives_act,_1884.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 50,
+      "name": "The Forest (Conservation) Act, 1980",
+      "description": "Central Legislation: The Forest (Conservation) Act, 1980",
+      "filename": "the_forest_(conservation)_act,_1980.pdf",
+      "pdfUrl": "/uploads/minor-acts/the_forest_(conservation)_act,_1980.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 51,
+      "name": "The General Clauses Act, 1897",
+      "description": "Central Legislation: The General Clauses Act, 1897",
+      "filename": "the_general_clauses_act,_1897.pdf",
+      "pdfUrl": "/uploads/minor-acts/the_general_clauses_act,_1897.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 52,
+      "name": "The Indecent Representation of Women (Prohibition) Act, 1986",
+      "description": "Central Legislation: The Indecent Representation of Women (Prohibition) Act, 1986",
+      "filename": "indecent_representation_of_women_(prohibition)_act,_1986.pdf",
+      "pdfUrl": "/uploads/minor-acts/indecent_representation_of_women_(prohibition)_act,_1986.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 53,
+      "name": "The Indian Forest Act, 1927",
+      "description": "Central Legislation: The Indian Forest Act, 1927",
+      "filename": "the_indian_forest_act,_1927.pdf",
+      "pdfUrl": "/uploads/minor-acts/the_indian_forest_act,_1927.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 54,
+      "name": "The Indian Treasure-Trove Act, 1878",
+      "description": "Central Legislation: The Indian Treasure-Trove Act, 1878",
+      "filename": "A1878-06.pdf",
+      "pdfUrl": "/uploads/minor-acts/A1878-06.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 55,
+      "name": "The Indian Wireless Telegraphy Act, 1933",
+      "description": "Central Legislation: The Indian Wireless Telegraphy Act, 1933",
+      "filename": "the_indian_wireless_telegraphy_act,_1933.pdf",
+      "pdfUrl": "/uploads/minor-acts/the_indian_wireless_telegraphy_act,_1933.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 56,
+      "name": "The Motor Vehicles Act, 1988",
+      "description": "Central Legislation: The Motor Vehicles Act, 1988",
+      "filename": "a1988-59.pdf",
+      "pdfUrl": "/uploads/minor-acts/a1988-59.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 57,
+      "name": "The Muslim Women (Protection of Rights on Divorce) Act, 1986",
+      "description": "Central Legislation: The Muslim Women (Protection of Rights on Divorce) Act, 1986",
+      "filename": "muslim_women_(protection_of_rights_on_divorce)_act,_1986.pdf",
+      "pdfUrl": "/uploads/minor-acts/muslim_women_(protection_of_rights_on_divorce)_act,_1986.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 58,
+      "name": "The Narcotic Drugs and Psychotropic Substances Act, 1985 (NDPS)",
+      "description": "Central Legislation: The Narcotic Drugs and Psychotropic Substances Act, 1985 (NDPS)",
+      "filename": "NDPS_Act_and_Rules_1985-(updated_2026).pdf",
+      "pdfUrl": "/uploads/minor-acts/NDPS_Act_and_Rules_1985-(updated_2026).pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 59,
+      "name": "The National Security Act, 1980",
+      "description": "Central Legislation: The National Security Act, 1980",
+      "filename": "ISdivII_NSAAct1980_20122018[1].pdf",
+      "pdfUrl": "/uploads/minor-acts/ISdivII_NSAAct1980_20122018[1].pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 60,
+      "name": "The Negotiable Instruments Act, 1881",
+      "description": "Central Legislation: The Negotiable Instruments Act, 1881",
+      "filename": "negotiable_instruments_act,_1881.pdf",
+      "pdfUrl": "/uploads/minor-acts/negotiable_instruments_act,_1881.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 61,
+      "name": "The Oaths Act, 1969",
+      "description": "Central Legislation: The Oaths Act, 1969",
+      "filename": "1754030237509_Oaths_Act--Rakesh_Bhargava-9789371266000.pdf",
+      "pdfUrl": "/uploads/minor-acts/1754030237509_Oaths_Act--Rakesh_Bhargava-9789371266000.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 62,
+      "name": "The Official Secrets Act, 1923",
+      "description": "Central Legislation: The Official Secrets Act, 1923",
+      "filename": "244.pdf",
+      "pdfUrl": "/uploads/minor-acts/244.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 63,
+      "name": "The Official Secrets Act, 1923",
+      "description": "Central Legislation: The Official Secrets Act, 1923",
+      "filename": "A1923-19.pdf",
+      "pdfUrl": "/uploads/minor-acts/A1923-19.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 64,
+      "name": "The Passports Act, 1967",
+      "description": "Central Legislation: The Passports Act, 1967",
+      "filename": "passports_act.pdf",
+      "pdfUrl": "/uploads/minor-acts/passports_act.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 65,
+      "name": "The Places of Worship (Special Provisions) Act, 1991",
+      "description": "Central Legislation: The Places of Worship (Special Provisions) Act, 1991",
+      "filename": "A1991-42.pdf",
+      "pdfUrl": "/uploads/minor-acts/A1991-42.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 66,
+      "name": "The Police Forces (Restriction of Rights) Act, 1966",
+      "description": "Central Legislation: The Police Forces (Restriction of Rights) Act, 1966",
+      "filename": "A1966-33.pdf",
+      "pdfUrl": "/uploads/minor-acts/A1966-33.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 67,
+      "name": "The Press and Registration of Books Act, 1867",
+      "description": "Central Legislation: The Press and Registration of Books Act, 1867",
+      "filename": "press_and_registration_of_books_act,_1867.pdf",
+      "pdfUrl": "/uploads/minor-acts/press_and_registration_of_books_act,_1867.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 68,
+      "name": "The Prevention of Corruption Act (Amendment), 1952",
+      "description": "Central Legislation: The Prevention of Corruption Act (Amendment), 1952",
+      "filename": "A195220 (1).pdf",
+      "pdfUrl": "/uploads/minor-acts/A195220 (1).pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 69,
+      "name": "The Prevention of Corruption Act, 1952",
+      "description": "Central Legislation: The Prevention of Corruption Act, 1952",
+      "filename": "A195220.pdf",
+      "pdfUrl": "/uploads/minor-acts/A195220.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 70,
+      "name": "The Prevention of Corruption Act, 1988",
+      "description": "Central Legislation: The Prevention of Corruption Act, 1988",
+      "filename": "pc_act,_1988.pdf",
+      "pdfUrl": "/uploads/minor-acts/pc_act,_1988.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 71,
+      "name": "The Prevention of Cruelty to Animals Act, 1960",
+      "description": "Central Legislation: The Prevention of Cruelty to Animals Act, 1960",
+      "filename": "the_prevention_of_cruelty_to_animals_act,_1960.pdf",
+      "pdfUrl": "/uploads/minor-acts/the_prevention_of_cruelty_to_animals_act,_1960.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 72,
+      "name": "The Prevention of Damage to Public Property Act, 1984",
+      "description": "Central Legislation: The Prevention of Damage to Public Property Act, 1984",
+      "filename": "damage_to_public_property_act,_1984.pdf",
+      "pdfUrl": "/uploads/minor-acts/damage_to_public_property_act,_1984.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 73,
+      "name": "The Prevention of Food Adulteration Act, 1954",
+      "description": "Central Legislation: The Prevention of Food Adulteration Act, 1954",
+      "filename": "the_prevention_of_food_adulteration_act,_1954.pdf",
+      "pdfUrl": "/uploads/minor-acts/the_prevention_of_food_adulteration_act,_1954.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 74,
+      "name": "The Prevention of Illicit Traffic in Narcotic Drugs and Psychotropic Substances Act, 1988",
+      "description": "Central Legislation: The Prevention of Illicit Traffic in Narcotic Drugs and Psychotropic Substances Act, 1988",
+      "filename": "pitndpsact1988.pdf",
+      "pdfUrl": "/uploads/minor-acts/pitndpsact1988.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 75,
+      "name": "The Prevention of Insults to National Honour Act, 1971",
+      "description": "Central Legislation: The Prevention of Insults to National Honour Act, 1971",
+      "filename": "insults_to_national_honour_act,_1971.pdf",
+      "pdfUrl": "/uploads/minor-acts/insults_to_national_honour_act,_1971.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 76,
+      "name": "The Prevention of Seditious Meetings Act, 1911",
+      "description": "Central Legislation: The Prevention of Seditious Meetings Act, 1911",
+      "filename": "seditious_meeting_act_(2).pdf",
+      "pdfUrl": "/uploads/minor-acts/seditious_meeting_act_(2).pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 77,
+      "name": "The Prisoners (Attendance in Courts) Act, 1955",
+      "description": "Central Legislation: The Prisoners (Attendance in Courts) Act, 1955",
+      "filename": "the_prisoners__attendance_in_courts__act,_1955.pdf",
+      "pdfUrl": "/uploads/minor-acts/the_prisoners__attendance_in_courts__act,_1955.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 78,
+      "name": "The Prisons Act, 1894",
+      "description": "Central Legislation: The Prisons Act, 1894",
+      "filename": "Prisons_act1894[1].pdf",
+      "pdfUrl": "/uploads/minor-acts/Prisons_act1894[1].pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 79,
+      "name": "The Prisons Act, 1894",
+      "description": "Central Legislation: The Prisons Act, 1894",
+      "filename": "prisons_act_1894.pdf",
+      "pdfUrl": "/uploads/minor-acts/prisons_act_1894.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 80,
+      "name": "The Probation of Offenders Act, 1958",
+      "description": "Central Legislation: The Probation of Offenders Act, 1958",
+      "filename": "the_probation_of_offenders_act,_1958.pdf",
+      "pdfUrl": "/uploads/minor-acts/the_probation_of_offenders_act,_1958.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 81,
+      "name": "The Prohibition of Benami Property Transactions Act, 1988",
+      "description": "Central Legislation: The Prohibition of Benami Property Transactions Act, 1988",
+      "filename": "10. the_prohibition_of_benami_property_transactions_act,_1988.pdf",
+      "pdfUrl": "/uploads/minor-acts/10. the_prohibition_of_benami_property_transactions_act,_1988.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 82,
+      "name": "The Protection of Civil Rights Act, 1955",
+      "description": "Central Legislation: The Protection of Civil Rights Act, 1955",
+      "filename": "protection_of_civil_rights_act,_1955.pdf",
+      "pdfUrl": "/uploads/minor-acts/protection_of_civil_rights_act,_1955.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 83,
+      "name": "The Protection of Human Rights Act, 1993",
+      "description": "Central Legislation: The Protection of Human Rights Act, 1993",
+      "filename": "the_protection_of_human_rights_act_1993.pdf",
+      "pdfUrl": "/uploads/minor-acts/the_protection_of_human_rights_act_1993.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 84,
+      "name": "The Public Gambling Act, 1867",
+      "description": "Central Legislation: The Public Gambling Act, 1867",
+      "filename": "AAA1867____03.pdf",
+      "pdfUrl": "/uploads/minor-acts/AAA1867____03.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 85,
+      "name": "THE PUBLIC SERVANTS (INQUIRIES) ACT, 1850",
+      "description": "Central Legislation: THE PUBLIC SERVANTS (INQUIRIES) ACT, 1850",
+      "filename": "THE PUBLIC SERVANTS (inquiries) Act, 1850.pdf",
+      "pdfUrl": "/uploads/minor-acts/THE PUBLIC SERVANTS (inquiries) Act, 1850.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 86,
+      "name": "The Railway Property (Unlawful Possession) Act, 1966",
+      "description": "Central Legislation: The Railway Property (Unlawful Possession) Act, 1966",
+      "filename": "A1966__29.pdf",
+      "pdfUrl": "/uploads/minor-acts/A1966__29.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 87,
+      "name": "The Railways Act, 1989",
+      "description": "Central Legislation: The Railways Act, 1989",
+      "filename": "the_railways_act,_1989.pdf",
+      "pdfUrl": "/uploads/minor-acts/the_railways_act,_1989.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 88,
+      "name": "The Registration of Foreigners Act, 1939",
+      "description": "Central Legislation: The Registration of Foreigners Act, 1939",
+      "filename": "the_registration_of_foreigners_act,_1939.pdf",
+      "pdfUrl": "/uploads/minor-acts/the_registration_of_foreigners_act,_1939.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 89,
+      "name": "The Representation of the People Act, 1950",
+      "description": "Central Legislation: The Representation of the People Act, 1950",
+      "filename": "A1950-43.pdf",
+      "pdfUrl": "/uploads/minor-acts/A1950-43.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 90,
+      "name": "The Scheduled Castes and the Scheduled Tribes (Prevention of Atrocities) Act, 1989",
+      "description": "Central Legislation: The Scheduled Castes and the Scheduled Tribes (Prevention of Atrocities) Act, 1989",
+      "filename": "scheduled_castes_and_the_scheduled_tribes.pdf",
+      "pdfUrl": "/uploads/minor-acts/scheduled_castes_and_the_scheduled_tribes.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 91,
+      "name": "The Scheduled Castes and the Scheduled Tribes (Prevention of Atrocities) Amendment Act, 2015",
+      "description": "Central Legislation: The Scheduled Castes and the Scheduled Tribes (Prevention of Atrocities) Amendment Act, 2015",
+      "filename": "scst-(prevention-of-atrocities)-act,-2015.pdf",
+      "pdfUrl": "/uploads/minor-acts/scst-(prevention-of-atrocities)-act,-2015.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 92,
+      "name": "The Smugglers and Foreign Exchange Manipulators (Forfeiture of Property) Act, 1976",
+      "description": "Central Legislation: The Smugglers and Foreign Exchange Manipulators (Forfeiture of Property) Act, 1976",
+      "filename": "smugglers_and_foreign_exchange_manipulators.pdf",
+      "pdfUrl": "/uploads/minor-acts/smugglers_and_foreign_exchange_manipulators.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 93,
+      "name": "THE SPIRITUOUS PREPARATIONS (INTER-STATE TRADE AND COMMERCE) CONTROL ACT, 1955",
+      "description": "Central Legislation: THE SPIRITUOUS PREPARATIONS (INTER-STATE TRADE AND COMMERCE) CONTROL ACT, 1955",
+      "filename": "THE SPIRITUOUS PREPARATIONS ( INTER-STATE TRADE AND   COMMERCE) CONTROL ACT_1955.pdf",
+      "pdfUrl": "/uploads/minor-acts/THE SPIRITUOUS PREPARATIONS ( INTER-STATE TRADE AND   COMMERCE) CONTROL ACT_1955.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 94,
+      "name": "The Terrorist Affected Areas (Special Courts) Act, 1984",
+      "description": "Central Legislation: The Terrorist Affected Areas (Special Courts) Act, 1984",
+      "filename": "the_terrorist_affected_areas_(special_courts)_act,_1984.pdf",
+      "pdfUrl": "/uploads/minor-acts/the_terrorist_affected_areas_(special_courts)_act,_1984.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 95,
+      "name": "The Terrorist and Disruptive Activities (Prevention) Act, 1987 (TADA)",
+      "description": "Central Legislation: The Terrorist and Disruptive Activities (Prevention) Act, 1987 (TADA)",
+      "filename": "terrorist_and_disruptive.pdf",
+      "pdfUrl": "/uploads/minor-acts/terrorist_and_disruptive.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 96,
+      "name": "The Trade Marks Act, 1999",
+      "description": "Central Legislation: The Trade Marks Act, 1999",
+      "filename": "the_trade_marks_act,_1999.pdf",
+      "pdfUrl": "/uploads/minor-acts/the_trade_marks_act,_1999.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 97,
+      "name": "The Unlawful Activities (Prevention) Act, 1967",
+      "description": "Central Legislation: The Unlawful Activities (Prevention) Act, 1967",
+      "filename": "A1967-37.pdf",
+      "pdfUrl": "/uploads/minor-acts/A1967-37.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 98,
+      "name": "The Water (Prevention and Control of Pollution) Act, 1974",
+      "description": "Central Legislation: The Water (Prevention and Control of Pollution) Act, 1974",
+      "filename": "the_water_(prevention_and_control_of_pollution)_act,_1974.pdf",
+      "pdfUrl": "/uploads/minor-acts/the_water_(prevention_and_control_of_pollution)_act,_1974.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 99,
+      "name": "The Wild Life (Protection) Act, 1972",
+      "description": "Central Legislation: The Wild Life (Protection) Act, 1972",
+      "filename": "the_wild_life_(protection)_act,_1972.pdf",
+      "pdfUrl": "/uploads/minor-acts/the_wild_life_(protection)_act,_1972.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
+    },
+    {
+      "order": 100,
+      "name": "The Young Persons (Harmful Publications) Act, 1956",
+      "description": "Central Legislation: The Young Persons (Harmful Publications) Act, 1956",
+      "filename": "the_young_persons_(harmful_publications)_act,_1956.pdf",
+      "pdfUrl": "/uploads/minor-acts/the_young_persons_(harmful_publications)_act,_1956.pdf",
+      "category": "Criminal Minor Acts",
+      "isActive": true,
+      "isFreeTrial": true
     }
   ],
   "secondschedule": [

@@ -17,24 +17,42 @@ import mappingData from '../../Assets/Data/comprehensiveMappings.json';
 
 export default function ComparisonScreen({ route, navigation }) {
   const {
-    ipcSec = '1',
+    ipcSec = null,
     oldSec = null,
     newSec = null,
+    leftSec = null,
+    rightSec = null,
+    leftCode = null,
+    rightCode = null,
+    primaryCode = null,
     sectionData = null,
-    actTitle = 'Indian Penal Code , 1860',
-    actCode = 'IPC'
+    actTitle = '',
+    actCode = ''
   } = route?.params || {};
 
   const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isSwapped, setIsSwapped] = useState(false);
 
-  // Determine the exact statutory comparison pair (IPC<->BNS, CrPC<->BNSS, IEA<->BSA)
+  // Determine the statutory comparison pair (IPC<->BNS, CrPC<->BNSS, IEA<->BSA)
   const pairInfo = useMemo(() => {
-    return ComparisonService.getComparisonPairInfo(actCode || actTitle);
-  }, [actCode, actTitle]);
+    const rawLookup = (leftCode || primaryCode || actCode || actTitle || '').toUpperCase();
+    return ComparisonService.getComparisonPairInfo(rawLookup);
+  }, [leftCode, primaryCode, actCode, actTitle]);
+
+  // Determine if the initial left side requested by the caller is the New Law (e.g. BNSS, BNS, BSA)
+  const isNewLawInitial = useMemo(() => {
+    const targetCode = (leftCode || primaryCode || actCode || '').toUpperCase();
+    if (targetCode === 'BNSS' || targetCode === 'BNS' || targetCode === 'BSA') {
+      return true;
+    }
+    if (targetCode === 'CRPC' || targetCode === 'IPC' || targetCode === 'IEA') {
+      return false;
+    }
+    return targetCode === pairInfo.newCode.toUpperCase();
+  }, [leftCode, primaryCode, actCode, pairInfo]);
 
   // Dynamic content mapping based on the selected law pair and section
   const comparisonData = useMemo(() => {
-    const querySec = String(oldSec || ipcSec || '1').trim();
     let pairList = mappingData.ipcToBns || [];
     if (pairInfo.oldCode === 'CrPC') {
       pairList = mappingData.crpcToBnss || [];
@@ -42,37 +60,53 @@ export default function ComparisonScreen({ route, navigation }) {
       pairList = mappingData.ieaToBsa || [];
     }
 
-    // Find in comprehensive mapping table
-    let foundPair = pairList.find(p => p.oldSec === querySec);
-    if (!foundPair && newSec) {
+    // Determine target lookup query
+    const querySec = String(leftSec || newSec || oldSec || ipcSec || '1').trim();
+
+    // 1. Try finding by newSec if starting from new law or newSec was provided
+    let foundPair = null;
+    if (newSec) {
       foundPair = pairList.find(p => p.newSec === newSec);
     }
+    if (!foundPair && oldSec) {
+      foundPair = pairList.find(p => p.oldSec === oldSec);
+    }
     if (!foundPair) {
-      foundPair = pairList.find(p => p.newSec === querySec);
+      foundPair = pairList.find(p => p.newSec === querySec || p.oldSec === querySec);
     }
     if (!foundPair) {
       const baseSec = querySec.split('(')[0].trim();
       foundPair = pairList.find(p => p.oldSec === baseSec || p.newSec === baseSec || p.oldSec.startsWith(baseSec) || p.newSec.startsWith(baseSec));
     }
 
-    let leftSecNum = foundPair ? foundPair.oldSec : (oldSec || querySec);
-    let rightSecNum = foundPair ? foundPair.newSec : (newSec || (pairInfo.mapping?.[leftSecNum]?.bnsSec || pairInfo.mapping?.[leftSecNum]?.bnssSec || pairInfo.mapping?.[leftSecNum]?.bsaSec || querySec));
+    // Resolved Section Numbers
+    let resolvedNewSec = foundPair ? foundPair.newSec : (newSec || (isNewLawInitial ? querySec : null));
+    let resolvedOldSec = foundPair ? foundPair.oldSec : (oldSec || (!isNewLawInitial ? querySec : null));
 
-    let leftHeading = sectionData?.keyword || foundPair?.title || `Section ${leftSecNum}`;
-    let rightHeading = foundPair?.title || leftHeading;
+    if (!resolvedNewSec && resolvedOldSec) {
+      resolvedNewSec = pairInfo.mapping?.[resolvedOldSec]?.bnssSec || pairInfo.mapping?.[resolvedOldSec]?.bnsSec || pairInfo.mapping?.[resolvedOldSec]?.bsaSec || resolvedOldSec;
+    }
+    if (!resolvedOldSec && resolvedNewSec) {
+      resolvedOldSec = pairInfo.mapping?.[resolvedNewSec]?.crpcSec || pairInfo.mapping?.[resolvedNewSec]?.ipcSec || pairInfo.mapping?.[resolvedNewSec]?.ieaSec || resolvedNewSec;
+    }
 
-    let leftContentText = foundPair?.oldContent || sectionData?.content?.[0]?.content || '';
-    let rightContentText = foundPair?.newContent || '';
+    // Resolved Headings
+    let newLawHeading = foundPair?.title || (isNewLawInitial && sectionData?.keyword) || `Section ${resolvedNewSec}`;
+    let oldLawHeading = foundPair?.title || (!isNewLawInitial && sectionData?.keyword) || `Section ${resolvedOldSec}`;
+
+    // Resolved Content
+    let newLawContent = foundPair?.newContent || (isNewLawInitial && sectionData?.content?.[0]?.content) || '';
+    let oldLawContent = foundPair?.oldContent || (!isNewLawInitial && sectionData?.content?.[0]?.content) || '';
 
     // Search rawData for old law text if not yet resolved
-    if (!leftContentText) {
+    if (!oldLawContent && resolvedOldSec) {
       for (const ch of rawData.casebooks || []) {
         const cId = (ch.categoryId && ch.categoryId['$oid']) || ch.categoryId;
         if (cId === pairInfo.oldCatId) {
           for (const s of ch.section || []) {
-            if (s.name === leftSecNum || s.name?.toLowerCase() === leftSecNum.toLowerCase()) {
-              leftContentText = s.content?.[0]?.content || '';
-              if (s.keyword) leftHeading = s.keyword;
+            if (s.name === resolvedOldSec || s.name?.toLowerCase() === resolvedOldSec.toLowerCase()) {
+              oldLawContent = s.content?.[0]?.content || '';
+              if (s.keyword) oldLawHeading = s.keyword;
               break;
             }
           }
@@ -81,14 +115,14 @@ export default function ComparisonScreen({ route, navigation }) {
     }
 
     // Search rawData for new law text if not yet resolved
-    if (!rightContentText && rightSecNum !== 'Repealed' && !rightSecNum.includes('Omitted')) {
+    if (!newLawContent && resolvedNewSec && resolvedNewSec !== 'Repealed' && !resolvedNewSec.includes('Omitted')) {
       for (const ch of rawData.casebooks || []) {
         const cId = (ch.categoryId && ch.categoryId['$oid']) || ch.categoryId;
         if (cId === pairInfo.newCatId) {
           for (const s of ch.section || []) {
-            if (s.name === rightSecNum || s.name?.toLowerCase() === rightSecNum.toLowerCase() || s.name?.startsWith(rightSecNum)) {
-              rightContentText = s.content?.[0]?.content || '';
-              if (s.keyword) rightHeading = s.keyword;
+            if (s.name === resolvedNewSec || s.name?.toLowerCase() === resolvedNewSec.toLowerCase() || s.name?.startsWith(resolvedNewSec)) {
+              newLawContent = s.content?.[0]?.content || '';
+              if (s.keyword) newLawHeading = s.keyword;
               break;
             }
           }
@@ -96,36 +130,69 @@ export default function ComparisonScreen({ route, navigation }) {
       }
     }
 
-    if (!leftContentText) {
-      leftContentText = `Statutory legal provision under ${pairInfo.oldTitle} Section ${leftSecNum}.`;
+    if (!oldLawContent) {
+      oldLawContent = `Statutory legal provision under ${pairInfo.oldTitle} Section ${resolvedOldSec}.`;
     }
-    if (!rightContentText) {
-      if (rightSecNum.includes('Repealed') || rightSecNum.includes('Omitted')) {
-        rightContentText = `This provision has been repealed and omitted in the ${pairInfo.newTitle}.`;
+    if (!newLawContent) {
+      if (resolvedNewSec && (resolvedNewSec.includes('Repealed') || resolvedNewSec.includes('Omitted'))) {
+        newLawContent = `This provision has been repealed and omitted in the ${pairInfo.newTitle}.`;
       } else {
-        rightContentText = `Corresponding statutory legal provision under ${pairInfo.newTitle} Section ${rightSecNum}.`;
+        newLawContent = `Corresponding statutory legal provision under ${pairInfo.newTitle} Section ${resolvedNewSec}.`;
       }
     }
 
-    // Compute live 100% accurate LCS diff highlights
-    const diffResult = computeLegalDiff(leftContentText, rightContentText);
+    // Determine current visual columns based on isNewLawInitial and isSwapped toggle
+    const showNewOnLeft = isNewLawInitial ? !isSwapped : isSwapped;
+
+    const leftCol = showNewOnLeft ? {
+      code: pairInfo.newCode,
+      title: pairInfo.newTitle,
+      label: `${pairInfo.newTitle} (New Law)`,
+      sec: resolvedNewSec,
+      heading: newLawHeading,
+      content: newLawContent,
+      isNew: true
+    } : {
+      code: pairInfo.oldCode,
+      title: pairInfo.oldTitle,
+      label: `${pairInfo.oldTitle} (Old Law)`,
+      sec: resolvedOldSec,
+      heading: oldLawHeading,
+      content: oldLawContent,
+      isNew: false
+    };
+
+    const rightCol = showNewOnLeft ? {
+      code: pairInfo.oldCode,
+      title: pairInfo.oldTitle,
+      label: `${pairInfo.oldTitle} (Old Law)`,
+      sec: resolvedOldSec,
+      heading: oldLawHeading,
+      content: oldLawContent,
+      isNew: false
+    } : {
+      code: pairInfo.newCode,
+      title: pairInfo.newTitle,
+      label: `${pairInfo.newTitle} (New Law)`,
+      sec: resolvedNewSec,
+      heading: newLawHeading,
+      content: newLawContent,
+      isNew: true
+    };
+
+    // Compute live 100% accurate LCS diff highlights between Left and Right columns
+    const diffResult = computeLegalDiff(leftCol.content, rightCol.content);
 
     return {
-      oldLawLabel: `${pairInfo.oldTitle} (Old Law)`,
-      newLawLabel: `${pairInfo.newTitle} (New Law)`,
-      headerSubtitle: `${pairInfo.oldTitle} vs ${pairInfo.newTitle} Comparison`,
+      leftCol,
+      rightCol,
+      headerSubtitle: `${leftCol.title} vs ${rightCol.title} Comparison`,
       status: diffResult.status.toUpperCase(),
       diffBlocks: diffResult.diffCount,
-      leftSec: leftSecNum,
-      leftHeading: leftHeading,
-      rightSec: rightSecNum,
-      rightHeading: rightHeading,
       leftSegments: diffResult.leftSegments,
       rightSegments: diffResult.rightSegments,
-      leftContentText: leftContentText,
-      rightContentText: rightContentText
     };
-  }, [ipcSec, oldSec, newSec, sectionData, pairInfo]);
+  }, [leftSec, oldSec, newSec, ipcSec, sectionData, pairInfo, isNewLawInitial, isSwapped]);
 
   const handleCopy = () => {
     Alert.alert('Copied', 'Comparison text copied to clipboard.');
@@ -134,11 +201,11 @@ export default function ComparisonScreen({ route, navigation }) {
   const handleBookmark = async () => {
     setIsBookmarked(!isBookmarked);
     await ApiService.bookmarks.toggle({
-      id: `comp_${comparisonData.leftSec}_${pairInfo.oldCode}`,
+      id: `comp_${comparisonData.leftCol.sec}_${comparisonData.leftCol.code}_${comparisonData.rightCol.sec}_${comparisonData.rightCol.code}`,
       actTitle: comparisonData.headerSubtitle,
-      secName: comparisonData.leftSec,
-      title: comparisonData.leftHeading,
-      desc: `Comparison between ${pairInfo.oldCode} Sec ${comparisonData.leftSec} and ${pairInfo.newCode} Sec ${comparisonData.rightSec}`
+      secName: comparisonData.leftCol.sec,
+      title: comparisonData.leftCol.heading,
+      desc: `Comparison between ${comparisonData.leftCol.code} Sec ${comparisonData.leftCol.sec} and ${comparisonData.rightCol.code} Sec ${comparisonData.rightCol.sec}`
     });
     Alert.alert('Bookmark', isBookmarked ? 'Bookmark removed.' : 'Comparison bookmarked successfully.');
   };
@@ -146,7 +213,7 @@ export default function ComparisonScreen({ route, navigation }) {
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `THE-LAWMEN'S Legal Comparison:\n${comparisonData.headerSubtitle}\n${pairInfo.oldCode} Sec ${comparisonData.leftSec} vs ${pairInfo.newCode} Sec ${comparisonData.rightSec}\nDownload THE-LAWMEN'S app for full legal research.`
+        message: `THE-LAWMEN'S Legal Comparison:\n${comparisonData.headerSubtitle}\n${comparisonData.leftCol.code} Sec ${comparisonData.leftCol.sec} vs ${comparisonData.rightCol.code} Sec ${comparisonData.rightCol.sec}\nDownload THE-LAWMEN'S app for full legal research.`
       });
     } catch (e) {}
   };
@@ -193,7 +260,7 @@ export default function ComparisonScreen({ route, navigation }) {
         </Text>
       </View>
 
-      {/* 3. STATUS & DIFF BLOCKS BAR */}
+      {/* 3. STATUS & DIFF BLOCKS BAR WITH SWAP BUTTON */}
       <View style={styles.statusBarRow}>
         <View style={styles.statusLeft}>
           <Text style={styles.statusLabel}>Status: </Text>
@@ -201,6 +268,17 @@ export default function ComparisonScreen({ route, navigation }) {
             <Text style={styles.statusPillText}>{comparisonData.status}</Text>
           </View>
         </View>
+
+        {/* Interactive Swap Sides Button */}
+        <TouchableOpacity
+          style={styles.swapBtn}
+          onPress={() => setIsSwapped(prev => !prev)}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.swapBtnIcon}>⇄</Text>
+          <Text style={styles.swapBtnText}>Swap Sides</Text>
+        </TouchableOpacity>
+
         <Text style={styles.diffBlocksText}>
           Diff Blocks: {comparisonData.diffBlocks}
         </Text>
@@ -208,8 +286,8 @@ export default function ComparisonScreen({ route, navigation }) {
 
       {/* 4. DUAL COLUMN TITLES */}
       <View style={styles.colTitleRow}>
-        <Text style={styles.colTitleLeft}>{comparisonData.oldLawLabel}</Text>
-        <Text style={styles.colTitleRight}>{comparisonData.newLawLabel}</Text>
+        <Text style={styles.colTitleLeft}>{comparisonData.leftCol.label}</Text>
+        <Text style={styles.colTitleRight}>{comparisonData.rightCol.label}</Text>
       </View>
 
       {/* 5. SCROLLABLE SIDE-BY-SIDE CARDS */}
@@ -220,28 +298,34 @@ export default function ComparisonScreen({ route, navigation }) {
       >
         {/* Section Heading Cards Row */}
         <View style={styles.dualCardRow}>
-          {/* Left Heading Card (Old Law) */}
+          {/* Left Heading Card */}
           <View style={styles.sectionHeadingCard}>
-            <Text style={styles.secNumberText}>Sec {comparisonData.leftSec}</Text>
-            <Text style={styles.secTitleText}>{comparisonData.leftHeading}</Text>
+            <View style={styles.cardHeaderTag}>
+              <Text style={styles.cardHeaderTagText}>{comparisonData.leftCol.code}</Text>
+            </View>
+            <Text style={styles.secNumberText}>Sec {comparisonData.leftCol.sec}</Text>
+            <Text style={styles.secTitleText}>{comparisonData.leftCol.heading}</Text>
           </View>
 
-          {/* Right Heading Card (New Law) */}
+          {/* Right Heading Card */}
           <View style={styles.sectionHeadingCard}>
-            <Text style={styles.secNumberText}>Sec {comparisonData.rightSec}</Text>
-            <Text style={styles.secTitleText}>{comparisonData.rightHeading}</Text>
+            <View style={[styles.cardHeaderTag, styles.cardHeaderTagRight]}>
+              <Text style={styles.cardHeaderTagText}>{comparisonData.rightCol.code}</Text>
+            </View>
+            <Text style={styles.secNumberText}>Sec {comparisonData.rightCol.sec}</Text>
+            <Text style={styles.secTitleText}>{comparisonData.rightCol.heading}</Text>
           </View>
         </View>
 
         {/* Section Content Cards Row */}
         <View style={styles.dualCardRow}>
-          {/* Left Content Card (Old Law with Delete Highlights) */}
+          {/* Left Content Card */}
           <View style={styles.contentCard}>
             <Text style={styles.contentHeaderLabel}>Content</Text>
             {renderSegments(comparisonData.leftSegments)}
           </View>
 
-          {/* Right Content Card (New Law with 100% Precision New/Change Highlights) */}
+          {/* Right Content Card */}
           <View style={styles.contentCard}>
             <Text style={styles.contentHeaderLabel}>Content</Text>
             {renderSegments(comparisonData.rightSegments)}
@@ -341,7 +425,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingTop: 14,
     paddingBottom: 10,
   },
   statusLeft: {
@@ -349,7 +433,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   statusLabel: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '800',
     color: '#111827',
   },
@@ -357,18 +441,37 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: '#25AAE2',
     backgroundColor: '#DEF3FA',
-    paddingHorizontal: 10,
-    paddingVertical: 3,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
     borderRadius: 6,
-    marginLeft: 6,
+    marginLeft: 4,
   },
   statusPillText: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '800',
     color: '#25AAE2',
   },
+  swapBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#181A20',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+  },
+  swapBtnIcon: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#25AAE2',
+    marginRight: 4,
+  },
+  swapBtnText: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
   diffBlocksText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '700',
     color: '#64748B',
   },
@@ -381,17 +484,17 @@ const styles = StyleSheet.create({
   },
   colTitleLeft: {
     flex: 1,
-    fontSize: 13.5,
+    fontSize: 13,
     fontWeight: '800',
     color: '#111827',
-    lineHeight: 18,
+    lineHeight: 17,
   },
   colTitleRight: {
     flex: 1,
-    fontSize: 13.5,
+    fontSize: 13,
     fontWeight: '800',
     color: '#111827',
-    lineHeight: 18,
+    lineHeight: 17,
   },
   bodyScroll: {
     flex: 1,
@@ -413,15 +516,32 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 14,
     backgroundColor: '#FFFFFF',
+    position: 'relative',
+  },
+  cardHeaderTag: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#DEF3FA',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginBottom: 6,
+  },
+  cardHeaderTagRight: {
+    backgroundColor: '#F1F5F9',
+  },
+  cardHeaderTagText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: '#25AAE2',
   },
   secNumberText: {
     fontSize: 17,
     fontWeight: '900',
     color: '#111827',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   secTitleText: {
-    fontSize: 12.5,
+    fontSize: 12,
     fontWeight: '600',
     color: '#64748B',
     lineHeight: 16,
@@ -436,15 +556,14 @@ const styles = StyleSheet.create({
     minHeight: 280,
   },
   contentHeaderLabel: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '800',
     color: '#111827',
-    marginBottom: 10,
   },
   contentText: {
-    fontSize: 13,
+    fontSize: 12.5,
     color: '#1E293B',
-    lineHeight: 20,
+    lineHeight: 19,
   },
   bottomBarContainer: {
     position: 'absolute',

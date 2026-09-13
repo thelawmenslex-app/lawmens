@@ -34,12 +34,16 @@ export default function PdfViewerScreen({ route, navigation }) {
   const [pdfBase64, setPdfBase64] = useState(null);
   const [fetchError, setFetchError] = useState(null);
 
-  // Fetch binary PDF data with fallback natively
+  // Fetch binary PDF data with multi-tier candidate URLs
   useEffect(() => {
     let isMounted = true;
 
     async function downloadPdfBytes(url) {
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: {
+          'Accept': 'application/pdf, */*'
+        }
+      });
       if (!response.ok) {
         throw new Error(`Status ${response.status}`);
       }
@@ -57,37 +61,40 @@ export default function PdfViewerScreen({ route, navigation }) {
     }
 
     async function loadPdfBinary() {
-      if (!pdfUrl && !fallbackPdfUrl) {
-        setLoading(false);
-        return;
-      }
       try {
         setLoading(true);
         setFetchError(null);
 
+        const candidates = [];
+        if (pdfUrl) candidates.push(pdfUrl);
+        if (fallbackPdfUrl && !candidates.includes(fallbackPdfUrl)) candidates.push(fallbackPdfUrl);
+        if (actId) candidates.push(`https://lawmens-1.onrender.com/api/v1/minoract/pdf/${encodeURIComponent(actId)}`);
+        if (title) {
+          candidates.push(`https://lawmens-1.onrender.com/uploads/minor-acts/${encodeURIComponent(title)}.pdf`);
+          candidates.push(`https://lawmens-1.onrender.com/api/v1/minoract/pdf/${encodeURIComponent(title)}`);
+        }
+
         let base64Data = null;
-        try {
-          if (pdfUrl) {
-            base64Data = await downloadPdfBytes(pdfUrl);
+        let lastErr = null;
+
+        for (const url of candidates) {
+          try {
+            base64Data = await downloadPdfBytes(url);
+            if (base64Data && base64Data.length > 50) break;
+          } catch (e) {
+            lastErr = e;
           }
-        } catch (e1) {
-          console.warn('Primary PDF URL failed, trying fallback:', e1.message);
-          if (fallbackPdfUrl && fallbackPdfUrl !== pdfUrl) {
-            base64Data = await downloadPdfBytes(fallbackPdfUrl);
+        }
+
+        if (isMounted) {
+          if (base64Data) {
+            setPdfBase64(base64Data);
           } else {
-            throw e1;
+            setFetchError(lastErr ? lastErr.message : 'Error fetching document');
           }
-        }
-
-        if (!base64Data && fallbackPdfUrl) {
-          base64Data = await downloadPdfBytes(fallbackPdfUrl);
-        }
-
-        if (isMounted && base64Data) {
-          setPdfBase64(base64Data);
+          setLoading(false);
         }
       } catch (err) {
-        console.warn('All PDF fetch sources failed:', err);
         if (isMounted) {
           setFetchError(err.message);
           setLoading(false);
@@ -100,7 +107,7 @@ export default function PdfViewerScreen({ route, navigation }) {
     return () => {
       isMounted = false;
     };
-  }, [pdfUrl, fallbackPdfUrl]);
+  }, [pdfUrl, fallbackPdfUrl, actId, title]);
 
   // Handle messages from PDF.js inside WebView
   const handleMessage = (event) => {
