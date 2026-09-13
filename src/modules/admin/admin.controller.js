@@ -2256,10 +2256,25 @@ const updateMinorAct = async (req, res) => {
             return sendResponse(res, false, 404, 'Minor Act not found.');
         }
 
-        if (name !== undefined) act.name = String(name).trim();
+        if (name !== undefined && String(name).trim()) act.name = String(name).trim();
         if (description !== undefined) act.description = String(description).trim();
         if (order !== undefined) act.order = parseInt(order, 10);
         if (isActive !== undefined) act.isActive = Boolean(isActive);
+
+        // If a new PDF file is uploaded during Edit, replace old PDF
+        if (req.file) {
+            if (act.pdfUrl) {
+                try {
+                    const oldPath = path.join(__dirname, '../../../public', act.pdfUrl);
+                    if (fs.existsSync(oldPath)) {
+                        fs.unlinkSync(oldPath);
+                    }
+                } catch (unlinkErr) {
+                    console.warn('Could not remove previous PDF file during edit:', unlinkErr.message);
+                }
+            }
+            act.pdfUrl = `/uploads/minor-acts/${req.file.filename}`;
+        }
 
         await act.save();
 
@@ -2267,7 +2282,7 @@ const updateMinorAct = async (req, res) => {
             await AuditLog.create({
                 userId: req.userId,
                 action: 'update_minor_act',
-                details: { id, name: act.name, description: act.description },
+                details: { id, name: act.name, description: act.description, pdfUpdated: Boolean(req.file) },
                 ipAddress: req.ip
             });
         } catch (e) {}

@@ -147,7 +147,7 @@ router.delete('/content/minor-acts/clear-pdf/:id', checkRole(['Admin', 'Super Ad
 router.delete('/content/minor-acts/clear-all-pdfs', checkRole(['Admin', 'Super Admin', 'Editor']), adminController.clearAllMinorActPdfs);
 router.get('/content/minor-acts', checkRole(['Admin', 'Super Admin', 'Editor']), adminController.getMinorActsList);
 router.put('/content/minor-acts/reorder', checkRole(['Admin', 'Super Admin', 'Editor']), adminController.reorderMinorActs);
-router.put('/content/minor-acts/:id', checkRole(['Admin', 'Super Admin', 'Editor']), adminController.updateMinorAct);
+router.put('/content/minor-acts/:id', checkRole(['Admin', 'Super Admin', 'Editor']), minorActPdfUpload.single('pdf'), adminController.updateMinorAct);
 router.delete('/content/minor-acts/bulk-delete-all', checkRole(['Admin', 'Super Admin', 'Editor']), adminController.bulkDeleteAllMinorActs);
 router.delete('/content/minor-acts/:id', checkRole(['Admin', 'Super Admin', 'Editor']), adminController.deleteMinorAct);
 
