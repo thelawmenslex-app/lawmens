@@ -11,7 +11,7 @@ import { devicewidth } from "../../Utilities/Dimensions";
 
 const DEFAULT_ABOUT_TEXT = `About :
 
-Welcome to THE-LAWMEN’S, your go-to mobile application for all things related to Indian law. Whether you're a legal professional, a student, or simply someone interested in the intricacies of the legal system, our app provides a comprehensive and user-friendly platform to access and compare old and new Indian laws.
+Welcome to THE-LAWMEN’S, your go-to mobile application for all things related to Indian law. Whether you're a legal professional, a member of the Legal Fraternity, or simply someone interested in the intricacies of the legal system, our app provides a comprehensive and user-friendly platform to access and compare old and new Indian laws.
 
 Features:
 

@@ -176,6 +176,9 @@ export default function LoginScreen({ navigation }) {
         } else if (raw.professionId && !/^[0-9a-fA-F]{24}$/.test(String(raw.professionId).trim())) {
           profName = String(raw.professionId).trim();
         }
+        if (profName.toLowerCase() === 'student' || profName.toLowerCase() === 'law student' || profName.toLowerCase() === 'students') {
+          profName = 'Legal Fraternity';
+        }
 
         const userObj = {
           _id: raw._id || '',

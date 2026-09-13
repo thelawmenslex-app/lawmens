@@ -16,7 +16,7 @@ export default function AboutScreen({ navigation }) {
           <Text style={styles.brandTitle}>THE-LAWMEN'S</Text>
           <Text style={styles.brandSub}>LegalTech Mobile Platform</Text>
           <Text style={styles.bodyText}>
-            Welcome to THE-LAWMEN'S, your comprehensive mobile application for Indian legal research and reference. Whether you are an advocate, a judge, a legal scholar, a law student, or a citizen interested in the Indian justice system, our app provides a fast, modern, and offline-capable platform to access and compare old and newly enacted criminal laws.
+            Welcome to THE-LAWMEN'S, your comprehensive mobile application for Indian legal research and reference. Whether you are an advocate, a judge, a legal scholar, a member of the Legal Fraternity, or a citizen interested in the Indian justice system, our app provides a fast, modern, and offline-capable platform to access and compare old and newly enacted criminal laws.
             \n\n
             Key Highlights:
             • Bharatiya Nyaya Sanhita (BNS, 2023)

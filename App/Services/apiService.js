@@ -59,7 +59,7 @@ export const ApiService = {
             phoneStr = String(raw.phone);
           }
 
-          let prof = 'Student';
+          let prof = 'Legal Fraternity';
           if (typeof raw.professionId === 'object' && raw.professionId?.name) {
             prof = raw.professionId.name;
           } else if (typeof raw.profession === 'object' && raw.profession?.name) {
@@ -67,7 +67,7 @@ export const ApiService = {
           } else if (raw.profession && !/^[0-9a-fA-F]{24}$/.test(String(raw.profession))) {
             prof = String(raw.profession);
           } else {
-            prof = 'Student';
+            prof = 'Legal Fraternity';
           }
 
           const userObj = {
@@ -138,6 +138,9 @@ export const ApiService = {
             prof = String(raw.professionId).trim();
           } else {
             prof = 'Other';
+          }
+          if (prof.toLowerCase() === 'student' || prof.toLowerCase() === 'law student' || prof.toLowerCase() === 'students') {
+            prof = 'Legal Fraternity';
           }
 
           let phoneStr = '';
@@ -259,7 +262,7 @@ export const ApiService = {
           email: 'example@gmail.com',
           phone: '8234567897',
           phoneNumber: '8234567897',
-          profession: 'Student',
+          profession: 'Legal Fraternity',
           role: 'User',
           isPremium: true,
           readingHistoryCount: 0,
@@ -403,6 +406,55 @@ export const ApiService = {
         return { isBookmarked: existsIdx < 0, count: updated.length };
       } catch (e) {
         return { isBookmarked: false, count: 0 };
+      }
+    }
+  },
+
+  // --- SECTION NOTES & ANNOTATIONS (FULL OFFLINE SUPPORT) ---
+  notes: {
+    getSectionNote: async (actTitle, secNumber) => {
+      try {
+        const key = await ApiService.getUserScopedKey(`@note_${String(actTitle)}_${String(secNumber)}`);
+        return await AsyncStorage.getItem(key) || '';
+      } catch (e) {
+        return '';
+      }
+    },
+    saveSectionNote: async (actTitle, secNumber, noteText) => {
+      try {
+        const key = await ApiService.getUserScopedKey(`@note_${String(actTitle)}_${String(secNumber)}`);
+        if (!noteText || !noteText.trim()) {
+          await AsyncStorage.removeItem(key);
+        } else {
+          await AsyncStorage.setItem(key, noteText.trim());
+        }
+        // Save to index of notes
+        const allNotesKey = await ApiService.getUserScopedKey('@all_user_notes_index');
+        const indexStr = await AsyncStorage.getItem(allNotesKey);
+        let indexList = indexStr ? JSON.parse(indexStr) : [];
+        indexList = indexList.filter(n => !(n.actTitle === actTitle && String(n.secNumber) === String(secNumber)));
+        if (noteText && noteText.trim()) {
+          indexList.unshift({
+            id: `note_${Date.now()}`,
+            actTitle,
+            secNumber,
+            note: noteText.trim(),
+            updatedAt: new Date().toISOString()
+          });
+        }
+        await AsyncStorage.setItem(allNotesKey, JSON.stringify(indexList));
+        return true;
+      } catch (e) {
+        return false;
+      }
+    },
+    getAllNotes: async () => {
+      try {
+        const allNotesKey = await ApiService.getUserScopedKey('@all_user_notes_index');
+        const indexStr = await AsyncStorage.getItem(allNotesKey);
+        return indexStr ? JSON.parse(indexStr) : [];
+      } catch (e) {
+        return [];
       }
     }
   },

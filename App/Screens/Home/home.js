@@ -255,7 +255,7 @@ export default function HomeScreen({ navigation }) {
 
         {/* Section Heading */}
         <Text style={styles.sectionHeading}>
-          Criminal laws ( old and new )
+          Criminal laws ( New and Old )
         </Text>
 
         {/* 3-Column Law Book Grid */}

@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import { WebView } from 'react-native-webview';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 
@@ -65,6 +66,20 @@ export default function PdfViewerScreen({ route, navigation }) {
         setLoading(true);
         setFetchError(null);
 
+        const cacheKey = `@offline_pdf_doc_${String(title || actId || 'doc').toLowerCase().replace(/[^a-z0-9]/g, '_')}`;
+        
+        // 1. Check local persistent offline cache first
+        try {
+          const cachedBytes = await AsyncStorage.getItem(cacheKey);
+          if (cachedBytes && cachedBytes.length > 50) {
+            if (isMounted) {
+              setPdfBase64(cachedBytes);
+              setLoading(false);
+            }
+            return;
+          }
+        } catch (e) {}
+
         const candidates = [];
         if (pdfUrl) candidates.push(pdfUrl);
         if (fallbackPdfUrl && !candidates.includes(fallbackPdfUrl)) candidates.push(fallbackPdfUrl);
@@ -80,7 +95,13 @@ export default function PdfViewerScreen({ route, navigation }) {
         for (const url of candidates) {
           try {
             base64Data = await downloadPdfBytes(url);
-            if (base64Data && base64Data.length > 50) break;
+            if (base64Data && base64Data.length > 50) {
+              // Cache downloaded PDF permanently for full offline viewing
+              try {
+                await AsyncStorage.setItem(cacheKey, base64Data);
+              } catch (saveErr) {}
+              break;
+            }
           } catch (e) {
             lastErr = e;
           }
@@ -427,10 +448,35 @@ export default function PdfViewerScreen({ route, navigation }) {
           />
         ) : (
           <View style={styles.loaderContainer}>
-            <ActivityIndicator size="large" color="#25AAE2" />
-            <Text style={styles.loadingText}>
-              {fetchError ? `Failed to load PDF: ${fetchError}` : 'Downloading Exact PDF from Backend...'}
-            </Text>
+            {fetchError ? (
+              <View style={{ alignItems: 'center', paddingHorizontal: 30 }}>
+                <Feather name="cloud-off" size={48} color="#94A3B8" style={{ marginBottom: 16 }} />
+                <Text style={{ fontSize: 18, fontWeight: '700', color: '#FFFFFF', marginBottom: 8, textAlign: 'center' }}>
+                  Offline Document Not Cached
+                </Text>
+                <Text style={{ fontSize: 13, color: '#94A3B8', textAlign: 'center', lineHeight: 20, marginBottom: 20 }}>
+                  This document hasn't been downloaded yet. Connect to the internet once to synchronize and save this Minor Act for 100% offline access anytime.
+                </Text>
+                <TouchableOpacity
+                  style={{
+                    backgroundColor: '#25AAE2',
+                    paddingHorizontal: 20,
+                    paddingVertical: 10,
+                    borderRadius: 12
+                  }}
+                  onPress={() => navigation.goBack()}
+                >
+                  <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 14 }}>Back to Minor Acts</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <>
+                <ActivityIndicator size="large" color="#25AAE2" />
+                <Text style={styles.loadingText}>
+                  Opening Document...
+                </Text>
+              </>
+            )}
           </View>
         )}
       </View>

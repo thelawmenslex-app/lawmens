@@ -42,7 +42,7 @@ export default function SignupScreen({ navigation, route }) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const professionsList = ['Advocate', 'Judge', 'Judicial Officer', 'Police Officer', 'Law Student', 'Researcher', 'Consultant'];
+  const professionsList = ['Advocate', 'Judge', 'Judicial Officer', 'Police Officer', 'Legal Fraternity', 'Researcher', 'Consultant'];
 
   const getPasswordStrength = (pass) => {
     if (!pass) {

@@ -89,6 +89,24 @@ export default function SubscriptionScreen({ navigation }) {
     }, 1200);
   };
 
+  const getDaysLeft = () => {
+    if (status?.validTill) {
+      try {
+        const exp = new Date(status.validTill);
+        if (!isNaN(exp.getTime())) {
+          return Math.max(0, Math.ceil((exp.getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
+        }
+      } catch (e) {}
+    }
+    if (typeof status?.daysLeft === 'number') {
+      return status.daysLeft;
+    }
+    return 0;
+  };
+
+  const defaultPurchasedDate = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+  const defaultValidTill = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#181A20" />
@@ -124,7 +142,7 @@ export default function SubscriptionScreen({ navigation }) {
                 {status.isSubscribed ? 'ACTIVE PREMIUM PASS' : (status.isTrialActive ? 'ACTIVE TRIAL PASS' : 'PASS EXPIRED')}
               </Text>
             </View>
-            <Text style={styles.daysLeftText}>{status.daysLeft} Days Left</Text>
+            <Text style={styles.daysLeftText}>{getDaysLeft()} Days Left</Text>
           </View>
 
           <Text style={styles.planTitle}>{status.planType}</Text>
@@ -132,17 +150,17 @@ export default function SubscriptionScreen({ navigation }) {
 
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Purchased Date:</Text>
-            <Text style={styles.infoValue}>{status.purchasedDate || '13 Aug 2026'}</Text>
+            <Text style={styles.infoValue}>{status.purchasedDate || defaultPurchasedDate}</Text>
           </View>
 
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Valid Till (Expiry):</Text>
-            <Text style={[styles.infoValue, { color: '#10B981' }]}>{status.validTill || '14 Aug 2027'}</Text>
+            <Text style={[styles.infoValue, { color: '#10B981' }]}>{status.validTill || defaultValidTill}</Text>
           </View>
 
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Receipt / Order ID:</Text>
-            <Text style={styles.infoValue}>{status.orderId || 'GPA.2338-4854-7510-16493'}</Text>
+            <Text style={styles.infoValue}>{status.orderId || 'PAY_ACTIVE_PASS'}</Text>
           </View>
 
           <TouchableOpacity

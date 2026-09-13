@@ -13,23 +13,26 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ApiService } from '../../Services/apiService';
 
 export default function BookmarkScreen({ navigation }) {
+  const [activeTab, setActiveTab] = useState('bookmarks'); // 'bookmarks' | 'notes'
   const [bookmarks, setBookmarks] = useState([]);
+  const [notes, setNotes] = useState([]);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
-      loadBookmarks();
+      loadData();
     });
-    loadBookmarks();
+    loadData();
     return unsubscribe;
   }, [navigation]);
 
-  const loadBookmarks = async () => {
+  const loadData = async () => {
     try {
-      const list = await ApiService.bookmarks.getAll();
-      setBookmarks(list || []);
+      const bmList = await ApiService.bookmarks.getAll();
+      setBookmarks(bmList || []);
+      const notesList = await ApiService.notes.getAllNotes();
+      setNotes(notesList || []);
     } catch (e) {
-      console.warn('Bookmark load error:', e);
-      setBookmarks([]);
+      console.warn('Bookmark/notes load error:', e);
     }
   };
 
@@ -44,6 +47,15 @@ export default function BookmarkScreen({ navigation }) {
       await AsyncStorage.setItem(key, JSON.stringify(updated));
     } catch (e) {
       console.warn('Remove bookmark error:', e);
+    }
+  };
+
+  const removeNote = async (itemToRemove) => {
+    try {
+      await ApiService.notes.saveSectionNote(itemToRemove.actTitle, itemToRemove.secNumber, '');
+      loadData();
+    } catch (e) {
+      console.warn('Remove note error:', e);
     }
   };
 
@@ -66,6 +78,8 @@ export default function BookmarkScreen({ navigation }) {
     );
   };
 
+  const currentList = activeTab === 'bookmarks' ? bookmarks : notes;
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#181A20" />
@@ -80,59 +94,126 @@ export default function BookmarkScreen({ navigation }) {
           >
             <Feather name="arrow-left" size={20} color="#111827" />
           </TouchableOpacity>
-          <Text style={styles.brandTitle}>Bookmarks</Text>
-          {bookmarks.length > 0 && (
+          <Text style={styles.brandTitle}>Saved Content</Text>
+          {activeTab === 'bookmarks' && bookmarks.length > 0 && (
             <TouchableOpacity onPress={clearAllBookmarks} style={styles.clearBtn}>
               <Text style={styles.clearBtnText}>Clear All</Text>
             </TouchableOpacity>
           )}
         </View>
-        <Text style={styles.subHeaderCount}>{bookmarks.length} Saved Legal Provisions</Text>
+
+        {/* Tab Switcher */}
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            style={[styles.tabBtn, activeTab === 'bookmarks' && styles.tabBtnActive]}
+            onPress={() => setActiveTab('bookmarks')}
+            activeOpacity={0.8}
+          >
+            <Feather name="bookmark" size={14} color={activeTab === 'bookmarks' ? '#FFFFFF' : '#94A3B8'} style={{ marginRight: 6 }} />
+            <Text style={[styles.tabText, activeTab === 'bookmarks' && styles.tabTextActive]}>
+              Bookmarks ({bookmarks.length})
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.tabBtn, activeTab === 'notes' && styles.tabBtnActive]}
+            onPress={() => setActiveTab('notes')}
+            activeOpacity={0.8}
+          >
+            <Feather name="edit-3" size={14} color={activeTab === 'notes' ? '#FFFFFF' : '#94A3B8'} style={{ marginRight: 6 }} />
+            <Text style={[styles.tabText, activeTab === 'notes' && styles.tabTextActive]}>
+              Notes ({notes.length})
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <FlatList
-        data={bookmarks}
-        keyExtractor={(item, index) => item.id || `bm_${item.actTitle}_${item.secName}_${index}`}
+        data={currentList}
+        keyExtractor={(item, index) => item.id || `item_${item.actTitle}_${item.secName || item.secNumber}_${index}`}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <View style={styles.cardTopRow}>
-              <View style={styles.badgeBox}>
-                <Text style={styles.badgeText}>Sec {item.secName}</Text>
+        renderItem={({ item }) => {
+          if (activeTab === 'notes') {
+            return (
+              <View style={styles.card}>
+                <View style={styles.cardTopRow}>
+                  <View style={styles.badgeBox}>
+                    <Text style={styles.badgeText}>Sec {item.secNumber}</Text>
+                  </View>
+                  <Text style={styles.actTitle} numberOfLines={1}>{item.actTitle}</Text>
+                  <TouchableOpacity
+                    onPress={() => removeNote(item)}
+                    style={styles.deleteBtn}
+                    activeOpacity={0.7}
+                  >
+                    <Feather name="trash-2" size={16} color="#EF4444" />
+                  </TouchableOpacity>
+                </View>
+
+                <Text style={styles.itemTitle}>Personal Note</Text>
+                <Text style={styles.itemDesc}>{item.note}</Text>
+
+                <TouchableOpacity
+                  style={styles.openBtn}
+                  activeOpacity={0.85}
+                  onPress={() => navigation.navigate('Sectiondetail', {
+                    actTitle: item.actTitle,
+                    sectionData: { name: item.secNumber, keyword: `Section ${item.secNumber}` }
+                  })}
+                >
+                  <Text style={styles.openBtnText}>Open Section</Text>
+                  <Feather name="arrow-right" size={14} color="#25AAE2" />
+                </TouchableOpacity>
               </View>
-              <Text style={styles.actTitle} numberOfLines={1}>{item.actTitle}</Text>
+            );
+          }
+
+          return (
+            <View style={styles.card}>
+              <View style={styles.cardTopRow}>
+                <View style={styles.badgeBox}>
+                  <Text style={styles.badgeText}>Sec {item.secName}</Text>
+                </View>
+                <Text style={styles.actTitle} numberOfLines={1}>{item.actTitle}</Text>
+                <TouchableOpacity
+                  onPress={() => removeBookmark(item)}
+                  style={styles.deleteBtn}
+                  activeOpacity={0.7}
+                >
+                  <Feather name="trash-2" size={16} color="#EF4444" />
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.itemTitle}>{item.title}</Text>
+              <Text style={styles.itemDesc} numberOfLines={3}>{item.desc}</Text>
+
               <TouchableOpacity
-                onPress={() => removeBookmark(item)}
-                style={styles.deleteBtn}
-                activeOpacity={0.7}
+                style={styles.openBtn}
+                activeOpacity={0.85}
+                onPress={() => navigation.navigate('Comparison', {
+                  ipcSec: item.secName,
+                  actTitle: item.actTitle,
+                  actCode: item.actCode || 'IPC'
+                })}
               >
-                <Feather name="trash-2" size={16} color="#EF4444" />
+                <Text style={styles.openBtnText}>Open Legal Reference</Text>
+                <Feather name="arrow-right" size={14} color="#25AAE2" />
               </TouchableOpacity>
             </View>
-
-            <Text style={styles.itemTitle}>{item.title}</Text>
-            <Text style={styles.itemDesc} numberOfLines={3}>{item.desc}</Text>
-
-            <TouchableOpacity
-              style={styles.openBtn}
-              activeOpacity={0.85}
-              onPress={() => navigation.navigate('Comparison', {
-                ipcSec: item.secName,
-                actTitle: item.actTitle,
-                actCode: item.actCode || 'IPC'
-              })}
-            >
-              <Text style={styles.openBtnText}>Open Legal Reference</Text>
-              <Feather name="arrow-right" size={14} color="#25AAE2" />
-            </TouchableOpacity>
-          </View>
-        )}
+          );
+        }}
         ListEmptyComponent={
           <View style={styles.emptyStateContainer}>
-            <Feather name="bookmark" size={54} color="#94A3B8" />
-            <Text style={styles.emptyStateText}>No bookmarks saved.</Text>
-            <Text style={styles.emptyStateSub}>Tap the bookmark icon on any section to save it here.</Text>
+            <Feather name={activeTab === 'bookmarks' ? "bookmark" : "edit-3"} size={54} color="#94A3B8" />
+            <Text style={styles.emptyStateText}>
+              {activeTab === 'bookmarks' ? 'No bookmarks saved.' : 'No personal notes saved yet.'}
+            </Text>
+            <Text style={styles.emptyStateSub}>
+              {activeTab === 'bookmarks' 
+                ? 'Tap the bookmark icon on any section to save it here.' 
+                : 'Tap "Notes" on any legal provision to write and save notes offline.'}
+            </Text>
           </View>
         }
       />
@@ -190,6 +271,34 @@ const styles = StyleSheet.create({
     color: '#94A3B8',
     fontWeight: '600',
     marginLeft: 46,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#2A2E39',
+    borderRadius: 14,
+    padding: 3,
+    marginTop: 12,
+    gap: 4,
+  },
+  tabBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    borderRadius: 11,
+  },
+  tabBtnActive: {
+    backgroundColor: '#25AAE2',
+  },
+  tabText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#94A3B8',
+  },
+  tabTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '800',
   },
   listContent: {
     padding: 16,

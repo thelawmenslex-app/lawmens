@@ -25,6 +25,18 @@ const formatDate = (dateVal) => {
   }
 };
 
+const calculateDaysRemaining = (expDateVal) => {
+  if (!expDateVal) return 0;
+  try {
+    const exp = new Date(expDateVal);
+    if (isNaN(exp.getTime())) return 0;
+    const diffMs = exp.getTime() - Date.now();
+    return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+  } catch (e) {
+    return 0;
+  }
+};
+
 export const SubscriptionService = {
   // Fetch live active subscription plans
   getAvailablePlans: async () => {
@@ -89,6 +101,7 @@ export const SubscriptionService = {
 
               const pDate = serverData.purchasedDate || user?.premiumPurchaseDate || user?.createdAt || new Date();
               const expDate = serverData.expiryDate || (serverData.daysRemaining ? new Date(Date.now() + Number(serverData.daysRemaining) * 24 * 60 * 60 * 1000) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
+              const daysLeft = calculateDaysRemaining(expDate) || Number(serverData.daysRemaining) || 0;
 
               return {
                 hasAccess: true,
@@ -97,7 +110,7 @@ export const SubscriptionService = {
                 isSubscribed: true,
                 isPremium: true,
                 canAccessMinorActs: true,
-                daysLeft: serverData.daysRemaining || 30,
+                daysLeft: daysLeft,
                 planType: serverData.planName || 'Start up',
                 subtitle: 'Full Legal Research Access (Active)',
                 purchasedDate: formatDate(pDate),
@@ -117,7 +130,7 @@ export const SubscriptionService = {
                 daysLeft: 0,
                 planType: 'Trial Expired',
                 subtitle: 'Trial Expired • App Locked',
-                purchasedDate: formatDate(serverData.purchasedDate || user?.createdAt || '2026-08-13'),
+                purchasedDate: formatDate(serverData.purchasedDate || user?.createdAt || new Date()),
                 validTill: formatDate(serverData.expiryDate || user?.trialEndDate || new Date()),
                 orderId: 'FREE_TRIAL'
               };
@@ -131,7 +144,10 @@ export const SubscriptionService = {
       // 2. Offline / Local fallback: If user completed payment or profile is marked premium:
       if (isSubscribedFlag === 'true' || user?.isPremium === true) {
         const pDateOffline = user?.premiumPurchaseDate || user?.createdAt || new Date();
-        const expDateOffline = user?.trialEndDate ? new Date(user.trialEndDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        const expDateOffline = user?.subscriptionExpiresAt
+          ? new Date(user.subscriptionExpiresAt)
+          : (user?.trialEndDate ? new Date(user.trialEndDate) : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000));
+        const daysLeftOffline = calculateDaysRemaining(expDateOffline);
 
         return {
           hasAccess: true,
@@ -140,8 +156,8 @@ export const SubscriptionService = {
           isSubscribed: true,
           isPremium: true,
           canAccessMinorActs: true,
-          daysLeft: 30,
-          planType: 'Start up',
+          daysLeft: daysLeftOffline,
+          planType: user?.planName || 'Start up',
           subtitle: 'Full Legal Research Access (Active)',
           purchasedDate: formatDate(pDateOffline),
           validTill: formatDate(expDateOffline),

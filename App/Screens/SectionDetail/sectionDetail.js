@@ -7,7 +7,9 @@ import {
   TouchableOpacity,
   StatusBar,
   Share,
-  Alert
+  Alert,
+  Modal,
+  TextInput
 } from 'react-native';
 import Feather from 'react-native-vector-icons/Feather';
 import { ApiService } from '../../Services/apiService';
@@ -184,6 +186,30 @@ export default function SectionDetailScreen({ route, navigation }) {
     return parseAdminPortalClauses(fullContent);
   }, [fullContent]);
 
+  const [noteModalVisible, setNoteModalVisible] = useState(false);
+  const [sectionNote, setSectionNote] = useState('');
+  const [hasNote, setHasNote] = useState(false);
+
+  useEffect(() => {
+    // Load existing offline note for this section
+    (async () => {
+      try {
+        const savedNote = await ApiService.notes.getSectionNote(actTitle, secNumber);
+        if (savedNote) {
+          setSectionNote(savedNote);
+          setHasNote(true);
+        }
+      } catch (e) {}
+    })();
+  }, [actTitle, secNumber]);
+
+  const handleSaveNote = async () => {
+    await ApiService.notes.saveSectionNote(actTitle, secNumber, sectionNote);
+    setHasNote(Boolean(sectionNote && sectionNote.trim()));
+    setNoteModalVisible(false);
+    Alert.alert('Note Saved', 'Your offline note for this section has been saved securely.');
+  };
+
   const handleCopy = () => {
     Alert.alert('Copied', `Section ${secNumber}: ${secTitle} copied to clipboard.`);
   };
@@ -260,6 +286,21 @@ export default function SectionDetailScreen({ route, navigation }) {
               </Text>
             </View>
           ))}
+
+          {/* Offline Note Display Box if present */}
+          {hasNote && sectionNote ? (
+            <TouchableOpacity 
+              style={styles.noteBox}
+              activeOpacity={0.85}
+              onPress={() => setNoteModalVisible(true)}
+            >
+              <View style={styles.noteBoxHeader}>
+                <Feather name="edit-3" size={14} color="#0085CC" style={{ marginRight: 6 }} />
+                <Text style={styles.noteBoxTitle}>My Notes on Section {secNumber}</Text>
+              </View>
+              <Text style={styles.noteBoxText}>{sectionNote}</Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
       </ScrollView>
 
@@ -290,6 +331,16 @@ export default function SectionDetailScreen({ route, navigation }) {
             <Text style={styles.actionBtnText}>Bookmark</Text>
           </TouchableOpacity>
 
+          {/* Notes */}
+          <TouchableOpacity
+            style={styles.actionBtn}
+            onPress={() => setNoteModalVisible(true)}
+            activeOpacity={0.7}
+          >
+            <Feather name="edit-3" size={20} color="#25AAE2" />
+            <Text style={styles.actionBtnText}>{hasNote ? 'Edit Note' : 'Notes'}</Text>
+          </TouchableOpacity>
+
           {/* Share */}
           <TouchableOpacity
             style={styles.actionBtn}
@@ -301,6 +352,55 @@ export default function SectionDetailScreen({ route, navigation }) {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* Offline Notes Editor Modal */}
+      <Modal
+        visible={noteModalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setNoteModalVisible(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeader}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Feather name="edit-3" size={20} color="#25AAE2" style={{ marginRight: 8 }} />
+                <Text style={styles.modalTitle}>Section {secNumber} Notes</Text>
+              </View>
+              <TouchableOpacity onPress={() => setNoteModalVisible(false)}>
+                <Feather name="x" size={22} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.modalSubtitle}>{actTitle}</Text>
+
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Write your offline personal notes, case laws, or legal analysis here..."
+              placeholderTextColor="#94A3B8"
+              multiline={true}
+              numberOfLines={6}
+              textAlignVertical="top"
+              value={sectionNote}
+              onChangeText={setSectionNote}
+            />
+
+            <View style={styles.modalButtonRow}>
+              <TouchableOpacity 
+                style={styles.modalCancelBtn}
+                onPress={() => setNoteModalVisible(false)}
+              >
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.modalSaveBtn}
+                onPress={handleSaveNote}
+              >
+                <Text style={styles.modalSaveText}>Save Offline Note</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -450,5 +550,97 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#25AAE2',
     marginTop: 2,
+  },
+  noteBox: {
+    marginTop: 18,
+    backgroundColor: '#F0F9FF',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#BAE6FD',
+    padding: 14,
+  },
+  noteBoxHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  noteBoxTitle: {
+    fontSize: 12.5,
+    fontWeight: '800',
+    color: '#0085CC',
+  },
+  noteBoxText: {
+    fontSize: 13,
+    color: '#334155',
+    lineHeight: 19,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalCard: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 22,
+    padding: 20,
+    elevation: 8,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  modalTitle: {
+    fontSize: 17,
+    fontWeight: '900',
+    color: '#111827',
+  },
+  modalSubtitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748B',
+    marginBottom: 14,
+  },
+  modalInput: {
+    height: 140,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    padding: 12,
+    fontSize: 13.5,
+    color: '#1E293B',
+    marginBottom: 16,
+  },
+  modalButtonRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
+  },
+  modalCancelBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    backgroundColor: '#F1F5F9',
+  },
+  modalCancelText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  modalSaveBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 10,
+    backgroundColor: '#25AAE2',
+  },
+  modalSaveText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
 });

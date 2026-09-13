@@ -1,6 +1,7 @@
 import { SubscriptionService } from '../Services/subscriptionService';
 import { fcmNotificationService } from '../Services/fcmNotificationService';
 import { liveSyncService } from '../Services/liveSyncService';
+import { offlineStorageService } from '../Services/offlineStorageService';
 import React, { useState, useEffect } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
@@ -94,6 +95,7 @@ export default function Routes() {
 
   useEffect(() => {
     checkAuthSession();
+    offlineStorageService.init();
     liveSyncService.init();
     fcmNotificationService.checkAndRequestPermission();
   }, []);

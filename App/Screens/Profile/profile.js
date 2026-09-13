@@ -18,17 +18,25 @@ import { ApiService } from '../../Services/apiService';
 
 const resolveProfessionName = (prof) => {
   if (!prof) return 'Other';
+  let name = '';
   if (typeof prof === 'object') {
     if (prof.name && !/^[0-9a-fA-F]{24}$/.test(String(prof.name).trim())) {
-      return String(prof.name).trim();
+      name = String(prof.name).trim();
+    } else {
+      name = 'Other';
     }
-    return 'Other';
+  } else {
+    const str = String(prof).trim();
+    if (/^[0-9a-fA-F]{24}$/.test(str) || str.toLowerCase() === 'undefined' || str.toLowerCase() === 'null') {
+      name = 'Other';
+    } else {
+      name = str || 'Other';
+    }
   }
-  const str = String(prof).trim();
-  if (/^[0-9a-fA-F]{24}$/.test(str) || str.toLowerCase() === 'undefined' || str.toLowerCase() === 'null') {
-    return 'Other';
+  if (name.toLowerCase() === 'student' || name.toLowerCase() === 'law student' || name.toLowerCase() === 'students') {
+    return 'Legal Fraternity';
   }
-  return str || 'Other';
+  return name;
 };
 
 export default function ProfileScreen({ navigation }) {
