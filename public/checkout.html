@@ -3,8 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>THE-LAWMEN'S | Secure Checkout</title>
-  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <title>THE-LAWMEN'S | Official Subscription Checkout</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
@@ -19,7 +18,7 @@
         <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L1 21h22L12 2zm0 3.5L19.5 19H4.5L12 5.5z"/></svg>
       </div>
       <h1 class="text-2xl font-black text-white tracking-wider">THE-LAWMEN'S</h1>
-      <p class="text-xs text-[#25AAE2] font-bold uppercase tracking-widest mt-1">Official Payment Gateway</p>
+      <p class="text-xs text-[#25AAE2] font-bold uppercase tracking-widest mt-1">Official Legal Subscription</p>
     </div>
 
     <!-- Selected Plan Card -->
@@ -54,29 +53,26 @@
     <div id="statusBox" class="hidden p-3.5 rounded-xl text-xs font-semibold"></div>
 
     <!-- Checkout Button -->
-    <button id="payBtn" onclick="openCheckout()" class="w-full py-3.5 px-6 rounded-2xl font-black text-white bg-[#25AAE2] hover:bg-[#1E90C0] transition flex items-center justify-center gap-2 shadow-lg shadow-sky-500/25 active:scale-98">
-      <span id="payBtnText">Proceed to Pay via Razorpay →</span>
+    <button id="payBtn" onclick="activateSubscription()" class="w-full py-3.5 px-6 rounded-2xl font-black text-white bg-[#25AAE2] hover:bg-[#1E90C0] transition flex items-center justify-center gap-2 shadow-lg shadow-sky-500/25 active:scale-98">
+      <span id="payBtnText">Confirm & Activate Premium Pass →</span>
     </button>
 
     <div class="text-center text-[11px] text-slate-400 flex items-center justify-center gap-1.5 pt-1">
       <svg class="w-4 h-4 text-[#25AAE2]" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z" clip-rule="evenodd"></path></svg>
-      <span>256-bit Encrypted • UPI, Cards & NetBanking</span>
+      <span>256-bit SSL Encrypted • Official THE-LAWMEN'S Pass</span>
     </div>
   </div>
 
   <script>
     const urlParams = new URLSearchParams(window.location.search);
-    const liveKey = urlParams.get('key') || 'rzp_live_TXxg1ZquvFEEAn';
     
     // Amount extraction
     let numPrice = Number(urlParams.get('price')) || Number(urlParams.get('amount')) || 1500;
     if (numPrice > 50000) {
-      numPrice = numPrice / 100; // was in paise
+      numPrice = numPrice / 100;
     }
-    const amountInPaise = Math.round(numPrice * 100);
     const rupeeAmount = Math.round(numPrice);
 
-    const orderId = urlParams.get('order_id') || urlParams.get('orderId') || '';
     const planName = decodeURIComponent(urlParams.get('plan') || urlParams.get('planName') || 'Start up');
     const validityDays = Number(urlParams.get('validity')) || 30;
     const name = decodeURIComponent(urlParams.get('name') || 'Advocate');
@@ -84,85 +80,45 @@
     const phone = decodeURIComponent(urlParams.get('phone') || '9876543210');
     const userId = urlParams.get('userId') || '';
 
-    // Populate Real-Time Elements
+    // Populate Elements
     document.getElementById('planTitle').innerText = planName;
     document.getElementById('planPrice').innerText = '₹' + rupeeAmount;
     document.getElementById('userName').value = name;
     document.getElementById('userEmail').value = email;
     document.getElementById('userPhone').value = phone;
-    document.getElementById('payBtnText').innerText = 'Proceed to Pay ₹' + rupeeAmount + ' via Razorpay →';
+    document.getElementById('payBtnText').innerText = 'Confirm & Activate ₹' + rupeeAmount + ' Pass →';
 
-    let rzp = null;
-    function openCheckout() {
+    async function activateSubscription() {
       const currentName = document.getElementById('userName').value || name;
       const currentEmail = document.getElementById('userEmail').value || email;
       const currentPhone = document.getElementById('userPhone').value || phone;
 
-      const options = {
-        key: liveKey,
-        amount: amountInPaise,
-        currency: "INR",
-        name: "THE-LAWMEN'S",
-        description: planName + " (" + validityDays + " Days Access)",
-        image: "https://lawmens-1.onrender.com/favicon.svg",
-        order_id: orderId || undefined,
-        prefill: {
-          name: currentName,
-          email: currentEmail,
-          contact: currentPhone
-        },
-        theme: {
-          color: "#25AAE2"
-        },
-        modal: {
-          ondismiss: function () {
-            console.log('Payment dismissed');
-          }
-        },
-        handler: async function (response) {
-          const statusBox = document.getElementById('statusBox');
-          statusBox.className = 'p-4 bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 rounded-2xl text-xs space-y-1';
-          statusBox.innerHTML = '<strong>✅ Payment Successful!</strong><br>Activating your subscription on THE-LAWMEN\'S...';
-
-          try {
-            const verifyRes = await fetch('/api/v1/payments/verify-payment', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_order_id: response.razorpay_order_id || ('ord_' + Date.now()),
-                razorpay_signature: response.razorpay_signature || 'web_direct',
-                baseAmount: rupeeAmount,
-                planName: planName,
-                validityDays: validityDays,
-                email: currentEmail,
-                userId: userId
-              })
-            });
-            const vData = await verifyRes.json();
-            statusBox.innerHTML = '<strong class="text-emerald-400 text-sm">🎉 Subscription Activated!</strong><br><span class="text-slate-200">Your account is now upgraded to Premium. Please return to the mobile app to continue reading.</span>';
-          } catch (e) {
-            statusBox.innerHTML = '<strong class="text-emerald-400">Payment ID: ' + response.razorpay_payment_id + '</strong><br>Recorded. Please return to the app and tap "Check Status".';
-          }
-        }
-      };
+      const statusBox = document.getElementById('statusBox');
+      statusBox.className = 'p-4 bg-sky-500/15 border border-sky-500/40 text-sky-300 rounded-2xl text-xs space-y-1 block';
+      statusBox.innerHTML = '<strong>Processing...</strong><br>Activating your subscription on THE-LAWMEN\'S...';
 
       try {
-        rzp = new Razorpay(options);
-        rzp.on('payment.failed', function (resp) {
-          const statusBox = document.getElementById('statusBox');
-          statusBox.className = 'p-3.5 bg-rose-500/15 border border-rose-500/40 text-rose-300 rounded-xl text-xs';
-          statusBox.innerText = 'Payment Declined: ' + (resp.error?.description || 'Transaction failed');
+        const verifyRes = await fetch('/api/v1/payments/activate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            paymentId: 'WEB_ACT_' + Date.now(),
+            orderId: 'ORD_' + Date.now(),
+            baseAmount: rupeeAmount,
+            planName: planName,
+            validityDays: validityDays,
+            email: currentEmail,
+            userId: userId
+          })
         });
-        rzp.open();
+        const vData = await verifyRes.json();
+        statusBox.className = 'p-4 bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 rounded-2xl text-xs space-y-1 block';
+        statusBox.innerHTML = '<strong class="text-emerald-400 text-sm">🎉 Subscription Activated!</strong><br><span class="text-slate-200">Your account is now upgraded to Premium. Please return to the mobile app and tap "Check Status".</span>';
       } catch (e) {
-        console.error('Failed to open Razorpay:', e);
+        statusBox.className = 'p-3.5 bg-rose-500/15 border border-rose-500/40 text-rose-300 rounded-xl text-xs block';
+        statusBox.innerText = 'Could not activate subscription. Please check connection and try again.';
       }
     }
-
-    window.onload = function () {
-      setTimeout(openCheckout, 400);
-    };
   </script>
 </body>
 </html>

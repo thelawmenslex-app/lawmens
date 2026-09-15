@@ -17,6 +17,8 @@ const register = async (req, res) => {
             return sendResponse(res, false, 200, 'Phone number already registered.',);
         }
         data.password = await encryptPassword(data.password);
+        data.trialStartDate = new Date();
+        data.trialEndDate = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000);
         const user = await userService.createUser(data);
         const deviceId = data.deviceId || `device_${Date.now()}`;
         await userService.updateUser({ _id: user._id }, { currentDeviceId: deviceId });
@@ -392,7 +394,7 @@ const googleLogin = async (req, res) => {
                 role: 'User',
                 isActive: true,
                 trialStartDate: new Date(),
-                trialEndDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+                trialEndDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000)
             });
         } else {
             await userService.updateUser({ _id: checkUser._id }, { currentDeviceId: deviceId });

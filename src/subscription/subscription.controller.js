@@ -180,8 +180,8 @@ const getSubscriptionStatus = async (req, res) => {
         const now = new Date();
         const createdAt = user?.createdAt ? new Date(user.createdAt) : now;
         
-        // Strict 3-day trial end date calculated from account creation
-        const trialEndDate = user?.trialEndDate ? new Date(user.trialEndDate) : new Date(createdAt.getTime() + 3 * 24 * 60 * 60 * 1000);
+        // Strict 10-day trial end date calculated from account creation
+        const trialEndDate = user?.trialEndDate ? new Date(user.trialEndDate) : new Date(createdAt.getTime() + 10 * 24 * 60 * 60 * 1000);
         
         const isPremium = user?.isPremium === true || Boolean(user?.subscriptionId);
         let isExpired = false;
@@ -215,7 +215,7 @@ const getSubscriptionStatus = async (req, res) => {
             }
             isTrial = false;
         } else {
-            // Free Trial evaluation (Strict 3 Days)
+            // Free Trial evaluation (Strict 10 Days)
             isExpired = now > trialEndDate;
             hasAccess = !isExpired;
             isTrial = true;
@@ -236,6 +236,8 @@ const getSubscriptionStatus = async (req, res) => {
             isTrial,
             isExpired,
             canAccessMinorActs: isPremium && !isExpired,
+            allowedActs: isPremium ? ['*'] : ['ipc', 'bns'],
+            lockedFeatures: isPremium ? [] : ['crpc', 'bnss', 'iea', 'bsa', 'minor_acts', 'schedules', 'bookmarks', 'notes'],
             daysRemaining,
             reason,
             trialStartDate: createdAt.toISOString(),
@@ -243,9 +245,9 @@ const getSubscriptionStatus = async (req, res) => {
             purchasedDate: user?.premiumPurchaseDate || user?.createdAt || now.toISOString(),
             expiryDate: isPremium ? subscriptionExpiry.toISOString() : trialEndDate.toISOString(),
             paymentId: user?.premiumPaymentId || (isPremium ? "PREMIUM_ACTIVE" : "FREE_TRIAL"),
-            planName: activePlan ? activePlan.name : (isPremium ? "Start up" : (isExpired ? "Trial Expired" : "3-Day Free Trial")),
+            planName: activePlan ? activePlan.name : (isPremium ? "Start up" : (isExpired ? "Trial Expired" : "10-Day Free Trial")),
             planPrice: activePlan ? activePlan.price : 1500,
-            validityDays: activePlan ? activePlan.validity : (isPremium ? 30 : 3),
+            validityDays: activePlan ? activePlan.validity : (isPremium ? 30 : 10),
             history
         });
     } catch (error) {

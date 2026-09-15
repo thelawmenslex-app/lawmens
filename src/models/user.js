@@ -64,7 +64,7 @@ const userSchema = new Schema(
         },
         trialEndDate: {
             type: Date,
-            default: () => new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+            default: () => new Date(Date.now() + 10 * 24 * 60 * 60 * 1000)
         },
         isTrialUsed: {
             type: Boolean,
@@ -107,4 +107,3 @@ userSchema.index({ phoneNumber: 1 });
 userSchema.index({ professionId: 1 });
 
 module.exports = model(constants.USER, userSchema);
-
