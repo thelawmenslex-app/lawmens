@@ -2,7 +2,6 @@ const User = require('../../models/user');
 const AuditLog = require('../../models/auditLog');
 const { sendResponse, errorHandler, decryptPassword, encryptPassword, generateToken, generateOTP } = require('../../../utils/common_functions');
 const { sendEmail } = require('../../../services/email.service');
-const { sendWhatsAppOTP } = require('../../services/whatsapp.service');
 const pug = require('pug');
 
 // Admin Login
@@ -94,16 +93,7 @@ const forgotPassword = async (req, res) => {
             console.log(`[DEV ONLY] Admin OTP for ${email} is: ${otp}`);
         }
 
-        if (user.phoneNumber) {
-            try {
-                const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
-                await sendWhatsAppOTP({ phone: user.phoneNumber, otp, name: fullName || 'Admin' });
-            } catch (waErr) {
-                console.error("Admin WhatsApp OTP dispatch failed:", waErr.message);
-            }
-        }
-
-        return sendResponse(res, true, 200, 'Reset OTP sent successfully.');
+        return sendResponse(res, true, 200, 'Reset OTP sent successfully to your Gmail / Email.');
     } catch (error) {
         return errorHandler(error, res);
     }

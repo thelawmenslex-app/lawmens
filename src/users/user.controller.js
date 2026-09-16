@@ -1,4 +1,3 @@
-const { sendWhatsAppOTP } = require('../services/whatsapp.service');
 const { sendResponse, errorHandler, encryptPassword, generateToken, decryptPassword, generateOTP } = require('../../utils/common_functions');
 const userService = require("./user.services");
 const { createOtp, getOtp, updateStatus } = require("../otp/otp.services");
@@ -107,14 +106,7 @@ const otpFunctionality = async (req, res) => {
             } catch (emailErr) {
                 console.error("Email sending failed:", emailErr.message);
             }
-            if (data.phoneNumber) {
-                try {
-                    await sendWhatsAppOTP({ phone: data.phoneNumber, otp: otp, name: data.firstName || 'New User' });
-                } catch (waErr) {
-                    console.error("WhatsApp OTP dispatch failed:", waErr.message);
-                }
-            }
-            return sendResponse(res, true, 200, 'Otp sent successfull.');
+            return sendResponse(res, true, 200, 'Otp sent successfully to your Gmail / Email.');
         }
         if (!checkUser && checkOtp && data.type && data.type === "verify") {
             const currentDate = new Date();
@@ -172,37 +164,23 @@ const forgotPasswordRequest = async (req, res) => {
         let emailSent = false;
         let waSent = false;
 
-        // 1. Dispatch Email OTP
+        // Dispatch Email OTP to registered Gmail address
         if (checkUser.email) {
             try {
                 const content = pug.renderFile('./views/otp.pug', { otp: otp });
                 await sendEmail(checkUser.email, content, 'Password Reset OTP - THE-LAWMEN\'S');
-                emailSent = true;
                 console.log(`[OTP DISPATCH] Email delivered to ${checkUser.email}`);
             } catch (emailErr) {
                 console.warn('[OTP DISPATCH] Email delivery warning:', emailErr.message);
             }
         }
 
-        // 2. Dispatch WhatsApp OTP
-        if (checkUser.phoneNumber) {
-            try {
-                const fullName = `${checkUser.firstName || ''} ${checkUser.lastName || ''}`.trim() || 'User';
-                await sendWhatsAppOTP({ phone: checkUser.phoneNumber, otp: otp, name: fullName });
-                waSent = true;
-                console.log(`[OTP DISPATCH] WhatsApp OTP delivered to ${checkUser.phoneNumber}`);
-            } catch (waErr) {
-                console.warn('[OTP DISPATCH] WhatsApp delivery warning:', waErr.message);
-            }
-        }
-
         const maskedEmail = checkUser.email ? checkUser.email.replace(/^(.{2})(.*)(@.*)$/, (_, a, b, c) => a + '*'.repeat(Math.max(1, b.length)) + c) : null;
-        const maskedPhone = checkUser.phoneNumber ? checkUser.phoneNumber.replace(/^(.{3})(.*)(.{2})$/, (_, a, b, c) => a + '*'.repeat(Math.max(1, b.length)) + c) : null;
 
-        return sendResponse(res, true, 200, 'Verification code has been sent successfully.', {
+        return sendResponse(res, true, 200, `Verification OTP code has been dispatched to your registered Gmail address (${maskedEmail || checkUser.email}).`, {
             email: checkUser.email,
             phoneNumber: checkUser.phoneNumber,
-            maskedDestination: isEmail ? (maskedEmail || checkUser.email) : (maskedPhone || checkUser.phoneNumber),
+            maskedDestination: maskedEmail || checkUser.email,
             otp: process.env.NODE_ENV !== 'production' ? otp : undefined
         });
     } catch (error) {
@@ -296,16 +274,7 @@ const profileVerification = async (req, res) => {
                     console.error("Email sending failed:", emailErr.message);
                     console.log(`[DEV ONLY] Profile verification OTP for ${data.email} is: ${otp}`);
                 }
-                const activeUser = await userService.getUser({ _id: userId });
-                if (activeUser && activeUser.phoneNumber) {
-                    try {
-                        const fullName = `${activeUser.firstName || ''} ${activeUser.lastName || ''}`.trim();
-                        await sendWhatsAppOTP({ phone: activeUser.phoneNumber, otp: otp, name: fullName || 'User' });
-                    } catch (waErr) {
-                        console.error("WhatsApp OTP dispatch failed:", waErr.message);
-                    }
-                }
-                return sendResponse(res, true, 200, 'Otp sent successfull.',);
+                return sendResponse(res, true, 200, 'Otp sent successfully to your Gmail / Email.');
             }
 
             if (data.type && data.type === "verify") {
@@ -704,33 +673,36 @@ const initiateAccountDeletion = async (req, res) => {
             return sendResponse(res, false, 400, 'Incorrect password. Verification failed.');
         }
 
-        const otp = generateOTP();
-        const { createOtp, updateStatus, getOtp } = require("../otp/otp.services");
-        const checkOtp = await getOtp({ email: user.email || `${user.phoneNumber}@thelawmens.com` });
-        
-        if (!checkOtp) {
-            await createOtp({ email: user.email || `${user.phoneNumber}@thelawmens.com`, otp });
-        } else {
-            await updateStatus({ email: user.email || `${user.phoneNumber}@thelawmens.com` }, { otp, emailStatus: 'pending' });
+        const targetEmail = user.email || (isEmail ? userName.trim().toLowerCase() : null);
+        if (!targetEmail) {
+            return sendResponse(res, false, 400, 'No registered Gmail / Email address found associated with this account to receive OTP.');
         }
 
-        // Send OTP via WhatsApp
-        if (user.phoneNumber) {
+        const otp = generateOTP();
+        const { createOtp, updateStatus, getOtp } = require("../otp/otp.services");
+        const userEmail = user.email || `${user.phoneNumber}@thelawmens.com`;
+        const checkOtp = await getOtp({ email: userEmail });
+        
+        if (!checkOtp) {
+            await createOtp({ email: userEmail, otp });
+        } else {
+            await updateStatus({ email: userEmail }, { otp, emailStatus: 'pending' });
+        }
+
+        // Send OTP via Email / Gmail
+        if (user.email) {
             try {
-                await sendWhatsAppOTP({
-                    phone: user.phoneNumber,
-                    otp,
-                    name: `${user.firstName || 'Advocate'}`
-                });
-            } catch (waErr) {
-                console.error('WhatsApp OTP Error:', waErr.message);
+                const content = pug.renderFile('./views/otp.pug', { otp });
+                await sendEmail(user.email, content, 'Account Deletion Verification OTP - THE-LAWMEN\'S');
+            } catch (emailErr) {
+                console.error('Email OTP Error:', emailErr.message);
             }
         }
 
-        const maskedPhone = user.phoneNumber ? `+91 ${user.phoneNumber.substring(0, 2)}******${user.phoneNumber.substring(user.phoneNumber.length - 2)}` : user.email;
+        const maskedEmail = user.email ? user.email.replace(/^(.{2})(.*)(@.*)$/, (_, a, b, c) => a + '*'.repeat(Math.max(1, b.length)) + c) : user.phoneNumber;
 
-        return sendResponse(res, true, 200, `Verification OTP has been dispatched to your registered WhatsApp mobile number (${maskedPhone}).`, {
-            maskedContact: maskedPhone
+        return sendResponse(res, true, 200, `Verification OTP has been dispatched to your registered Gmail address (${maskedEmail}).`, {
+            maskedContact: maskedEmail
         });
     } catch (error) {
         return errorHandler(error, res);
@@ -776,8 +748,8 @@ const confirmAccountDeletion = async (req, res) => {
             name: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
             email: user.email || 'deleted_user@lawmens.com',
             phone: user.phoneNumber || '',
-            subject: 'Account Permanently Deleted via 3-Factor Web Verification',
-            query: `Account for ${user.email || user.phoneNumber} was permanently purged at ${new Date().toISOString()} after verifying Username, Password, and WhatsApp OTP.`,
+            subject: 'Account Permanently Deleted via 3-Factor Verification',
+            query: `Account for ${user.email || user.phoneNumber} was permanently purged at ${new Date().toISOString()} after verifying Username, Password, and Email OTP.`,
             status: 'resolved'
         }).catch(() => null);
 
