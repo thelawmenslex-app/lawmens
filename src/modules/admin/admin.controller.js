@@ -174,18 +174,21 @@ const getAnalytics = async (req, res) => {
 const getUsers = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 20;
-        const skip = (page - 1) * limit;
+        const limit = req.query.exportAll === 'true' ? 10000 : (parseInt(req.query.limit) || 20);
+        const skip = req.query.exportAll === 'true' ? 0 : (page - 1) * limit;
         const search = req.query.search || '';
         const role = req.query.role || '';
         const isPremium = req.query.isPremium;
+        const startDate = req.query.startDate;
+        const endDate = req.query.endDate;
 
         const query = { isDeleted: { $ne: true } };
         if (search) {
             query.$or = [
                 { firstName: { $regex: search, $options: 'i' } },
                 { lastName: { $regex: search, $options: 'i' } },
-                { email: { $regex: search, $options: 'i' } }
+                { email: { $regex: search, $options: 'i' } },
+                { phoneNumber: { $regex: search, $options: 'i' } }
             ];
         }
         if (role) {
@@ -193,6 +196,19 @@ const getUsers = async (req, res) => {
         }
         if (isPremium !== undefined && isPremium !== '') {
             query.isPremium = isPremium === 'true';
+        }
+
+        // Custom Date Range Filtering
+        if (startDate || endDate) {
+            query.createdAt = {};
+            if (startDate) {
+                query.createdAt.$gte = new Date(startDate);
+            }
+            if (endDate) {
+                const end = new Date(endDate);
+                end.setHours(23, 59, 59, 999);
+                query.createdAt.$lte = end;
+            }
         }
 
         const users = await User.find(query)
@@ -207,10 +223,72 @@ const getUsers = async (req, res) => {
 
         return sendResponse(res, true, 200, 'Users list retrieved.', {
             users,
-            totalPages: Math.ceil(totalUsers / limit),
+            totalPages: Math.ceil(totalUsers / (req.query.exportAll === 'true' ? 10000 : limit)) || 1,
             currentPage: page,
             totalUsers
         });
+    } catch (error) {
+        return errorHandler(error, res);
+    }
+};
+
+// Get Account Deletion Requests
+const getAccountDeletionRequests = async (req, res) => {
+    try {
+        const requests = await UserQuery.find({
+            $or: [
+                { subject: { $regex: /deletion/i } },
+                { query: { $regex: /deletion/i } }
+            ]
+        })
+        .sort({ createdAt: -1 })
+        .lean();
+
+        return sendResponse(res, true, 200, 'Account deletion requests retrieved.', requests);
+    } catch (error) {
+        return errorHandler(error, res);
+    }
+};
+
+// Execute Account Deletion from Admin Portal
+const executeAccountDeletionRequest = async (req, res) => {
+    try {
+        const { requestId } = req.params;
+        const adminId = req.userId;
+
+        const requestDoc = await UserQuery.findById(requestId);
+        if (!requestDoc) {
+            return sendResponse(res, false, 404, 'Deletion request not found.');
+        }
+
+        let targetUser = null;
+        if (requestDoc.userId) {
+            targetUser = await User.findById(requestDoc.userId);
+        } else if (requestDoc.email) {
+            targetUser = await User.findOne({ email: requestDoc.email.trim().toLowerCase() });
+        } else if (requestDoc.phone) {
+            targetUser = await User.findOne({ phoneNumber: requestDoc.phone.trim() });
+        }
+
+        if (targetUser) {
+            targetUser.isDeleted = true;
+            targetUser.deletedAt = new Date();
+            targetUser.currentDeviceId = null;
+            await targetUser.save();
+        }
+
+        requestDoc.status = 'resolved';
+        requestDoc.adminReply = `Account permanently purged by Admin on ${new Date().toISOString()}`;
+        await requestDoc.save();
+
+        await AuditLog.create({
+            userId: adminId,
+            action: 'execute_account_deletion',
+            details: { requestId, userEmail: targetUser?.email || requestDoc.email, userPhone: targetUser?.phoneNumber || requestDoc.phone },
+            ipAddress: req.ip
+        });
+
+        return sendResponse(res, true, 200, 'Account has been deleted and request resolved successfully.');
     } catch (error) {
         return errorHandler(error, res);
     }
@@ -2736,5 +2814,7 @@ module.exports = {
     createAdminUser,
     getAllSubscriptionPlans,
     updateSubscriptionPlan,
-    createSubscriptionPlan
+    createSubscriptionPlan,
+    getAccountDeletionRequests,
+    executeAccountDeletionRequest
 };

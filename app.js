@@ -136,6 +136,33 @@ app.get("/", (req, res) => {
     });
 });
 
+// 404 handler for unknown API routes
+app.use('/api/*', (req, res) => {
+    return res.status(404).json({
+        status: false,
+        statusCode: 404,
+        message: `Endpoint ${req.method} ${req.originalUrl} not found.`
+    });
+});
+
+// Global Express Error Handling Middleware (4 arguments)
+const { errorHandler: globalErrorHandler } = require('./utils/common_functions');
+app.use((err, req, res, next) => {
+    if (res.headersSent) {
+        return next(err);
+    }
+    return globalErrorHandler(err, res);
+});
+
+// Process Level Safety Handlers
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('[UNHANDLED REJECTION]:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+    console.error('[UNCAUGHT EXCEPTION]:', err);
+});
+
 // Auto-seed Minor Acts on DB connect if needed
 async function autoSeedMinorActs() {
     try {

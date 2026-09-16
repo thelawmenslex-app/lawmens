@@ -34,6 +34,8 @@ router.put('/users/:userId', checkRole(['Admin', 'Super Admin']), adminControlle
 router.put('/users/:userId/status', checkRole(['Admin', 'Super Admin']), adminController.toggleUserStatus);
 router.delete('/users/:userId', checkRole(['Admin', 'Super Admin']), adminController.deleteUser);
 router.post('/users/:userId/force-logout', checkRole(['Admin', 'Super Admin']), adminController.forceLogoutUser);
+router.get('/account-deletion-requests', checkRole(['Admin', 'Super Admin']), adminController.getAccountDeletionRequests);
+router.delete('/account-deletion-requests/:requestId', checkRole(['Admin', 'Super Admin']), adminController.executeAccountDeletionRequest);
 
 // Subscription & Payment logs
 router.get('/payments', checkRole(['Admin', 'Super Admin', 'Finance Manager']), adminController.getPayments);

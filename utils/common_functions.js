@@ -56,18 +56,23 @@ function sendResponse(res, status, statusCode, message, data) {
     const cleanData = sanitizeData(data);
     return res.status(statusCode).json({ status, statusCode, message, data: cleanData });
 }
+
 function errorHandler(err, res) {
-    const response = {
-        code: err.statusCode,
-        message: err.message,
-    };
-    if (!response.code) {
-        response.code = 400;
+    const statusCode = Number(err.statusCode || err.status || err.code) || 500;
+    const isProd = process.env.NODE_ENV === 'production';
+    
+    let userMessage = err.message || 'An unexpected error occurred. Please try again.';
+    if (statusCode === 500 && isProd) {
+        userMessage = 'Internal server error. Please try again shortly.';
     }
-    console.log(err)
-    return res
-        .status(response.code)
-        .json({ message: 'Oops,something went wrong', error: ' ' + err });
+
+    console.error(`[API ERROR ${statusCode}]:`, err.stack || err);
+    return res.status(statusCode >= 100 && statusCode < 600 ? statusCode : 500).json({
+        status: false,
+        statusCode: statusCode >= 100 && statusCode < 600 ? statusCode : 500,
+        message: userMessage,
+        error: isProd ? undefined : (err.message || String(err))
+    });
 }
 //function for generate jwt token
 const generateToken = (data, expireTime) => {
