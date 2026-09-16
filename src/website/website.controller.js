@@ -1,5 +1,6 @@
 const WebsiteContent = require('../models/websiteContent');
 const UserQuery = require('../models/userQuery');
+const Settings = require('../models/settings');
 const catchAsync = (fn) => (req, res, next) => {
     Promise.resolve(fn(req, res, next)).catch(next);
 };
@@ -42,8 +43,8 @@ const DEFAULT_WEBSITE_DATA = {
         googlePlayUrl: "https://play.google.com/store/apps/details?id=com.thelawmens.app",
         appStoreUrl: "https://apps.apple.com/app/the-lawmens/id123456789",
         qrCodeUrl: "/app-qr-code.png",
-        websiteUrl: "https://www.the-lawmens.com",
-        supportEmail: "support@thelawmens.com"
+        websiteUrl: "https://the-lawmens.com",
+        supportEmail: "thelawmenslex@gmail.com"
     },
     socialLinks: {
         linkedin: "https://www.linkedin.com/company/thelawmens",
@@ -66,8 +67,57 @@ const DEFAULT_WEBSITE_DATA = {
     }
 };
 
+exports.getPublicSettings = catchAsync(async (req, res) => {
+    let setting = await Settings.findOne().lean();
+    if (!setting) {
+        setting = {
+            companyName: "THE-LAWMEN'S",
+            supportEmail: "thelawmenslex@gmail.com",
+            supportPhone: "+91 93858 11823",
+            grievanceOfficerName: "Legal Compliance & Grievance Officer",
+            grievanceEmail: "thelawmenslex@gmail.com",
+            officeAddress: "No. 12, Lawyers Chamber, High Court Complex, Chennai - 600104, Tamil Nadu, India",
+            workingHours: "Monday to Saturday, 10:00 AM – 6:00 PM IST",
+            officialWebsite: "https://the-lawmens.com",
+            disclaimerText: "APP DISCLAIMER\n\nTHE-LAWMEN’S is an independent legal-information and research platform. The information provided is for educational and research purposes only and does not constitute legal advice. Laws, amendments and judicial decisions may change. Users must independently verify the prevailing law from authentic official sources before relying upon any information. THE-LAWMEN’S is not a Government application.\n\nUse of the Application is subject to the Terms and Conditions and Privacy Policy.",
+            trialDays: 14,
+            isActive: true
+        };
+    }
+
+    const formatted = {
+        ...setting,
+        companyName: setting.companyName || "THE-LAWMEN'S",
+        grievanceOfficer: setting.grievanceOfficerName || "Legal Compliance & Grievance Officer",
+        grievanceOfficerName: setting.grievanceOfficerName || "Legal Compliance & Grievance Officer",
+        grievanceEmail: setting.grievanceEmail || setting.supportEmail || "thelawmenslex@gmail.com",
+        email: setting.supportEmail || setting.email || "thelawmenslex@gmail.com",
+        supportEmail: setting.supportEmail || setting.email || "thelawmenslex@gmail.com",
+        phone: setting.supportPhone || setting.phoneNumber || "+91 93858 11823",
+        phoneNumber: setting.supportPhone || setting.phoneNumber || "+91 93858 11823",
+        supportPhone: setting.supportPhone || setting.phoneNumber || "+91 93858 11823",
+        address: setting.officeAddress || "No. 12, Lawyers Chamber, High Court Complex, Chennai - 600104, Tamil Nadu, India",
+        officeAddress: setting.officeAddress || "No. 12, Lawyers Chamber, High Court Complex, Chennai - 600104, Tamil Nadu, India",
+        workingHours: setting.workingHours || "Monday to Saturday, 10:00 AM – 6:00 PM IST",
+        website: setting.officialWebsite || "https://the-lawmens.com",
+        websiteUrl: setting.officialWebsite || "https://the-lawmens.com",
+        officialWebsite: setting.officialWebsite || "https://the-lawmens.com",
+        disclaimerText: setting.disclaimerText
+    };
+
+    return res.status(200).json({
+        success: true,
+        status: true,
+        data: formatted
+    });
+});
+
 exports.getPublicContent = catchAsync(async (req, res) => {
-    let doc = await WebsiteContent.findOne({ key: "main_website" });
+    let [doc, setting] = await Promise.all([
+        WebsiteContent.findOne({ key: "main_website" }).lean(),
+        Settings.findOne().lean()
+    ]);
+
     if (!doc) {
         doc = await WebsiteContent.create({
             key: "main_website",
@@ -77,9 +127,40 @@ exports.getPublicContent = catchAsync(async (req, res) => {
             lastUpdatedBy: "System"
         });
     }
+
+    const baseContent = doc.publishedContent || DEFAULT_WEBSITE_DATA;
+
+    const mergedData = {
+        ...baseContent,
+        companyName: setting?.companyName || "THE-LAWMEN'S",
+        supportEmail: setting?.supportEmail || setting?.email || "thelawmenslex@gmail.com",
+        email: setting?.supportEmail || setting?.email || "thelawmenslex@gmail.com",
+        supportPhone: setting?.supportPhone || setting?.phoneNumber || "+91 93858 11823",
+        phone: setting?.supportPhone || setting?.phoneNumber || "+91 93858 11823",
+        grievanceOfficer: setting?.grievanceOfficerName || "Legal Compliance & Grievance Officer",
+        grievanceOfficerName: setting?.grievanceOfficerName || "Legal Compliance & Grievance Officer",
+        grievanceEmail: setting?.grievanceEmail || setting?.supportEmail || "thelawmenslex@gmail.com",
+        address: setting?.officeAddress || "No. 12, Lawyers Chamber, High Court Complex, Chennai - 600104, Tamil Nadu, India",
+        officeAddress: setting?.officeAddress || "No. 12, Lawyers Chamber, High Court Complex, Chennai - 600104, Tamil Nadu, India",
+        workingHours: setting?.workingHours || "Monday to Saturday, 10:00 AM – 6:00 PM IST",
+        website: setting?.officialWebsite || "https://the-lawmens.com",
+        websiteUrl: setting?.officialWebsite || "https://the-lawmens.com",
+        officialWebsite: setting?.officialWebsite || "https://the-lawmens.com",
+        disclaimerText: setting?.disclaimerText,
+        contactInfo: {
+            companyName: setting?.companyName || "THE-LAWMEN'S",
+            grievanceOfficer: setting?.grievanceOfficerName || "Legal Compliance & Grievance Officer",
+            email: setting?.supportEmail || "thelawmenslex@gmail.com",
+            phone: setting?.supportPhone || "+91 93858 11823",
+            address: setting?.officeAddress || "No. 12, Lawyers Chamber, High Court Complex, Chennai - 600104, Tamil Nadu, India",
+            workingHours: setting?.workingHours || "Monday to Saturday, 10:00 AM – 6:00 PM IST",
+            website: setting?.officialWebsite || "https://the-lawmens.com"
+        }
+    };
+
     return res.status(200).json({
         success: true,
-        data: doc.publishedContent || DEFAULT_WEBSITE_DATA,
+        data: mergedData,
         updatedAt: doc.updatedAt
     });
 });

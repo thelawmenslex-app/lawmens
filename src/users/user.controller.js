@@ -759,6 +759,33 @@ const confirmAccountDeletion = async (req, res) => {
     }
 };
 
+const getAppSettings = async (req, res) => {
+    try {
+        const Settings = require('../models/settings');
+        let setting = await Settings.findOne().lean();
+        if (!setting) {
+            setting = {
+                email: 'thelawmenslex@gmail.com',
+                phoneNumber: '+91 93858 11823',
+                supportEmail: 'thelawmenslex@gmail.com',
+                supportPhone: '+91 93858 11823',
+                grievanceOfficerName: 'Legal Compliance & Grievance Officer',
+                grievanceEmail: 'thelawmenslex@gmail.com',
+                officeAddress: 'No. 12, Lawyers Chamber, High Court Complex, Chennai - 600104, Tamil Nadu, India',
+                workingHours: 'Monday to Saturday, 10:00 AM – 6:00 PM IST',
+                officialWebsite: 'https://the-lawmens.com',
+                companyName: "THE-LAWMEN'S",
+                disclaimerText: "APP DISCLAIMER\n\nTHE-LAWMEN’S is an independent legal-information and research platform. The information provided is for educational and research purposes only and does not constitute legal advice. Laws, amendments and judicial decisions may change. Users must independently verify the prevailing law from authentic official sources before relying upon any information. THE-LAWMEN’S is not a Government application.\n\nUse of the Application is subject to the Terms and Conditions and Privacy Policy.",
+                trialDays: 10,
+                isActive: true
+            };
+        }
+        return sendResponse(res, true, 200, 'Live application settings.', setting);
+    } catch (error) {
+        return errorHandler(error, res);
+    }
+};
+
 module.exports = {
     register,
     login,
@@ -780,5 +807,6 @@ module.exports = {
     updateFcmToken,
     requestAccountDeletion,
     initiateAccountDeletion,
-    confirmAccountDeletion
+    confirmAccountDeletion,
+    getAppSettings
 }

@@ -33,6 +33,7 @@ const contentRateLimiter = rateLimit({
 // 1. PUBLIC WEBSITE ROUTES
 // ==========================================
 router.get('/content', contentRateLimiter, websiteController.getPublicContent);
+router.get('/settings', websiteController.getPublicSettings);
 router.get('/demo-comparison', websiteController.getDemoComparison);
 router.post('/contact', contactRateLimiter, websiteController.submitPublicContact);
 
