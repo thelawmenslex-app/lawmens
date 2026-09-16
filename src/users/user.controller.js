@@ -550,6 +550,35 @@ const updateFcmToken = async (req, res) => {
     }
 };
 
+const requestAccountDeletion = async (req, res) => {
+    try {
+        const { identifier, reason, userConsent } = req.body;
+        if (!identifier || !userConsent) {
+            return sendResponse(res, false, 400, 'Registered mobile number/email and user confirmation are required.');
+        }
+
+        const isEmail = identifier.includes('@');
+        const query = isEmail ? { email: identifier.trim().toLowerCase() } : { phoneNumber: identifier.trim() };
+        
+        const user = await userService.getUser(query);
+        
+        const UserQuery = require('../models/userQuery');
+        await UserQuery.create({
+            userId: user ? user._id : null,
+            name: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'Account Deletion Applicant',
+            email: user?.email || (isEmail ? identifier : 'not_provided@lawmens.com'),
+            phone: user?.phoneNumber || (!isEmail ? identifier : ''),
+            subject: 'Google Play & DPDP Account Deletion Request',
+            query: `Reason: ${reason || 'User requested account and personal data deletion via Web Portal'}. Consent confirmed at: ${new Date().toISOString()}`,
+            status: 'pending'
+        });
+
+        return sendResponse(res, true, 200, 'Your account deletion request has been submitted successfully. In accordance with Google Play Store and Indian DPDP guidelines, your profile and personal data will be processed and removed within 48-72 hours.');
+    } catch (error) {
+        return errorHandler(error, res);
+    }
+};
+
 module.exports = {
     register,
     login,
@@ -567,5 +596,6 @@ module.exports = {
     getPublicSignupConfig,
     submitQuery,
     getUserQueries,
-    updateFcmToken
+    updateFcmToken,
+    requestAccountDeletion
 }
