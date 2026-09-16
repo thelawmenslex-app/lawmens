@@ -651,30 +651,108 @@ const updateFcmToken = async (req, res) => {
     }
 };
 
-const requestAccountDeletion = async (req, res) => {
+const initiateAccountDeletion = async (req, res) => {
     try {
-        const { identifier, reason, userConsent } = req.body;
-        if (!identifier || !userConsent) {
-            return sendResponse(res, false, 400, 'Registered mobile number/email and user confirmation are required.');
+        const { userName, password } = req.body;
+        if (!userName || !password) {
+            return sendResponse(res, false, 400, 'Registered Username/Email/Mobile and Password are required.');
         }
 
-        const isEmail = identifier.includes('@');
-        const query = isEmail ? { email: identifier.trim().toLowerCase() } : { phoneNumber: identifier.trim() };
+        const isEmail = userName.includes('@');
+        const query = isEmail ? { email: userName.trim().toLowerCase() } : { phoneNumber: userName.trim() };
         
         const user = await userService.getUser(query);
-        
-        const UserQuery = require('../models/userQuery');
-        await UserQuery.create({
-            userId: user ? user._id : null,
-            name: user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : 'Account Deletion Applicant',
-            email: user?.email || (isEmail ? identifier : 'not_provided@lawmens.com'),
-            phone: user?.phoneNumber || (!isEmail ? identifier : ''),
-            subject: 'Google Play & DPDP Account Deletion Request',
-            query: `Reason: ${reason || 'User requested account and personal data deletion via Web Portal'}. Consent confirmed at: ${new Date().toISOString()}`,
-            status: 'pending'
-        });
+        if (!user) {
+            return sendResponse(res, false, 404, 'No account found with the provided details.');
+        }
 
-        return sendResponse(res, true, 200, 'Your account deletion request has been submitted successfully. In accordance with Google Play Store and Indian DPDP guidelines, your profile and personal data will be processed and removed within 48-72 hours.');
+        if (!user.password) {
+            return sendResponse(res, false, 400, 'Invalid password credentials.');
+        }
+
+        const isPasswordValid = await decryptPassword(password, user.password);
+        if (!isPasswordValid) {
+            return sendResponse(res, false, 400, 'Incorrect password. Verification failed.');
+        }
+
+        const otp = generateOTP();
+        const { createOtp, updateStatus, getOtp } = require("../otp/otp.services");
+        const checkOtp = await getOtp({ email: user.email || `${user.phoneNumber}@thelawmens.com` });
+        
+        if (!checkOtp) {
+            await createOtp({ email: user.email || `${user.phoneNumber}@thelawmens.com`, otp });
+        } else {
+            await updateStatus({ email: user.email || `${user.phoneNumber}@thelawmens.com` }, { otp, emailStatus: 'pending' });
+        }
+
+        // Send OTP via WhatsApp
+        if (user.phoneNumber) {
+            try {
+                await sendWhatsAppOTP({
+                    phone: user.phoneNumber,
+                    otp,
+                    name: `${user.firstName || 'Advocate'}`
+                });
+            } catch (waErr) {
+                console.error('WhatsApp OTP Error:', waErr.message);
+            }
+        }
+
+        const maskedPhone = user.phoneNumber ? `+91 ${user.phoneNumber.substring(0, 2)}******${user.phoneNumber.substring(user.phoneNumber.length - 2)}` : user.email;
+
+        return sendResponse(res, true, 200, `Verification OTP has been dispatched to your registered WhatsApp mobile number (${maskedPhone}).`, {
+            maskedContact: maskedPhone
+        });
+    } catch (error) {
+        return errorHandler(error, res);
+    }
+};
+
+const confirmAccountDeletion = async (req, res) => {
+    try {
+        const { userName, password, otp } = req.body;
+        if (!userName || !password || !otp) {
+            return sendResponse(res, false, 400, 'Username, Password, and 6-digit OTP are required.');
+        }
+
+        const isEmail = userName.includes('@');
+        const query = isEmail ? { email: userName.trim().toLowerCase() } : { phoneNumber: userName.trim() };
+        
+        const user = await userService.getUser(query);
+        if (!user) {
+            return sendResponse(res, false, 404, 'User account not found.');
+        }
+
+        const isPasswordValid = await decryptPassword(password, user.password);
+        if (!isPasswordValid) {
+            return sendResponse(res, false, 400, 'Incorrect password.');
+        }
+
+        const { getOtp } = require("../otp/otp.services");
+        const storedOtp = await getOtp({ email: user.email || `${user.phoneNumber}@thelawmens.com` });
+
+        if (!storedOtp || storedOtp.otp !== otp.toString().trim()) {
+            return sendResponse(res, false, 400, 'Invalid or expired OTP code. Please request a new OTP.');
+        }
+
+        const User = require('../models/user');
+        const Note = require('../models/note');
+        const UserQuery = require('../models/userQuery');
+
+        // Permanently delete user data
+        await User.findByIdAndDelete(user._id);
+        await Note.deleteMany({ userId: user._id }).catch(() => null);
+        
+        await UserQuery.create({
+            name: `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+            email: user.email || 'deleted_user@lawmens.com',
+            phone: user.phoneNumber || '',
+            subject: 'Account Permanently Deleted via 3-Factor Web Verification',
+            query: `Account for ${user.email || user.phoneNumber} was permanently purged at ${new Date().toISOString()} after verifying Username, Password, and WhatsApp OTP.`,
+            status: 'resolved'
+        }).catch(() => null);
+
+        return sendResponse(res, true, 200, 'Your account and personal data have been permanently deleted from THE-LAWMEN\'S platform.');
     } catch (error) {
         return errorHandler(error, res);
     }
@@ -699,5 +777,7 @@ module.exports = {
     submitQuery,
     getUserQueries,
     updateFcmToken,
-    requestAccountDeletion
+    requestAccountDeletion,
+    initiateAccountDeletion,
+    confirmAccountDeletion
 }

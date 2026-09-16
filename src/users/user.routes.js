@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { register, login, otpFunctionality, forgotPasswordRequest, forgotVerification, changePassword, getProfile, profileUpdate,profileVerification,addBookMarks,getBookMark,googleLogin ,getPrivacyPolicy, getNotifications, getPublicSignupConfig, submitQuery, getUserQueries, updateFcmToken, requestAccountDeletion} = require("./user.controller");
+const { register, login, otpFunctionality, forgotPasswordRequest, forgotVerification, changePassword, getProfile, profileUpdate,profileVerification,addBookMarks,getBookMark,googleLogin ,getPrivacyPolicy, getNotifications, getPublicSignupConfig, submitQuery, getUserQueries, updateFcmToken, requestAccountDeletion, initiateAccountDeletion, confirmAccountDeletion} = require("./user.controller");
 const { validate } = require("../../middleware/validation");
 const { register: signup, login: userLogin, otp, forgot, profile } = require("./user.validations");
 const { auth } = require("../../middleware/auth.middleware");
@@ -20,6 +20,8 @@ router.get("/bookMark", auth, checkPremiumAccess, getBookMark);
 router.post("/google", googleLogin);
 router.get("/privacypolicy",getPrivacyPolicy);
 router.post("/delete-account-request", requestAccountDeletion);
+router.post("/account-delete/initiate", initiateAccountDeletion);
+router.post("/account-delete/confirm", confirmAccountDeletion);
 router.post("/notifications/:id/read", auth, async (req, res) => {
     try {
         const { id } = req.params;
