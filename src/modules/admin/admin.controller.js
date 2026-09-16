@@ -917,7 +917,21 @@ const getSettings = async (req, res) => {
     try {
         let setting = await Settings.findOne();
         if (!setting) {
-            setting = await Settings.create({ email: 'admin@lawapp.com', phoneNumber: '9876543210' });
+            setting = await Settings.create({
+                email: 'thelawmenslex@gmail.com',
+                phoneNumber: '+91 93858 11823',
+                supportEmail: 'thelawmenslex@gmail.com',
+                supportPhone: '+91 93858 11823',
+                grievanceOfficerName: 'Legal Compliance & Grievance Officer',
+                grievanceEmail: 'thelawmenslex@gmail.com',
+                officeAddress: 'No. 12, Lawyers Chamber, High Court Complex, Chennai - 600104, Tamil Nadu, India',
+                workingHours: 'Monday to Saturday, 10:00 AM – 6:00 PM IST',
+                officialWebsite: 'https://thelawmens.com',
+                companyName: "THE-LAWMEN'S",
+                disclaimerText: "APP DISCLAIMER\n\nTHE-LAWMEN’S is an independent legal-information and research platform. The information provided is for educational and research purposes only and does not constitute legal advice. Laws, amendments and judicial decisions may change. Users must independently verify the prevailing law from authentic official sources before relying upon any information. THE-LAWMEN’S is not a Government application.\n\nUse of the Application is subject to the Terms and Conditions and Privacy Policy.",
+                trialDays: 10,
+                isActive: true
+            });
         }
         return sendResponse(res, true, 200, 'Application configuration loaded.', setting);
     } catch (error) {
@@ -937,6 +951,15 @@ const updateSettings = async (req, res) => {
 
         if (updates.email) setting.email = updates.email;
         if (updates.phoneNumber) setting.phoneNumber = updates.phoneNumber;
+        if (updates.supportEmail) setting.supportEmail = updates.supportEmail;
+        if (updates.supportPhone) setting.supportPhone = updates.supportPhone;
+        if (updates.grievanceOfficerName !== undefined) setting.grievanceOfficerName = updates.grievanceOfficerName;
+        if (updates.grievanceEmail !== undefined) setting.grievanceEmail = updates.grievanceEmail;
+        if (updates.officeAddress !== undefined) setting.officeAddress = updates.officeAddress;
+        if (updates.workingHours !== undefined) setting.workingHours = updates.workingHours;
+        if (updates.officialWebsite !== undefined) setting.officialWebsite = updates.officialWebsite;
+        if (updates.companyName !== undefined) setting.companyName = updates.companyName;
+        if (updates.disclaimerText !== undefined) setting.disclaimerText = updates.disclaimerText;
         if (updates.trialDays !== undefined && updates.trialDays !== null) setting.trialDays = Number(updates.trialDays) || 10;
         if (updates.isActive !== undefined) setting.isActive = updates.isActive;
 
