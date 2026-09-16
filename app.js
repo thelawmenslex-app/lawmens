@@ -21,6 +21,9 @@ const { passportConfig: { jwtStrategy } } = require('./config');
 
 const app = express();
 
+// Trust reverse proxy for Render / Cloudflare / Load Balancers to support express-rate-limit
+app.set('trust proxy', 1);
+
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
