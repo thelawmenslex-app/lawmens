@@ -2493,6 +2493,16 @@ const updateSignupConfig = async (req, res) => {
                 },
                 { upsert: true, new: true }
             );
+
+            // If profession options are updated, also sync the Profession collection
+            if ((item.fieldKey === 'professionId' || item.fieldKey === 'profession') && Array.isArray(item.options) && item.options.length > 0) {
+                await Profession.deleteMany({});
+                for (const opt of item.options) {
+                    if (opt && typeof opt === 'string' && opt.trim()) {
+                        await Profession.create({ name: opt.trim(), isActive: true });
+                    }
+                }
+            }
         }
 
         const updated = await SignupConfig.find().sort({ order: 1 });
