@@ -23,8 +23,8 @@ const checkPremiumAccess = (req, res, next) => {
     return sendResponse(res, false, 403, 'Subscribe to Premium to access this feature.', { isPremiumRequired: true });
 };
 
-// Check for baseline app access (10-day trial or active premium)
-const checkTrialOrPremiumAccess = (req, res, next) => {
+// Check for baseline app access (dynamic trial or active premium)
+const checkTrialOrPremiumAccess = async (req, res, next) => {
     const profile = req.profile;
     
     if (!profile) {
@@ -40,20 +40,26 @@ const checkTrialOrPremiumAccess = (req, res, next) => {
         return next();
     }
 
-    // Check if the user is within their 10-day free trial
-    const now = new Date();
-    const trialEnd = profile.trialEndDate 
-        ? new Date(profile.trialEndDate) 
-        : (profile.createdAt ? new Date(new Date(profile.createdAt).getTime() + 10 * 24 * 60 * 60 * 1000) : new Date(now.getTime() + 10 * 24 * 60 * 60 * 1000));
-        
-    const isTrialActive = now < trialEnd;
+    try {
+        const Settings = require('../src/models/settings');
+        const setting = await Settings.findOne().lean();
+        const appTrialDays = Number(setting?.trialDays) || 10;
 
-    if (isTrialActive) {
+        const now = new Date();
+        const trialStart = profile.trialStartDate ? new Date(profile.trialStartDate) : (profile.createdAt ? new Date(profile.createdAt) : now);
+        const trialEnd = new Date(trialStart.getTime() + appTrialDays * 24 * 60 * 60 * 1000);
+        
+        const isTrialActive = now < trialEnd;
+
+        if (isTrialActive) {
+            return next();
+        }
+
+        // Access Expired after trial
+        return sendResponse(res, false, 402, `Your ${appTrialDays}-day free trial has expired. Please upgrade to Premium to continue.`);
+    } catch (err) {
         return next();
     }
-
-    // Access Expired after 10-day trial
-    return sendResponse(res, false, 402, 'Your 10-day free trial has expired. Please upgrade to Premium to continue.');
 };
 
 module.exports = { 

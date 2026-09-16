@@ -167,6 +167,10 @@ const getSubscriptionStatus = async (req, res) => {
         const User = require('../models/user');
         const SubscriptionHistory = require('../models/subscriptionHistory');
         const Subscription = require('../models/subscription');
+        const Settings = require('../models/settings');
+
+        let setting = await Settings.findOne().lean();
+        const appTrialDays = Number(setting?.trialDays) || 10;
 
         let user = null;
         if (userId) {
@@ -179,9 +183,10 @@ const getSubscriptionStatus = async (req, res) => {
 
         const now = new Date();
         const createdAt = user?.createdAt ? new Date(user.createdAt) : now;
+        const trialStartDate = user?.trialStartDate ? new Date(user.trialStartDate) : createdAt;
         
-        // Strict 10-day trial end date calculated from account creation
-        const trialEndDate = user?.trialEndDate ? new Date(user.trialEndDate) : new Date(createdAt.getTime() + 10 * 24 * 60 * 60 * 1000);
+        // Common trial end date calculated dynamically from admin-configured trialDays
+        const trialEndDate = new Date(trialStartDate.getTime() + appTrialDays * 24 * 60 * 60 * 1000);
         
         const isPremium = user?.isPremium === true || Boolean(user?.subscriptionId);
         let isExpired = false;
@@ -215,7 +220,7 @@ const getSubscriptionStatus = async (req, res) => {
             }
             isTrial = false;
         } else {
-            // Free Trial evaluation (Strict 10 Days)
+            // Free Trial evaluation (Dynamic App-Wide Trial Days)
             isExpired = now > trialEndDate;
             hasAccess = !isExpired;
             isTrial = true;
@@ -235,19 +240,21 @@ const getSubscriptionStatus = async (req, res) => {
             isPremium,
             isTrial,
             isExpired,
+            trialDays: appTrialDays,
             canAccessMinorActs: isPremium && !isExpired,
             allowedActs: isPremium ? ['*'] : ['ipc', 'bns'],
             lockedFeatures: isPremium ? [] : ['crpc', 'bnss', 'iea', 'bsa', 'minor_acts', 'schedules', 'bookmarks', 'notes'],
             daysRemaining,
             reason,
-            trialStartDate: createdAt.toISOString(),
+            trialStartDate: trialStartDate.toISOString(),
             trialEndDate: trialEndDate.toISOString(),
             purchasedDate: user?.premiumPurchaseDate || user?.createdAt || now.toISOString(),
             expiryDate: isPremium ? subscriptionExpiry.toISOString() : trialEndDate.toISOString(),
             paymentId: user?.premiumPaymentId || (isPremium ? "PREMIUM_ACTIVE" : "FREE_TRIAL"),
-            planName: activePlan ? activePlan.name : (isPremium ? "Start up" : (isExpired ? "Trial Expired" : "10-Day Free Trial")),
+            planName: activePlan ? activePlan.name : (isPremium ? "Start up" : (isExpired ? "Trial Expired" : `${appTrialDays}-Day Free Trial`)),
+            subtitle: isPremium ? 'Full Legal Research Access (Active)' : (isExpired ? 'Trial Expired • App Locked' : `${appTrialDays}-Day Free Trial (IPC & BNS Access Only)`),
             planPrice: activePlan ? activePlan.price : 1500,
-            validityDays: activePlan ? activePlan.validity : (isPremium ? 30 : 10),
+            validityDays: activePlan ? activePlan.validity : (isPremium ? 30 : appTrialDays),
             history
         });
     } catch (error) {

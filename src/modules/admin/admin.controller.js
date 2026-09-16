@@ -859,6 +859,7 @@ const updateSettings = async (req, res) => {
 
         if (updates.email) setting.email = updates.email;
         if (updates.phoneNumber) setting.phoneNumber = updates.phoneNumber;
+        if (updates.trialDays !== undefined && updates.trialDays !== null) setting.trialDays = Number(updates.trialDays) || 10;
         if (updates.isActive !== undefined) setting.isActive = updates.isActive;
 
         await setting.save();

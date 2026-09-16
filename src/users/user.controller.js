@@ -17,8 +17,11 @@ const register = async (req, res) => {
             return sendResponse(res, false, 200, 'Phone number already registered.',);
         }
         data.password = await encryptPassword(data.password);
+        const Settings = require('../models/settings');
+        const settingDoc = await Settings.findOne().lean();
+        const appTrialDays = Number(settingDoc?.trialDays) || 10;
         data.trialStartDate = new Date();
-        data.trialEndDate = new Date(Date.now() + 10 * 24 * 60 * 60 * 1000);
+        data.trialEndDate = new Date(Date.now() + appTrialDays * 24 * 60 * 60 * 1000);
         const user = await userService.createUser(data);
         const deviceId = data.deviceId || `device_${Date.now()}`;
         await userService.updateUser({ _id: user._id }, { currentDeviceId: deviceId });
@@ -383,6 +386,10 @@ const googleLogin = async (req, res) => {
         const deviceId = data.deviceId || `device_${Date.now()}`;
 
         if (!checkUser) {
+            const Settings = require('../models/settings');
+            const settingDoc = await Settings.findOne().lean();
+            const appTrialDays = Number(settingDoc?.trialDays) || 10;
+
             const fName = (data.firstName || cleanEmail.split('@')[0] || 'User').trim();
             const lName = (data.lastName || '').trim();
             checkUser = await userService.createUser({
@@ -394,7 +401,7 @@ const googleLogin = async (req, res) => {
                 role: 'User',
                 isActive: true,
                 trialStartDate: new Date(),
-                trialEndDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000)
+                trialEndDate: new Date(Date.now() + appTrialDays * 24 * 60 * 60 * 1000)
             });
         } else {
             await userService.updateUser({ _id: checkUser._id }, { currentDeviceId: deviceId });

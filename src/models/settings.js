@@ -4,6 +4,7 @@ const categorySchema = Schema(
     {
         email: { type: String , default:"admin@yopmail.com"},
         phoneNumber: { type: String ,default:"9876543210"},
+        trialDays: { type: Number, default: 10 },
         isActive: { type: Boolean, default: true },
     },
     {
