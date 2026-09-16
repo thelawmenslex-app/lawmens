@@ -132,50 +132,151 @@ const otpFunctionality = async (req, res) => {
 }
 
 
+const forgotPasswordRequest = async (req, res) => {
+    try {
+        const { email, phoneNumber, identifier, type } = req.body;
+        const target = (identifier || email || phoneNumber || '').toString().trim();
+
+        if (!target) {
+            return sendResponse(res, false, 400, 'Please enter your registered Email or Mobile number.');
+        }
+
+        const isEmail = target.includes('@');
+        const cleanEmail = target.toLowerCase();
+        const cleanPhone = target.replace(/[^0-9]/g, '');
+
+        const searchQueries = [];
+        if (isEmail) {
+            searchQueries.push({ email: cleanEmail });
+        } else {
+            searchQueries.push({ phoneNumber: target });
+            if (cleanPhone.length >= 10) {
+                searchQueries.push({ phoneNumber: cleanPhone });
+                searchQueries.push({ phoneNumber: cleanPhone.slice(-10) });
+            }
+        }
+
+        const checkUser = await userService.getUser({ $or: searchQueries });
+
+        if (!checkUser) {
+            return sendResponse(res, false, 404, 'No registered account found with this Email or Mobile number. Please check and try again.');
+        }
+
+        const otp = generateOTP();
+        await userService.updateUser({ _id: checkUser._id }, { otp: otp, otpCreatedOn: new Date() });
+
+        console.log(`=======================================================`);
+        console.log(`[FORGOT PASSWORD OTP] Target: ${target} | User: ${checkUser.email} | Phone: ${checkUser.phoneNumber} | OTP CODE: ${otp}`);
+        console.log(`=======================================================`);
+
+        let emailSent = false;
+        let waSent = false;
+
+        // 1. Dispatch Email OTP
+        if (checkUser.email) {
+            try {
+                const content = pug.renderFile('./views/otp.pug', { otp: otp });
+                await sendEmail(checkUser.email, content, 'Password Reset OTP - THE-LAWMEN\'S');
+                emailSent = true;
+                console.log(`[OTP DISPATCH] Email delivered to ${checkUser.email}`);
+            } catch (emailErr) {
+                console.warn('[OTP DISPATCH] Email delivery warning:', emailErr.message);
+            }
+        }
+
+        // 2. Dispatch WhatsApp OTP
+        if (checkUser.phoneNumber) {
+            try {
+                const fullName = `${checkUser.firstName || ''} ${checkUser.lastName || ''}`.trim() || 'User';
+                await sendWhatsAppOTP({ phone: checkUser.phoneNumber, otp: otp, name: fullName });
+                waSent = true;
+                console.log(`[OTP DISPATCH] WhatsApp OTP delivered to ${checkUser.phoneNumber}`);
+            } catch (waErr) {
+                console.warn('[OTP DISPATCH] WhatsApp delivery warning:', waErr.message);
+            }
+        }
+
+        const maskedEmail = checkUser.email ? checkUser.email.replace(/^(.{2})(.*)(@.*)$/, (_, a, b, c) => a + '*'.repeat(Math.max(1, b.length)) + c) : null;
+        const maskedPhone = checkUser.phoneNumber ? checkUser.phoneNumber.replace(/^(.{3})(.*)(.{2})$/, (_, a, b, c) => a + '*'.repeat(Math.max(1, b.length)) + c) : null;
+
+        return sendResponse(res, true, 200, 'Verification code has been sent successfully.', {
+            email: checkUser.email,
+            phoneNumber: checkUser.phoneNumber,
+            maskedDestination: isEmail ? (maskedEmail || checkUser.email) : (maskedPhone || checkUser.phoneNumber),
+            otp: process.env.NODE_ENV !== 'production' ? otp : undefined
+        });
+    } catch (error) {
+        return errorHandler(error, res);
+    }
+};
+
 const forgotVerification = async (req, res) => {
     try {
         const { body: data } = req;
-        const checkUser = await userService.getUser({ $or: [{ email: data.email }] })
-        if (checkUser) {
-            if (data.type && data.type === "send") {
-                const otp = generateOTP();
-                await userService.updateUser({ _id: checkUser._id }, { otp: otp, otpCreatedOn: new Date() });
-                const content = pug.renderFile('./views/otp.pug', { otp: otp });
-                try {
-                    await sendEmail(data.email, content, 'otp verification');
-                } catch (emailErr) {
-                    console.error("Email sending failed:", emailErr.message);
-                    console.log(`[DEV ONLY] Forgot OTP for ${data.email} is: ${otp}`);
-                }
-                if (checkUser.phoneNumber) {
-                    try {
-                        const fullName = `${checkUser.firstName || ''} ${checkUser.lastName || ''}`.trim();
-                        await sendWhatsAppOTP({ phone: checkUser.phoneNumber, otp: otp, name: fullName || 'User' });
-                    } catch (waErr) {
-                        console.error("WhatsApp OTP dispatch failed:", waErr.message);
-                    }
-                }
-                return sendResponse(res, true, 200, 'Otp sent successfull.',);
-            }
+        const target = (data.identifier || data.email || data.phoneNumber || '').toString().trim();
+        const cleanEmail = target.toLowerCase();
+        const cleanPhone = target.replace(/[^0-9]/g, '');
 
-            if (data.type && data.type === "verify") {
-
-                const currentDate = new Date();
-                const time = Math.floor((currentDate.getTime() - checkUser.otpCreatedOn.getTime()) / 1000) / 60;
-                if (checkUser.otp && checkUser.otp === data.otp && time && time <= 5) {
-                    await userService.updateUser({ email: data.email }, { otp: "" });
-                    return sendResponse(res, true, 200, 'Email verified successfully');
-                } else {
-                    return sendResponse(res, false, 200, 'Invalid OTP.');
-                }
-            }
+        const searchQueries = [];
+        if (target.includes('@')) {
+            searchQueries.push({ email: cleanEmail });
         } else {
-            return sendResponse(res, false, 200, 'Please register to continue.');
+            searchQueries.push({ phoneNumber: target });
+            if (cleanPhone.length >= 10) {
+                searchQueries.push({ phoneNumber: cleanPhone });
+                searchQueries.push({ phoneNumber: cleanPhone.slice(-10) });
+            }
+        }
+
+        const checkUser = await userService.getUser({ $or: searchQueries });
+
+        if (!checkUser) {
+            return sendResponse(res, false, 404, 'User account not found. Please register to continue.');
+        }
+
+        if (data.type === "send" || !data.type) {
+            return forgotPasswordRequest(req, res);
+        }
+
+        if (data.type === "verify" || data.password) {
+            const cleanOtp = (data.otp || '').toString().trim();
+            const newPassword = (data.password || '').trim();
+
+            if (!cleanOtp) {
+                return sendResponse(res, false, 400, 'Please enter the verification code (OTP).');
+            }
+
+            const currentDate = new Date();
+            const otpCreated = checkUser.otpCreatedOn ? new Date(checkUser.otpCreatedOn) : new Date(0);
+            const timeDiffMinutes = Math.floor((currentDate.getTime() - otpCreated.getTime()) / 1000) / 60;
+
+            if (!checkUser.otp || checkUser.otp.toString().trim() !== cleanOtp) {
+                return sendResponse(res, false, 400, 'Invalid verification code. Please check and try again.');
+            }
+
+            if (timeDiffMinutes > 15) {
+                return sendResponse(res, false, 400, 'Verification code has expired. Please request a new code.');
+            }
+
+            // If password was also supplied, reset it immediately in the same call
+            if (newPassword) {
+                if (newPassword.length < 6) {
+                    return sendResponse(res, false, 400, 'New password must be at least 6 characters.');
+                }
+                const hashedPassword = await encryptPassword(newPassword);
+                await userService.updateUser({ _id: checkUser._id }, { password: hashedPassword, otp: "", otpCreatedOn: null });
+                console.log(`[PASSWORD RESET SUCCESS] User: ${checkUser.email || checkUser.phoneNumber}`);
+                return sendResponse(res, true, 200, 'Password has been reset successfully. Please login with your new password.');
+            }
+
+            // OTP verified without password reset yet
+            await userService.updateUser({ _id: checkUser._id }, { otp: "" });
+            return sendResponse(res, true, 200, 'Verification code verified successfully.');
         }
     } catch (error) {
         return errorHandler(error, res);
     }
-}
+};
 
 const profileVerification = async (req, res) => {
     try {
@@ -583,6 +684,7 @@ module.exports = {
     register,
     login,
     otpFunctionality,
+    forgotPasswordRequest,
     forgotVerification,
     changePassword,
     profileUpdate,

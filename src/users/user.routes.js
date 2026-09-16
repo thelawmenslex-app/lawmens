@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const { register, login, otpFunctionality, forgotVerification, changePassword, getProfile, profileUpdate,profileVerification,addBookMarks,getBookMark,googleLogin ,getPrivacyPolicy, getNotifications, getPublicSignupConfig, submitQuery, getUserQueries, updateFcmToken, requestAccountDeletion} = require("./user.controller");
+const { register, login, otpFunctionality, forgotPasswordRequest, forgotVerification, changePassword, getProfile, profileUpdate,profileVerification,addBookMarks,getBookMark,googleLogin ,getPrivacyPolicy, getNotifications, getPublicSignupConfig, submitQuery, getUserQueries, updateFcmToken, requestAccountDeletion} = require("./user.controller");
 const { validate } = require("../../middleware/validation");
 const { register: signup, login: userLogin, otp, forgot, profile } = require("./user.validations");
 const { auth } = require("../../middleware/auth.middleware");
@@ -9,7 +9,9 @@ router.post("/login", validate(userLogin), login);
 router.post("/otp", validate(otp), otpFunctionality);
 router.post("/verification", validate(otp), forgotVerification);
 router.post("/profileverification",auth, validate(otp), profileVerification);
-router.put("/forgotpassword", validate(forgot), changePassword);
+router.post("/forgotpassword", validate(forgot), forgotPasswordRequest);
+router.put("/forgotpassword", validate(forgot), forgotVerification);
+router.post("/resetpassword", validate(forgot), forgotVerification);
 const { checkPremiumAccess } = require("../../middleware/trial.middleware");
 router.put("/profile", auth, validate(profile), profileUpdate);
 router.get("/profile", auth, getProfile);

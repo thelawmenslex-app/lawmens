@@ -40,42 +40,23 @@ const login = joi
 const otp = joi
     .object({
         body: joi.object({
-            type: joi.string().required(),
-            email: joi
-                .string()
-                .email({
-                    minDomainSegments: 2,
-                    tlds: {
-                        allow: ['com', 'net', 'in', 'co', 'org', 'guru', 'etc', 'info'],
-                    },
-                })
-                .strict()
-                .trim()
-                .required(),
-            otp: joi.when('type', {
-                is: 'verify',
-                then: joi.required(),
-                otherwise: joi.forbidden(),
-            }),
-            phoneNumber: joi.string()
+            type: joi.string().optional(),
+            email: joi.string().trim().allow('', null).optional(),
+            phoneNumber: joi.string().trim().allow('', null).optional(),
+            identifier: joi.string().trim().allow('', null).optional(),
+            otp: joi.string().trim().allow('', null).optional(),
+            password: joi.string().allow('', null).optional()
         }),
     }).unknown(true);
 
 const forgot = joi
     .object({
         body: joi.object({
-            email: joi
-                .string()
-                .email({
-                    minDomainSegments: 2,
-                    tlds: {
-                        allow: ['com', 'net', 'in', 'co', 'org', 'guru', 'etc', 'info'],
-                    },
-                })
-                .strict()
-                .trim()
-                .required(),
-            password: joi.string()
+            email: joi.string().trim().allow('', null).optional(),
+            phoneNumber: joi.string().trim().allow('', null).optional(),
+            identifier: joi.string().trim().allow('', null).optional(),
+            otp: joi.string().trim().allow('', null).optional(),
+            password: joi.string().allow('', null).optional()
         }),
     }).unknown(true);
 const profile = joi
