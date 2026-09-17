@@ -170,7 +170,7 @@ const getSubscriptionStatus = async (req, res) => {
         const Settings = require('../models/settings');
 
         let setting = await Settings.findOne().lean();
-        const appTrialDays = Number(setting?.trialDays) || 10;
+        const appTrialDays = Number(setting?.trialDays) || 14;
 
         let user = null;
         if (userId) {
@@ -242,19 +242,20 @@ const getSubscriptionStatus = async (req, res) => {
             isExpired,
             trialDays: appTrialDays,
             canAccessMinorActs: isPremium && !isExpired,
-            allowedActs: isPremium ? ['*'] : ['ipc', 'bns'],
-            lockedFeatures: isPremium ? [] : ['crpc', 'bnss', 'iea', 'bsa', 'minor_acts', 'schedules', 'bookmarks', 'notes'],
+            allowedActs: isPremium ? ['*'] : (isExpired ? [] : ['ipc', 'bns']),
+            lockedFeatures: isPremium ? [] : (isExpired ? ['ipc', 'bns', 'crpc', 'bnss', 'iea', 'bsa', 'minor_acts', 'schedules', 'bookmarks', 'notes', 'search', 'comparison'] : ['crpc', 'bnss', 'iea', 'bsa', 'minor_acts', 'schedules', 'bookmarks', 'notes']),
             daysRemaining,
             reason,
             trialStartDate: trialStartDate.toISOString(),
             trialEndDate: trialEndDate.toISOString(),
             purchasedDate: user?.premiumPurchaseDate || user?.createdAt || now.toISOString(),
-            expiryDate: isPremium ? subscriptionExpiry.toISOString() : trialEndDate.toISOString(),
+            expiryDate: isPremium ? (subscriptionExpiry ? subscriptionExpiry.toISOString() : '') : trialEndDate.toISOString(),
             paymentId: user?.premiumPaymentId || (isPremium ? "PREMIUM_ACTIVE" : "FREE_TRIAL"),
             planName: activePlan ? activePlan.name : (isPremium ? "Start up" : (isExpired ? "Trial Expired" : `${appTrialDays}-Day Free Trial`)),
-            subtitle: isPremium ? 'Full Legal Research Access (Active)' : (isExpired ? 'Trial Expired • App Locked' : `${appTrialDays}-Day Free Trial (IPC & BNS Access Only)`),
-            planPrice: activePlan ? activePlan.price : 1500,
+            subtitle: isPremium ? 'Full Legal Research Access (Active)' : (isExpired ? 'Trial Expired • Upgrade to Unlock' : `${appTrialDays}-Day Free Trial (IPC & BNS Access Only)`),
+            planPrice: activePlan ? activePlan.price : (isPremium ? 1500 : 0),
             validityDays: activePlan ? activePlan.validity : (isPremium ? 30 : appTrialDays),
+            validTill: isPremium ? (user?.subscriptionExpiresAt || user?.trialEndDate || '') : trialEndDate.toISOString(),
             history
         });
     } catch (error) {
