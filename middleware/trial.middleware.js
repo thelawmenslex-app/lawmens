@@ -43,7 +43,7 @@ const checkTrialOrPremiumAccess = async (req, res, next) => {
     try {
         const Settings = require('../src/models/settings');
         const setting = await Settings.findOne().lean();
-        const appTrialDays = Number(setting?.trialDays) || 10;
+        const appTrialDays = Number(setting?.trialDays) || 14;
 
         const now = new Date();
         const trialStart = profile.trialStartDate ? new Date(profile.trialStartDate) : (profile.createdAt ? new Date(profile.createdAt) : now);

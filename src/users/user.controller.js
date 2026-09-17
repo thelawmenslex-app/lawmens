@@ -18,7 +18,7 @@ const register = async (req, res) => {
         data.password = await encryptPassword(data.password);
         const Settings = require('../models/settings');
         const settingDoc = await Settings.findOne().lean();
-        const appTrialDays = Number(settingDoc?.trialDays) || 10;
+        const appTrialDays = Number(settingDoc?.trialDays) || 14;
         data.trialStartDate = new Date();
         data.trialEndDate = new Date(Date.now() + appTrialDays * 24 * 60 * 60 * 1000);
         const user = await userService.createUser(data);
@@ -374,6 +374,18 @@ const getProfile = async (req, res) => {
             } catch (e) {}
         }
 
+        const Settings = require('../models/settings');
+        const settingDoc = await Settings.findOne().lean();
+        const appTrialDays = Number(settingDoc?.trialDays) || 14;
+
+        const now = new Date();
+        const createdAt = userDoc.createdAt ? new Date(userDoc.createdAt) : now;
+        const trialStartDate = userDoc.trialStartDate ? new Date(userDoc.trialStartDate) : createdAt;
+        const trialEndDate = new Date(trialStartDate.getTime() + appTrialDays * 24 * 60 * 60 * 1000);
+        const isPrem = Boolean(userDoc.isPremium || userDoc.subscriptionId);
+        const isExpired = !isPrem && (now > trialEndDate);
+        const daysRemaining = isPrem ? 365 : (!isExpired ? Math.max(0, Math.ceil((trialEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24))) : 0);
+
         const profileData = {
             _id: userDoc._id,
             firstName: userDoc.firstName || '',
@@ -385,10 +397,15 @@ const getProfile = async (req, res) => {
             professionId: typeof userDoc.professionId === 'object' ? userDoc.professionId?._id : userDoc.professionId,
             profession: professionName,
             role: userDoc.role || 'User',
-            isPremium: Boolean(userDoc.isPremium || userDoc.subscriptionId),
+            isPremium: isPrem,
             subscriptionId: userDoc.subscriptionId,
             isActive: userDoc.isActive !== false,
-            trialEndDate: userDoc.trialEndDate,
+            trialStartDate: trialStartDate.toISOString(),
+            trialEndDate: trialEndDate.toISOString(),
+            trialDays: appTrialDays,
+            daysRemaining: daysRemaining,
+            isTrial: !isPrem,
+            isExpired: isExpired,
             createdAt: userDoc.createdAt,
             contact: users,
             about: cms.find(item => item.type === "about")?.content,
@@ -458,7 +475,7 @@ const googleLogin = async (req, res) => {
         if (!checkUser) {
             const Settings = require('../models/settings');
             const settingDoc = await Settings.findOne().lean();
-            const appTrialDays = Number(settingDoc?.trialDays) || 10;
+            const appTrialDays = Number(settingDoc?.trialDays) || 14;
 
             const fName = (data.firstName || cleanEmail.split('@')[0] || 'User').trim();
             const lName = (data.lastName || '').trim();
@@ -776,7 +793,7 @@ const getAppSettings = async (req, res) => {
                 officialWebsite: 'https://the-lawmens.com',
                 companyName: "THE-LAWMEN'S",
                 disclaimerText: "APP DISCLAIMER\n\nTHE-LAWMEN’S is an independent legal-information and research platform. The information provided is for educational and research purposes only and does not constitute legal advice. Laws, amendments and judicial decisions may change. Users must independently verify the prevailing law from authentic official sources before relying upon any information. THE-LAWMEN’S is not a Government application.\n\nUse of the Application is subject to the Terms and Conditions and Privacy Policy.",
-                trialDays: 10,
+                trialDays: 14,
                 isActive: true
             };
         }
